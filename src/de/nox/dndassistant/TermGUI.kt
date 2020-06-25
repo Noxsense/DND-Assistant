@@ -1,4 +1,4 @@
-package de.nox.dndhelper;
+package de.nox.dndassistant;
 
 fun main() {
 	println(

@@ -1,4 +1,4 @@
-package de.nox.dndhelper;
+package de.nox.dndassistant;
 
 import kotlin.math.abs;
 

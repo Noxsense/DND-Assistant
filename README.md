@@ -16,6 +16,7 @@ Also to create a new one and roll anything needed.
 - [ ] sharing and positioning during a session with other people
 
 ## To do
+- [ ] replace `Makefile` with `gradle.build`
 - [ ] display main stats, first page
 - [x] add dice parser for string
 - [ ] add roller for stats
