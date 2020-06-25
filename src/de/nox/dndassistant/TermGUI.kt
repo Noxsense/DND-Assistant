@@ -25,6 +25,8 @@ fun main() {
 
 	println(diceTerm)
 
+	println(rollTake(Die(6), 3, 4, true))
+
 	// val diceRegexInvalid = "3d8 + d12 + 3 + 3 - 3 + 12d"
 	// parseDiceTerm(diceRegexInvalid)
 }

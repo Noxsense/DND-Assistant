@@ -1,6 +1,25 @@
 package de.nox.dndassistant;
 
 import kotlin.math.abs;
+import kotlin.math.max;
+import kotlin.math.min;
+
+/* Roll the SimpleDice {num} times, take {take} best/worst values. */
+fun rollTake(dice: SimpleDice, take : Int = 3, num : Int = 4, best : Boolean = true) : List<Int> {
+	val rolls = (1..abs(num)) . map { dice.roll() } . toTypedArray()
+	rolls . sort()
+
+	return if (best) rolls.toList().takeLast(take) // highest
+		else rolls.toList().take(take) // lowest
+}
+
+/* Roll with advenage: Take the best of two rolls.*/
+fun rollWithAdventage(dice: SimpleDice) : Int
+	= rollTake(dice, 1, 2, true).first()
+
+/* Roll with advenage: Take the worst of two rolls.*/
+fun rollWithDisdventage(dice: SimpleDice) : Int
+	= rollTake(dice, 1, 2, false).first()
 
 /** Parse string to DiceTerm.
   * @param str the string to parse.
@@ -62,8 +81,11 @@ class DiceTerm(val dice : Array<SimpleDice>) {
 		= dice.map { it.toString() }.joinToString(separator = " ")
 }
 
+fun Bonus(v : Int) : SimpleDice = SimpleDice(1, v)
+fun Die(v : Int) : SimpleDice = SimpleDice(v, 1)
+
 /* A simple dice term with only one kind of die and number.*/
-data class SimpleDice(val max: Int, val times: Int = 1) {
+data class SimpleDice(val max: Int, val times: Int = 1) : Comparable<SimpleDice> {
 
 	private val absMax = abs(max)
 	private val absTimes = abs(times)
@@ -76,6 +98,13 @@ data class SimpleDice(val max: Int, val times: Int = 1) {
 		= (1..absTimes)
 		. map { if (absMax < 2) 1 else (1..absMax).random() }
 		. sum() * (if (timesNeg) -1 else 1)
+
+	/* Compare to another SimpleDice term.*/
+	override fun compareTo(other: SimpleDice) : Int
+		= when {
+			absMax == other.absMax -> times - other.times
+			else -> absMax - other.absMax
+		}
 
 	/** String representation of simpleDice.*/
 	override fun toString() : String
