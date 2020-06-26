@@ -4,7 +4,15 @@ import kotlin.math.floor;
 
 private fun getModifier(value : Int) = floor((value - 10) / 2.0).toInt()
 
-data class PlayerCharacter(val name : String, val player: String) {
+data class PlayerCharacter(
+	val name : String,
+	val race: String = "Human" /*TODO*/,
+	val gender: String = "divers",
+	val player: String = ""
+	) {
+	
+	var expiriencePoints : Int = 0
+
 	var abilityScore : Map<Ability, Int> = enumValues<Ability>().map { it }.associateWith { 10 }
 		private set
 
@@ -21,7 +29,6 @@ data class PlayerCharacter(val name : String, val player: String) {
 		private set
 
 	var proficientValue : Int = 2
-		private set
 
 	val initiative : Int get()
 		= this.abilityModifier.getOrDefault(Ability.DEX,
@@ -60,7 +67,6 @@ data class PlayerCharacter(val name : String, val player: String) {
 	 * If a param is set to (-1), it will be rolled with a D20.
 	 */
 	fun setAbilityScore(a : Ability, v: Int) {
-
 		val d20 : SimpleDice = SimpleDice(20, 1);
 
 		abilityScore += Pair(a, if (v > 0) v else d20.roll())
@@ -73,47 +79,6 @@ data class PlayerCharacter(val name : String, val player: String) {
 
 	fun getProficiencyFor(skill: Skill) : Proficiency
 		= proficientSkills.getOrDefault(skill, Proficiency.NONE)
-
-	fun printAbilityScores() {
-		for (a in enumValues<Ability>()) {
-			var score = abilityScore.getOrDefault(a, 10)
-			var mod = abilityModifier.getOrDefault(a, 0)
-			var prof = mod + proficientValue
-			
-			var save = if (a in savingThrows) {
-				"SAVING(%+d)".format(prof)
-			} else {
-				"saving(%+d)".format(mod)
-			}
-
-			println("%13s: %2d (%+d) \u21d2  %s, %s".format(
-				a.fullname,
-				score, mod,
-				save,
-				enumValues<Skill>()
-					.filter{it.source == a}
-					.map { showSkillProficiency(it) }
-					.joinToString()))
-		}
-	}
-
-	private fun showSkillProficiency(s: Skill) : String {
-		val name = s.name
-		val lower = s.name.toLowerCase()
-
-		val level = getProficiencyFor(s)
-		val (proficientStr,show) = when (level) {
-			Proficiency.EXPERT     -> Pair("**",name)
-			Proficiency.PROFICIENT -> Pair("*", name[0] + lower.substring(1))
-			Proficiency.NONE       -> Pair("", lower)
-		}
-
-		var bonus
-			= abilityModifier.getOrDefault(s.source, 0)
-			+ level.factor * proficientValue
-
-		return "%s(%+d%s)".format(show, bonus, proficientStr)
-	}
 
 	/* Add proficiency to saving trhow.*/
 	fun addProficiency(saving : Ability) {

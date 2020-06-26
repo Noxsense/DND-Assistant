@@ -30,10 +30,10 @@ fun main() {
 	// val diceRegexInvalid = "3d8 + d12 + 3 + 3 - 3 + 12d"
 	// parseDiceTerm(diceRegexInvalid)
 
-	val pc : PlayerCharacter = PlayerCharacter("Onyx Necklace", "Nox")
+	val pc : PlayerCharacter = PlayerCharacter("Onyx Necklace", race = "Gnome", player = "Nox")
 
 	pc.rollAbilityScores()
-	pc.printAbilityScores()
+	printPlayer(pc)
 
 	println("Proficent Skills: " + pc.proficientSkills)
 	pc.addProficiency(Skill.SLEIGHT_OF_HAND)
@@ -47,5 +47,54 @@ fun main() {
 
 	println("---------")
 	println(pc.name + " from " + pc.player)
-	pc.printAbilityScores()
+	printPlayer(pc)
+}
+
+/* Print PlayerCharacter.
+ * Display all statistics like ability scores and skill scores, languages.
+ * Show treats and features.
+ *
+ * Print to normal terminal interface.
+ */
+fun printPlayer(pc: PlayerCharacter) {
+
+	if (pc.player != "")
+		println("Player: ${pc.name}, ${pc.race}");
+
+	println("Name:   ${pc.name}, ${pc.race}");
+	println("Name:   ${pc.name}, ${pc.race}");
+	println("XP:     ${pc.expiriencePoints}");
+
+	for (a in enumValues<Ability>()) {
+		var score = pc.abilityScore.getOrDefault(a, 10)
+		var mod = pc.abilityModifier.getOrDefault(a, 0)
+		var prof = mod + pc.proficientValue
+		
+		var save = if (a in pc.savingThrows) {
+			"SAVING(%+d)".format(prof)
+		} else {
+			"saving(%+d)".format(mod)
+		}
+
+		println("%13s: %2d (%+d) \u21d2  %s, %s".format(
+			a.fullname,
+			score, mod,
+			save,
+			enumValues<Skill>()
+				.filter{it.source == a}
+				.map {
+					val name = it.name
+					val lower = name.toLowerCase()
+					val level = pc.getProficiencyFor(it)
+					val (indicator, show) = when (level) {
+						Proficiency.EXPERT     -> Pair("**", name)
+						Proficiency.PROFICIENT -> Pair("*", name[0] + lower.substring(1))
+						Proficiency.NONE       -> Pair("", lower)
+					}
+
+					var bonus = mod + level.factor * pc.proficientValue
+					"%s(%+d%s)".format(show, bonus, indicator)
+				}
+				.joinToString()))
+	}
 }
