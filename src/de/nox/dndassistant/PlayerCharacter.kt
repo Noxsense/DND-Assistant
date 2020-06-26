@@ -10,7 +10,7 @@ data class PlayerCharacter(
 	val gender: String = "divers",
 	val player: String = ""
 	) {
-	
+
 	var expiriencePoints : Int = 0
 
 	var abilityScore : Map<Ability, Int> = enumValues<Ability>().map { it }.associateWith { 10 }
@@ -29,30 +29,6 @@ data class PlayerCharacter(
 		private set
 
 	var proficientValue : Int = 2
-
-	val initiative : Int get()
-		= this.abilityModifier.getOrDefault(Ability.DEX,
-			getModifier(this.abilityScore.getOrDefault(Ability.DEX, 0)))
-
-	fun initiativeRoll() : Int = initiative + Die(20).roll()
-	
-	val armorClass : Int get() {
-		println("Look up, what the PC's wearing. Maybe add DEX modifier.")
-		println("Not wearing anything: AC 10 + DEX")
-		return 10 + abilityModifier.getOrDefault(Ability.DEX, 0)
-	}
-
-	val maxHitPoints : Int get()
-		= -1 // TODO(2020-06-26)
-
-	val currentHitPoints : Int get()
-		= -1 // TODO(2020-06-26)
-
-	val temporaryHitPoints : Int get()
-		= -1 // TODO(2020-06-26)
-
-	var deathSaves : Array<Int> = arrayOf(0, 0, 0, 0, 0) // maximal 5 chances.
-		private set
 
 	fun rollAbilityScores() {
 		abilityScore = abilityScore.mapValues { Die(20).roll() }
@@ -93,6 +69,56 @@ data class PlayerCharacter(
 
 		proficientSkills += Pair(skill, level)
 	}
+
+	val initiative : Int get()
+		= this.abilityModifier.getOrDefault(Ability.DEX,
+			getModifier(this.abilityScore.getOrDefault(Ability.DEX, 0)))
+
+	fun initiativeRoll() : Int = initiative + Die(20).roll()
+
+	val armorClass : Int get() {
+		// TODO (2020-06-26)
+		// Look up, what the PC's wearing. Maybe add DEX modifier.
+		// Not wearing anything: AC 10 + DEX
+		return 10 + abilityModifier.getOrDefault(Ability.DEX, 0)
+	}
+
+	val maxHitPoints : Int get()
+		= -1 // TODO(2020-06-26)
+
+	val curHitPoints : Int get()
+		= -1 // TODO(2020-06-26)
+
+	val tmpHitPoints : Int get()
+		= -1 // TODO(2020-06-26)
+
+	val hasTmpHitpoints : Boolean get()
+		= tmpHitPoints > 0 && tmpHitPoints != maxHitPoints
+
+	var deathSaves : Array<Int> = arrayOf(0, 0, 0, 0, 0) // maximal 5 chances.
+		private set
+
+	/* Count fails and successes and returns the more significcant value.*/
+	fun checkDeathFight() : Int {
+		val success = deathSaves.count { it > 0 }
+		val failed = deathSaves.count { it < 0 }
+
+		return when {
+			success > 2 -> 3
+			failed > 2 -> -3
+			success > failed -> 1
+			success < failed -> -1
+			else -> 0
+		}
+	}
+
+	/* Take a short rest. Recover hitpoints, maybe magic points, etc. */
+	fun rest(shortRest: Boolean = true) {
+		println("Rest " + (if (shortRest) "short" else "long"))
+		// TODO (2020-06-26)
+	}
+
+	var knownLanguages : List<String> = listOf("Common")
 }
 
 /* The base ability score.*/
