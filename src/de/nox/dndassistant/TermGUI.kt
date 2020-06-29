@@ -133,17 +133,4 @@ fun printPlayer(pc: PlayerCharacter) {
 		pc.proficientTools.toString()))
 
 	println(dLine)
-
-	var purse = Money()
-	println("Money: ${purse}")
-
-	purse += Money(gp = 100, sp = 50)
-	println("Money: ${purse} (after payment)")
-
-	purse = purse.change(Money.GOLD)
-	println("Money: ${purse} (after change gp \u2192 pp)")
-
-	purse = Money(gp = purse.gp, pp = purse.pp + 2, cp = purse.cp, sp = purse.sp)
-	println("Money: ${purse} (after manual change gp \u2192 pp)")
-
 }

@@ -11,24 +11,31 @@ data class PlayerCharacter(
 	val player: String = ""
 	) {
 
-	var expiriencePoints : Int = 0
+	var expiriencePoints : Int
+		= 0
 
-	var abilityScore : Map<Ability, Int> = enumValues<Ability>().map { it }.associateWith { 10 }
+	var abilityScore : Map<Ability, Int>
+		= enumValues<Ability>().map { it }.associateWith { 10 }
 		private set
 
-	var abilityModifier : Map<Ability, Int> = abilityScore.mapValues { getModifier(it.value) }
+	var abilityModifier : Map<Ability, Int>
+		= abilityScore.mapValues { getModifier(it.value) }
 		private set
 
-	var savingThrows : List<Ability> = listOf()
+	var savingThrows : List<Ability>
+		= listOf()
 		private set
 
-	var proficientSkills : Map<Skill, Proficiency> = mapOf()
+	var proficientSkills : Map<Skill, Proficiency>
+		= mapOf()
 		private set
 
-	var proficientTools : Map<String, Proficiency> = mapOf()
+	var proficientTools : Map<String, Proficiency>
+		= mapOf()
 		private set
 
-	var proficientValue : Int = 2
+	var proficientValue : Int
+		= 2
 
 	fun rollAbilityScores() {
 		abilityScore = abilityScore.mapValues { Die(20).roll() }
@@ -118,7 +125,8 @@ data class PlayerCharacter(
 		// TODO (2020-06-26)
 	}
 
-	var knownLanguages : List<String> = listOf("Common")
+	var knownLanguages : List<String>
+		= listOf("Common")
 }
 
 /* The base ability score.*/
