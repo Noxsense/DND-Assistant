@@ -11,13 +11,15 @@ Also to create a new one and roll anything needed.
 - [ ] maintain spells, focus, stats
 - [ ] equip certain items from inventory (and unequip)
 - [ ] features and traits not just as text
-- [ ] handle notes and pets and other environmental featurs
+- [ ] handle notes, pets, hostile beasts and other environmental features
 - [ ] maybe an initiative / battle tracker
 - [ ] sharing and positioning during a session with other people
 
 ## To do
 - [ ] replace `Makefile` with `gradle.build`
-- [ ] display main stats, first page
+- [ ] display main stats, first page (CLI)
+- [ ] display main stats, first page (web interface, locally hosted)
+- [ ] display main stats, first page (android app)
 - [x] add dice parser for string
-- [ ] add roller for stats
+- [ ] add roller for stats: graphical display as button for rolls with boni and Co.
 - [ ] list features and inventory, unconnected yet, text-based
