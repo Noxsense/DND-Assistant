@@ -1,4 +1,4 @@
-package de.nox.dndassistant;
+package de.nox.dndassistant
 
 fun main() {
 	println(
@@ -47,6 +47,38 @@ fun main() {
 
 	println("=============================")
 	printPlayer(pc)
+
+	var purse = Money()
+	println("Purse: ${purse}, empty.")
+
+	purse += Money(sp = 5, gp = 3 * Money.PP_GP)
+	println("Purse: ${purse}, paid 100 Gold.")
+
+	purse = purse.changeUp(Money.GOLD)
+	println("Purse: ${purse}, change gold (to platinum).")
+
+	purse = purse.changeDown(Money.SILVER)
+	println("Purse: ${purse}, change silver (to copper).")
+
+	purse = Money(pp = 10) // 100g
+	println("Purse: ${purse}, set to 10pp => 100gp.")
+	purse -= Money(gp = 25) // sh
+	println("Purse: ${purse}, bought Crossbow (25gp), should left 75gp, or 7pp and 5gp.")
+
+	purse = Money(cp = 1) - Money(cp = 2)
+	println("Purse: ${purse}, aborting.")
+
+	purse = Money(ep = 10, ignoreElectrum = true)
+	println("Purse: ${purse}, new ep = 10, ignore electrum.")
+
+	purse = purse.changeUp(Money.ELECTRUM)
+	println("Purse: ${purse}, change up, ignore electrum => change all.")
+
+	purse = Money(ep = 10, ignoreElectrum = true)
+	println("Purse: ${purse}, new ep = 10, ignore electrum.")
+
+	purse = purse.changeDown(Money.ELECTRUM)
+	println("Purse: ${purse}, change down, ignore electrum => change all.")
 }
 
 /* Print PlayerCharacter.
