@@ -1,4 +1,4 @@
-package de.nox.dndassistant;
+package de.nox.dndassistant
 
 import kotlin.math.floor;
 
