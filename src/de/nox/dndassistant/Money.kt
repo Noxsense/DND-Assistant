@@ -9,6 +9,8 @@ data class Money(
 	val ignoreElectrum : Boolean = true
 ) : Comparable<Money> {
 
+	private val logger = LoggerFactory.getLogger("Money")
+
 	/* Return the whole value as smallest currency,*/
 	val asCopper: Int
 		= cp + (SP_CP * (sp + (EP_SP * ep + (GP_EP * gp * (PP_GP * pp)))))
@@ -43,7 +45,7 @@ data class Money(
 
 		/* Abort: Too small to be reduced by "other".*/
 		if (this < other) {
-			println("Cannot abstract the other amount, it is too big.")
+			logger.verbose("Cannot abstract the other amount, it is too big.")
 			return this;
 		}
 
