@@ -34,50 +34,172 @@ fun main() {
 	pc.rollAbilityScores()
 	printPlayer(pc)
 
-	println("Proficent Skills: " + pc.proficientSkills)
+	logger.debug("Proficent Skills: " + pc.proficientSkills)
 	pc.addProficiency(Skill.SLEIGHT_OF_HAND)
-	println("Proficent Skills: " + pc.proficientSkills)
+	logger.debug("Proficent Skills: " + pc.proficientSkills)
 	pc.addProficiency(Skill.STEALTH)
-	println("Proficent Skills: " + pc.proficientSkills)
+	logger.debug("Proficent Skills: " + pc.proficientSkills)
 	pc.addProficiency(Skill.SLEIGHT_OF_HAND)
-	println("Proficent Skills: " + pc.proficientSkills)
+	logger.debug("Proficent Skills: " + pc.proficientSkills)
 	pc.addProficiency(Ability.DEX)
 	pc.addProficiency(Ability.INT)
 
-	println("=============================")
+	logger.info("=============================")
 	printPlayer(pc)
 
+	testMoney()
+}
+
+fun testMoney(): Boolean {
+
+	var passedAll = true
+	var current: Boolean
+	var (passedCnt,allCnt) = Pair(0,0)
+	var testStr : String
+
 	var purse = Money()
-	println("Purse: ${purse}, empty.")
 
-	purse += Money(sp = 5, gp = 3 * Money.PP_GP)
-	println("Purse: ${purse}, paid 100 Gold.")
+	current = testEquals("normalized", 0, purse.asCopper)
+	passedAll = passedAll && testEquals("Empty Purse", true, current)
+	passedCnt += if (current) 1 else 0; allCnt += 1
 
-	purse = purse.changeUp(Money.GOLD)
-	println("Purse: ${purse}, change gold (to platinum).")
+	purse += Money(sp = 5, gp = 3 * Money.PP_GP /*30*/)
 
-	purse = purse.changeDown(Money.SILVER)
-	println("Purse: ${purse}, change silver (to copper).")
+	current = testEquals("normalized", 3050, purse.asCopper)
+	current = testEquals("Gold", 30, purse.gp) && current
+	current = testEquals("Silver", 5, purse.sp) && current
+	current = testEquals("result", Money(0, 30, 0, 5, 0), purse) && current
+	passedAll = passedAll && testEquals("Paid 30gp and 5sp", true, current)
+	passedCnt += if (current) 1 else 0; allCnt += 1
 
-	purse = Money(pp = 10) // 100g
-	println("Purse: ${purse}, set to 10pp => 100gp.")
-	purse -= Money(gp = 25) // sh
-	println("Purse: ${purse}, bought Crossbow (25gp), should left 75gp, or 7pp and 5gp.")
+	logger.debug("-----")
+
+	purse = purse.changeUp(Money.GP)
+
+	// still the same amount.
+	current = testEquals("normalized", 3050, purse.asCopper)
+	current = testEquals("Platinum", 1, purse.pp) && current
+	current = testEquals("Gold", 20, purse.gp) && current
+	current = testEquals("Silver", 5, purse.sp) && current
+	current = testEquals("result", Money(1, 20, 0, 5, 0), purse) && current
+	passedAll = passedAll && testEquals("GP \u2191 PP, same sum", true, current)
+	passedCnt += if (current) 1 else 0; allCnt += 1
+
+	purse = purse.changeDown(Money.SP)
+
+	// still the same amount.
+	current = testEquals("normalized", 3050, purse.asCopper)
+	current = testEquals("Platinum", 1, purse.pp) && current
+	current = testEquals("Gold", 20, purse.gp) && current
+	current = testEquals("Silver", 4, purse.sp) && current
+	current = testEquals("Copper", 10, purse.cp) && current
+	current = testEquals("result", Money(1, 20, 0, 4, 10), purse) && current
+	passedAll = testEquals("SP \u2193 CP, same sum", true, current) && passedAll
+	passedCnt += if (current) 1 else 0; allCnt += 1
+
+	logger.debug("-----")
 
 	purse = Money(cp = 1) - Money(cp = 2)
-	println("Purse: ${purse}, aborting.")
+	current = testEquals("normalized", 1, purse.asCopper)
+	passedAll = testEquals("Not reduced: 1cp", true, current) && passedAll
+	passedCnt += if (current) 1 else 0; allCnt += 1
 
 	purse = Money(ep = 10, ignoreElectrum = true)
-	println("Purse: ${purse}, new ep = 10, ignore electrum.")
+	passedAll = (testEquals("init: ep:10", 500, purse.asCopper)) && passedAll
+	passedCnt += if (current) 1 else 0; allCnt += 1
+	// TODO (2020-07-03)
 
-	purse = purse.changeUp(Money.ELECTRUM)
-	println("Purse: ${purse}, change up, ignore electrum => change all.")
+	testStr = "Change up: EP(10) \u2191 GP, all (2)"
+	purse = purse.changeUp(Money.EP)
+	current = testEquals(testStr, 500, purse.asCopper) && current
+	current = testEquals(testStr, 5, purse.gp) && current
+	current = testEquals(testStr, 0, purse.ep) && current
+	passedAll = testEquals(testStr, true, current) && passedAll
+	passedCnt += if (current) 1 else 0; allCnt += 1
+	logger.debug("Purse: ${purse}, change up, ignore electrum => change all.")
 
 	purse = Money(ep = 10, ignoreElectrum = true)
-	println("Purse: ${purse}, new ep = 10, ignore electrum.")
+	passedAll = testEquals("init: ep:10", 500, purse.asCopper) && passedAll
+	passedCnt += if (current) 1 else 0; allCnt += 1
 
-	purse = purse.changeDown(Money.ELECTRUM)
-	println("Purse: ${purse}, change down, ignore electrum => change all.")
+	testStr = "change down: EP \u2192 CP, all (50)"
+	purse = purse.changeDown(Money.EP)
+	current = testEquals(testStr, 500, purse.asCopper) && current
+	current = testEquals(testStr, 0, purse.ep) && current
+	current = testEquals(testStr, 50, purse.sp) && current
+	passedAll = passedAll && current
+	passedCnt += if (current) 1 else 0; allCnt += 1
+
+	/* Thoughts
+	 * x:02pp 01gp 0ep 99sp 20cp = 3110cp
+	 * -: 0pp 25gp 0ep  0sp 25cp ⇒ 2523cp possible
+	 * ------------------------------------------------
+	 * =:0pp -24gp 0ep  0sp -2cp ⇒ but it is negative
+	 *
+	 * vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+	 * x: 2pp  1gp 0ep 99sp 20cp
+	 * -: 1pp 15gp 0ep  0sp 25cp ⇒ other.changeUp(G)
+	 * -: 2pp  5gp 0ep  0sp 25cp ⇒ other.changeUp(G)
+	 * -: 2pp  1gp 0ep 40sp 25cp ⇒ other.changeDown(S)
+	 * -: 2pp  1gp 0ep 41sp 15cp ⇒ other.changeUp(C)
+	 * ================================================
+	 * =: 0pp  0gp 0ep 58sp  2cp ⇒ result option
+	 */
+
+	logger.debug("=======")
+
+	testStr = "[10pp (100gp)] - [Bow 25gp] = [(75gp) 7pp 5gp]"
+
+	purse = Money(pp = 10) // 100g
+	current = testEquals( "normalized", 10000, purse.asCopper)
+	passedAll = passedAll && testEquals( "Money set 10pp", true, current)
+	passedCnt += if (current) 1 else 0; allCnt += 1
+
+	purse -= Money(gp = 25) // sh
+	logger.debug("Buy a new Bow (25gp), purse had enough.")
+
+	current = testEquals("normalized", 10000 - 2500, purse.asCopper)
+	current = testEquals(testStr, Money(pp=7, gp=5), purse) && current
+	passedAll = passedAll && testEquals("Change money invalid (bow)", true, current)
+	passedCnt += if (current) 1 else 0; allCnt += 1
+
+	// --------
+
+	purse = Money(2, 1, 0, 99, 20)
+	testStr = "Bow (25gp) and 5 arrows (25cp) could be paid, rest: 58sp 2cp"
+
+	current = testEquals("normalized", 3110, purse.asCopper)
+	current = testEquals("Initiated: 2pp 99sp 20cp", true, current) && current
+	passedAll = passedAll && current
+	passedCnt += if (current) 1 else 0; allCnt += 1
+
+	// by a bow and some arrows (5 arrpws = 100/20cp * 5 = 25cp)
+	purse -= Money(0, 25, 0, 0, 25)
+
+	current = testEquals("normalized", 3110 - 2500 - 25, purse.asCopper)
+	current = testEquals("paid bow", Money(sp = 58, cp = 5), purse) && current
+	passedAll = passedAll && testEquals(testStr, true, current)
+
+	passedCnt += if (current) 1 else 0; allCnt += 1
+
+	logger.debug("=======")
+
+	logger.debug("Money - Test: ${passedCnt} / ${allCnt}")
+	logger.debug("Money - Test: " + (if (passedAll) "PASSED" else "FAILED"))
+
+	return passedAll;
+}
+
+fun testEquals(s: String = "", should: Any, was: Any) : Boolean {
+	val eq = should == was
+
+	var str = "TEST  " +
+		(if (eq) "PASSED" else "FAILED, should be: ${should}, was: ${was}") +
+		(if (s == "") "" else "  (${s})")
+
+	logger.verbose(str)
+
+	return eq
 }
 
 /* Print PlayerCharacter.
@@ -112,25 +234,26 @@ fun printPlayer(pc: PlayerCharacter) {
 			" (%+d) saving".format(mod)
 		}
 
-		print("%-15s %2d (%+d) \u21d2 %s".format(
-			a.fullname + ":", score, mod, save))
+		print("%2d (%+d) %s\n  - %s".format(
+			 score, mod, a.fullname, save))
 
 		if (a != Ability.CON) {
-			print("\t" + enumValues<Skill>()
+			print("\n  - " + enumValues<Skill>()
 				.filter{it.source == a}
 				.map {
 					val name = it.name
+					val lower = name.toLowerCase()
 					val level = pc.getProficiencyFor(it)
 
 					val (indicator, show) = when (level) {
-						Proficiency.EXPERT     -> Pair(":", name)
-						Proficiency.PROFICIENT -> Pair(".", name.capitalize())
-						Proficiency.NONE       -> Pair(" ", name.toLowerCase())
+						Proficiency.EXPERT     -> Pair("#", name)
+						Proficiency.PROFICIENT -> Pair("*", lower.capitalize())
+						Proficiency.NONE       -> Pair(" ", lower)
 					}
 
 					var bonus = mod + level.factor * pc.proficientValue
 					"%s(%+d) %s".format(indicator, bonus, show)
-				}.joinToString(separator = "\t"))
+				}.joinToString(separator = "\n  - "))
 		}
 
 		println()
