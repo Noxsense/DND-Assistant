@@ -13,15 +13,15 @@ data class Money(
 
 	/* Return the whole value as smallest currency,*/
 	val asCopper: Int
-		= cp + (SP_CP * (sp + (EP_SP * ep + (GP_EP * gp * (PP_GP * pp)))))
+		= cp + (SP_CP * (sp + (EP_SP * ep + (GP_SP * (gp + (PP_GP * pp))))))
 
 	/* Constants.*/
 	companion object {
-		const val PLATINUM = 0; const val PP_GP = 10 /*10gp.*/
-		const val GOLD     = 1; const val GP_EP = 2; const val GP_SP = 10 /*2ep, 10sp.*/
-		const val ELECTRUM = 2; const val EP_SP = 5 /*5sp*/
-		const val SILVER   = 3; const val SP_CP = 10 /*10cp.*/
-		const val COPPER   = 4; const val CP_GP = 1
+		const val PP = 0; const val PP_GP = 10 /*10gp.*/
+		const val GP = 1; const val GP_EP = 2; const val GP_SP = 10 /*2ep, 10sp.*/
+		const val EP = 2; const val EP_SP = 5 /*5sp*/
+		const val SP = 3; const val SP_CP = 10 /*10cp.*/
+		const val CP = 4; const val CP_GP = 1
 	}
 
 	override fun compareTo(other: Money) = asCopper - other.asCopper
@@ -49,76 +49,84 @@ data class Money(
 			return this;
 		}
 
-		var cP : Int; var sP : Int; var eP : Int; var gP : Int; var pP : Int
-		var borrow : Int = 0
+		var negative = false
 
-		/* TODO (2020-07-01) refactor!
-		 * - Questions: purse: 0gp 500sp, bow costs: 25gp = 250sp => now:
-		 * cannot be payed. :< but I can be paid.
-		 *
-		 * BUT: we want to keep the single coins, if possible. We don't not
-		 * always normalize the purse, by just buying something little.
-		 */
+		var pP = pp - other.pp; negative = negative || pP < 0
+		var gP = gp - other.gp; negative = negative || gP < 0
+		var eP = ep - other.ep; negative = negative || eP < 0
+		var sP = sp - other.sp; negative = negative || sP < 0
+		var cP = cp - other.cp; negative = negative || cP < 0
 
-		cP = cp - other.cp
+		if (!negative) {
+			logger.debug("Easily reduced.")
+			return Money(pP, gP, eP, sP, cP, ignoreElectrum)
+		}
 
+		logger.debug("Needs some fixes, can be done!")
+
+		// figure out, which values are negative, borrow up and down!
+		// it must be possible, otherwise, it would have said no before.
+
+		/* Borrow from silver.*/
 		if (cP < 0) {
-			borrow = cP / SP_CP - 1
-			cP = SP_CP + (cP % SP_CP)
+			// borrow from silver.
+			sP += cP / SP_CP - 1 // at least one.
+			cP += SP_CP
 		}
 
-		sP = sp - other.sp + borrow
-
-		if (!ignoreElectrum) {
-			if (sP < 0) {
-				borrow = sP / EP_SP - 1
-				sP = EP_SP + (sP % EP_SP)
+		/* Borrow from higher (electrum, gold, platinum) or lower (copper). */
+		while (sP < 0) {
+			if (eP > 0 || gP > 0 || pp > 0) {
+				// Borrow from the higher coin, if possible.
+				if (ignoreElectrum) {
+					gP -= 1
+					sP += EP_SP
+				} else  {
+					eP -= 1
+					sP += EP_SP
+				}
 			} else {
-				borrow = 0
+				// Borrow from the lower coin.
+				cP -= SP_CP
+				sP += 1
 			}
-
-			eP = ep - other.ep + borrow
-
-			if (eP < 0) {
-				borrow = eP / GP_EP - 1
-				eP = GP_EP + (eP % GP_EP)
-			} else {
-				borrow = 0
-			}
-		} else {
-			/* Borrow silver from gold.*/
-			if (sP < 0) {
-				borrow = sP / GP_SP - 1
-				sP = GP_SP + (sP % GP_SP)
-			} else {
-				borrow = 0
-			}
-
-			eP = ep - other.ep
-
-			// if too less add to borrowed.
-			if (ep < 0) {
-				borrow += ep / GP_EP - 1
-				ep
-			}
-
-			// What if there is EP to remove, but it should be ignored?
 		}
 
-		gP = gp - other.gp + borrow
-
-		if (gP < 0) {
-			borrow = gP / PP_GP - 1
-			gP = EP_SP + (gP % EP_SP)
-		} else {
-			borrow = 0
+		/* Borrow from higher (gold, platinum) or lower (silver, copper). */
+		while (eP < 0) {
+			if (gP > 0 || pp > 0) {
+				// Borrow from the higher coin, if possible.
+				gP -= 1
+				eP += GP_EP
+			} else if (sP >= EP_SP) {
+				// Borrow from the lower coin.
+				sP -= EP_SP
+				eP += 1
+			} else {
+				// Borrow from the lower coin.
+				cP -= EP_SP * SP_CP
+				eP += 1
+			}
 		}
-
-		pP = pp - other.pp + borrow
-
-		if (pP < 0) {
-			println("Substraction to expensive. Abort.")
-			return this
+		/* Borrow from higher (platinum) or lower (electrum, silver, copper). */
+		while (gP < 0) {
+			if (pP > 0) {
+				// Borrow from the higher coin, if possible.
+				pP -= 1
+				gP += PP_GP
+			} else if (eP >= GP_EP) {
+				// Borrow from the lower coin.
+				eP -= GP_EP
+				gP += 1
+			} else if (sP >= GP_EP * EP_SP) {
+				// Borrow from the lower coin.
+				sP -= GP_SP
+				gP += 1
+			} else {
+				// Borrow from the lower coin.
+				cP -= GP_SP * SP_CP
+				gP += 1
+			}
 		}
 
 		return Money(pP, gP, eP, sP, cP, ignoreElectrum)
@@ -136,32 +144,32 @@ data class Money(
 
 		when {
 			/* change gold to platinum.*/
-			from == GOLD && gp > PP_GP -> {
+			from == GP && gp > PP_GP -> {
 				pP += 1;
 				gP -= PP_GP;
 			}
 			/* change copper to silver.*/
-			from == COPPER && cp > SP_CP -> {
+			from == CP && cp > SP_CP -> {
 				sP += 1;
 				cP -= SP_CP;
 			}
 			/* Ignore electrum: Skip silver to electrum, change silver to gold.*/
-			ignoreElectrum && from == SILVER && sp > GP_SP -> {
+			ignoreElectrum && from == SP && sp > GP_SP -> {
 				gP += 1;
 				sP -= GP_SP
 			}
 			/* Normal Silver change.*/
-			from == SILVER && sp > GP_EP -> {
+			from == SP && sp > GP_EP -> {
 				eP += 1;
 				sP -= GP_EP
 			}
 			/* Ignore electrum, try to get rid of all electrums.*/
-			ignoreElectrum && from == ELECTRUM && ep > GP_EP -> {
+			ignoreElectrum && from == EP && ep > GP_EP -> {
 				gP += ep / GP_EP;
 				eP %= GP_EP
 			}
 			/* Normal electrum change.*/
-			from == ELECTRUM && ep > GP_EP -> {
+			from == EP && ep > GP_EP -> {
 				gP += 1;
 				eP -= GP_EP
 			}
@@ -177,32 +185,32 @@ data class Money(
 
 		when {
 			/* change  platinum to gold.*/
-			from == PLATINUM && pp > 0 -> {
+			from == PP && pp > 0 -> {
 				pP -= 1;
 				gP += PP_GP;
 			}
 			/* change  silver to copper.*/
-			from == SILVER && sp > 0 -> {
+			from == SP && sp > 0 -> {
 				sP -= 1;
 				cP += SP_CP;
 			}
 			/* Ignore electrum: Skip gold to electrum, change gold to silver.*/
-			ignoreElectrum && from == GOLD && gp > 0 -> {
+			ignoreElectrum && from == GP && gp > 0 -> {
 				gP -= 1;
 				sP += GP_SP
 			}
 			/* Normal Silver change.*/
-			from == GOLD && gp > 0 -> {
+			from == GP && gp > 0 -> {
 				gP -= 1;
 				eP += GP_EP
 			}
 			/* Ignore electrum, try to get rid of all electrums.*/
-			ignoreElectrum && from == ELECTRUM && ep > 0 -> {
+			ignoreElectrum && from == EP && ep > 0 -> {
 				eP = 0;
 				sP += ep * EP_SP
 			}
 			/* Normal electrum change.*/
-			from == ELECTRUM && ep > 0 -> {
+			from == EP && ep > 0 -> {
 				eP += 1;
 				sP -= EP_SP
 			}
@@ -211,5 +219,3 @@ data class Money(
 		return Money(pP, gP, eP, sP, cP) // apply changes.
 	}
 }
-
-
