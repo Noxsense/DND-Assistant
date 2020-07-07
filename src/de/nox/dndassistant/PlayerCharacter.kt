@@ -34,6 +34,10 @@ data class PlayerCharacter(
 		= mapOf()
 		private set
 
+	var proficiencies : Map<AbstractSkill, Proficiency>
+		= mapOf()
+		private set
+
 	var proficientValue : Int
 		= 2
 
@@ -57,8 +61,28 @@ data class PlayerCharacter(
 		abilityModifier = abilityScore.mapValues { getModifier(it.value) }
 	}
 
-	fun skillScore(skill: Skill) : Int
-		= abilityModifier.getOrDefault(skill.source, 0) + 0
+	fun savingScore(a: Ability) : Int
+		= abilityModifier.getOrDefault(a, 0) +
+			if (a in savingThrows) proficientValue else 0
+
+	fun skillScore(s: Skill) : Int
+		= abilityModifier.getOrDefault(s.source, 0) +
+			getProficiencyFor(s).factor * proficientValue
+
+	fun abilityScore(a: Ability) : Int
+		= abilityScore.getOrDefault(a, 10)
+
+	fun abilityModifier(a: Ability) : Int
+		= abilityModifier.getOrDefault(a, 10)
+
+	/* Get a random roll (D20) for a requesting ability, adding its bonus.*/
+	fun rollCheck(a: Ability) : Int = Die(20).roll() + abilityModifier(a)
+
+	/* Get a random roll (D20) for a requesting skill, adding its bonus.*/
+	fun rollCheck(s: Skill) : Int = Die(20).roll() + skillScore(s)
+
+	/* Get a random roll (D20) for a requesting saving throw, adding its bonus.*/
+	fun rollSave(a: Ability) : Int = Die(20).roll() + savingScore(a)
 
 	fun getProficiencyFor(skill: Skill) : Proficiency
 		= proficientSkills.getOrDefault(skill, Proficiency.NONE)
@@ -70,9 +94,11 @@ data class PlayerCharacter(
 
 	/* Add proficiency to a skill. If twice, add expertise.*/
 	fun addProficiency(skill : Skill) {
-		val level
-			= if (skill in proficientSkills.keys) Proficiency.EXPERT
-			else Proficiency.PROFICIENT
+		val level = if (skill in proficientSkills.keys) {
+				Proficiency.EXPERT
+			} else {
+				Proficiency.PROFICIENT
+			}
 
 		proficientSkills += Pair(skill, level)
 	}
@@ -104,6 +130,10 @@ data class PlayerCharacter(
 
 	var deathSaves : Array<Int> = arrayOf(0, 0, 0, 0, 0) // maximal 5 chances.
 		private set
+
+	fun resetDeathSaves() {
+		deathSaves.map { _ -> 0 }
+	}
 
 	/* Count fails and successes and returns the more significcant value.*/
 	fun checkDeathFight() : Int {
