@@ -1,9 +1,27 @@
 package de.nox.dndassistant
 
+/* TODO (2020-07-07) https://roll20.net/compendium/dnd5e/Rules:Objects#content
+ * - Armor Class of an Item
+ * - Hit Points of an Item
+ */
 interface Item {
 	val name: String
 	val weight: Double
 	val cost: Money
+}
+
+enum class WeightClass {
+	NONE,
+	LIGHT,
+	HEAVY
+}
+
+enum class Size {
+	TINY,
+	SMALL,
+	MEDIUM,
+	LARGE,
+	GIANT
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -27,26 +45,176 @@ data class Weapon(
 	override val weight: Double, // inherit from item
 	override val cost: Money, // inherit from item
 
-	/* Weapon specific attributs.*/
-	val isMartial: Boolean, // false: Simple, true: Martial
-	val isRanged: Boolean, // false: Melee, true: Ranged
-	val range: Iterable<Int> = (1..5), // range in feet. => no disadventage within range.
-	val dmgDice: DiceTerm, // damage on hit.
-	val dmgType: String, // one or more damge types.
-	val note: String, // notes
+	/* LIGHT weapons can be dual-wielded.
+	 * SMALL creatures have disadvantage with HEAVY weapons. */
+	val weightClass: WeightClass = WeightClass.NONE,
 
-	val weightClass: Int = 0, // weightClass: none | light | heavy
-	val isFinesse: Boolean = false, // can use dextrity modififier => use highest modifier (on default)
-	val isVersatile: Boolean = false, // can also be used two-handed => creates a "new" weapon.
-	val isTwoHanded: Boolean = false, // needs two hand to wield, no off-hand possible.
-	val isThrowable: Boolean = false  // can be thrown => creates a "new" weapon.
+	/* Weapon specific attributes.*/
+
+	val weaponType: Type,
+	val range: Range = Range(5), // range in feet. => disadvantage out of range.
+
+	/* The damage, which is dealt, on hit. */
+	val damageType: Array<DamageType>,
+
+	val damage: DiceTerm, // damage on hit and type.
+
+	/* A thrown melee weapon without thrown property deals 1D4
+	 * (like ranged weapon on melee attack, out of range). */
+	val throwable : Boolean = false,
+	val thrownRange: Range = Range(20,60),
+	val thrown: DiceTerm = DiceTerm(D4),
+
+	/* Can also be used two-handed => has a second dice term. */
+	val versatile: DiceTerm? = null,
+
+	/* needs two hand to wield, no off-hand possible. */
+	val isTwoHanded: Boolean = false,
+
+	/* Ranged attack with AMMUNITION, only if available, expended on use.
+	 * Draw from quiver needs free other-hand.
+	 * Recover ammunition up to half (on battlefield). */
+	val ammunition: Array<String> = arrayOf(),
+
+	/* can use dexterity modifier => use highest modifier (on default),
+	 * otherwise, use STR for melee and DEX for ranged. */
+	val isFinesse: Boolean = false,
+
+	// TODO (2020-07-08) silvered
+
+	val note: String  // notes
 ) : Item, Skillable {
 
-	final val WEIGHT_CLASS_NONE = 0
-	final val WEIGHT_CLASS_LIGHT = 1
-	final val WEIGHT_CLASS_HEAVY = 2
+	private val logger = LoggerFactory.getLogger("Weapon")
 
-	// load wepon.
+	override fun toString() : String = name
+
+	/* A range contains two numbers: Normal and long.
+	 * Beyond normal range: Disadvantage.
+	 * Beyond long range: Out-of-range.
+	 * (Long can also be normal.) */
+	data class Range(val normal_: Int, val long_: Int = 0) : Comparable<Range> {
+
+		val normal = normal_
+		val long = if (long_ < normal) normal else long_
+
+		/* True, if x is in range of the range aka. not out-of-range.*/
+		operator fun contains(x: Int) : Boolean
+			= x <= long
+
+		fun hasDisadventage(x: Int) : Boolean
+			= normal != long // no disadvantage, on any range.
+			|| normal < x // disadvantage, beyond normal range.
+
+		/* Compare by length in-between. */
+		override fun compareTo(other: Range) : Int = normal - other.normal
+	}
+
+	/* Basic: Weapon Types: Simple or Martial, Melee or Ranged.
+	 * Also the "other" option is available.*/
+	enum class Type(val simple: Boolean, val melee: Boolean) : Skillable {
+		SIMPLE_MELEE(true, true),
+		SIMPLE_RANGED(true, false),
+		MARTIAL_MELEE(false, true),
+		MARTIAL_RANGED(false, false),
+		OTHER(false, false)
+	}
+
+	/* TWO HANDED ATTACK.
+	 * Versatile Weapon as two-handed: Use versatile Damage Dice.
+	 * One-Handed Weapon as two-handed (wo/ versatility): No change.
+	 */
+	val damageUsingTwoHanded : DiceTerm
+		= versatile ?: damage
+		// = if (versatile != null) versatile?? else damage
+	// can be used two handed.
+
+	/* One HANDED ATTACK.
+	 * Two-Handed weapon use as one-handed: see suggestions.
+	 * [last update: 2020-06-13](https://rpg.stackexchange.com/a/128940)
+	 * - Less control (Disadvantage).
+	 * - reduced power, like versatile weapons.
+	 * - perquisites to wield the weapon at all (like STR > 15)
+	 * - lose/alter proficiency
+	 */
+	val damageUsingOneHanded : DiceTerm = when {
+		isTwoHanded -> damage // with disadvantage or lesser dice term.
+		else -> damage // can have disadvantage.
+	}
+
+	private val improvised = DiceTerm(D4)
+
+	/* RANGED ATTACK
+	 * Additionally (like a two-handed ranged weapon: any bow)
+	 * Ranged weapon as melee : "Improvised" 1D4 ...
+	 * Melee Weapon thrown (20/60): "Improvised" 1d4
+	 * Ranged weapon in long-range: Disadvantage
+	 */
+	val damageUsingMelee : DiceTerm = when {
+		weaponType != Type.OTHER && !weaponType.melee -> improvised
+		else -> damage
+	}
+
+	val damageUsingRanged : DiceTerm = when {
+		weaponType != Type.OTHER && weaponType.melee -> improvised
+		else -> damage // can have disadvantage.
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+/** Armor <- Skillable
+ * One can be proficient with armor: Know-How to wear.
+ * If worn and not proficient: Disadvantage (DEX, STR)
+ * on any ability, saving throw, attack; cannot cast spells
+ */
+data class Armor(
+	/* Inherit from item.*/
+	override val name: String, // inherit from Item
+	override val weight: Double, // inherit from item
+	override val cost: Money, // inherit from item
+
+	val type: Type,
+	val armorClass: Int,
+	val strength: Int, // bad for DEX, reduced movement, if STR 13 or 15 (mentioned) not hit.
+	val stealhy: Boolean, // disadvantage on stealth.
+
+	val weightClass: Weight,
+
+	val description : String
+) : Item, Skillable {
+
+	private val Logger = LoggerFactory.getLogger("Armor")
+
+	enum class Weight {
+		LIGHT, // for agile adventures: DEX plus armor's AC
+		MEDIUM, // bad for movement, DEX (max +2) plus armor's AC
+		HEAVY // worst for movement, no DEX modifier
+	}
+
+	enum class Type {
+		HAT, HELMET, // only one // HEAD
+		CLOAK, // only one // SHOULDERS
+		AMULET, // only one // NECK?
+		GLOVE, // one pair at a time (2), if just one of a pair, maybe no boni // HANDS
+		RING, // up to ... #fingers at a time // HANDS
+		BOOT, // one pair at a time (2), if just one of a pair, maybe no boni // FEET
+		SHIELD // only one // ARM
+	}
+
+	override fun toString() : String = name
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+/** Consumables.
+ * Food to eat. Potions, to swallow or other body contact. Scrolls to read.
+ */
+data class Consumables(
+	override val name: String,
+	override val weight: Double,
+	override val cost: Money
+) : Item {
 
 	override fun toString() : String = name
 }
@@ -68,13 +236,16 @@ data class Tool(
 	override val weight: Double,
 	override val cost: Money,
 
-	val toolType: Int
+	val type: Type
 
 ) : Item, Skillable {
 
-	final val TYPE_ARTISIAN_TOOL      = 0
-	final val TYPE_GAMING_SET         = 1
-	final val TYPE_MUSICAL_INSTRUMENT = 2
-	final val TYPE_VEHICLE            = 3
+	enum class Type {
+		ARTISIAN_TOOL,
+		GAMING_SET,
+		MUSICAL_INSTRUMENT,
+		VEHICLE
+	}
+
 	override fun toString() : String = name
 }

@@ -252,6 +252,200 @@ data class PlayerCharacter(
 		return 10 + abilityModifier.getOrDefault(Ability.DEX, 0)
 	}
 
+	var equippedArmor : List<Armor> = listOf()
+		private set
+
+	/* Equip a piece of armor.
+	 * If replace, put the currently worn armor into inventory,
+	 * otherwise do not equip.
+	 * Only armor, which is in inventory (in possession) can be equipped.*/
+	fun wear(a: Armor, replace: Boolean = true) {
+		if (a !in inventory) { // abort
+			return
+		}
+
+		/* Check, if there is already something worn.*/
+		val worn = equippedArmor.filter { it.type == a.type }
+		val wornSize = worn.size
+
+		/* Human specific. Update for others! TODO */
+		var free : Boolean = when (a.type) {
+			Armor.Type.HAT -> wornSize < 1
+			Armor.Type.HELMET -> wornSize < 1
+			Armor.Type.CLOAK -> wornSize < 1
+			Armor.Type.AMULET -> wornSize < 1
+			Armor.Type.RING -> wornSize < 10
+			Armor.Type.GLOVE -> wornSize < 2
+			Armor.Type.BOOT -> wornSize < 2
+			Armor.Type.SHIELD -> wornSize < 1
+		}
+
+		/* Replace the worn equipment, put back to inventory.*/
+		if (replace && !free) {
+			inventory += worn
+			equippedArmor -= worn
+			free = true
+		}
+
+		if (free) {
+			equippedArmor += a
+			inventory -= a
+		}
+	}
+
+	///////////////////////////////////////////////
+
+	var handMain : Weapon? = null
+		private set
+
+	var handOff : Weapon? = null
+		private set
+
+	fun hand(main: Boolean = true) : Weapon? = when (main) {
+		true -> handMain
+		false -> handOff
+	}
+
+	fun isWieldingAny() : Boolean
+		= handMain != null || handOff != null
+
+	/** Check if the hand is wielding a weapon.*/
+	fun isWielding(mainHand: Boolean) = when {
+		mainHand && handMain != null -> true
+		!mainHand && handOff != null -> true
+		else -> false
+	}
+
+	/* Equip a weapon.
+	 * If replace, put the currently wield weapon into inventory,
+	 * otherwise do not equip the weapon.
+	 * Only weapons, which is in inventory (in possession) can be equipped.*/
+	fun wield(w: Weapon, mainHand: Boolean = true, replace: Boolean = false) {
+		if (w !in inventory) { // abort
+			return
+		}
+
+		var success : Boolean = true
+
+		if (replace) unwield(mainHand)
+
+		if (w.isTwoHanded) {
+			// needs both hands to be free.
+			if (handMain == null && handOff == null) {
+				// free hands.
+				handMain = w
+				handOff = w
+			} else if (replace) {
+				unwield()
+				handMain = w
+				handOff = w
+			} else {
+				success = false
+			}
+		} else if (mainHand) {
+			if (handMain == null) {
+				handMain = w // free hand
+			} else if (replace) {
+				unwield()
+				handMain = w
+			} else {
+				success = false
+			}
+		} else {
+			if (handOff == null) {
+				handOff = w // free hand
+			} else if (replace) {
+				unwield()
+				handOff = w
+			} else {
+				success = false
+			}
+		}
+
+		if (success) inventory -= w // remove from inventory on success.
+	}
+
+	/** Unequip the current weapon(s). */
+	fun unwield(mainHand: Boolean = true, both: Boolean = false) {
+		if ((mainHand || both) && handMain != null) {
+			inventory += handMain!!
+
+			// unequip both hands.
+			if (handMain!!.isTwoHanded) {
+				handOff = null
+			}
+
+			handMain = null
+		}
+
+		if ((!mainHand || both) && handOff != null) {
+			inventory += handOff!!
+
+			// unequip both hands.
+			if (handOff!!.isTwoHanded) {
+				handMain = null
+			}
+
+			handOff = null
+		}
+	}
+
+	/** Roll, if an attack is hitting.*/
+	fun rollAttack(
+		mainHand: Boolean = true,
+		unarmed: Boolean = false,
+		targetDistance: Int = 5)
+		: Int {
+		val attack = D20.roll() // attack roll
+
+		// misses anyways.
+		if (attack < 2) {
+			return 1 // nat 1
+		}
+
+		// hits anyways
+		if (attack > 19) {
+			return 20 // nat 20
+		}
+
+		// add modifiers
+		val str = abilityModifier(Ability.STR)
+		val dex = abilityModifier(Ability.DEX)
+
+		val mod : Int
+		val prof : Int
+
+		// mainHand uses boni, off-hand not except if dual-wielder and co.
+		// TODO (2020-07-08) implement
+
+		// no weapon in chosen hand, or kick
+		if (unarmed || !isWieldingAny() || !isWielding(mainHand)) {
+			// unarmed strike
+			// TODO (2020-07-07) with monk in classes maxOf(dex, str)
+			mod = str
+			prof = proficientValue
+		} else {
+			// armed strike with main hand
+			val wpn = handMain ?: handOff!!
+			mod = when {
+				// use main hand (weapuon)
+				!wpn.weaponType.melee -> dex // must use DEX
+				wpn.isFinesse -> maxOf(str, dex) // DEX or STR
+
+				// any other
+				else -> str
+			}
+			prof = when (wpn.weaponType in proficiencies || wpn in proficiencies) {
+				true -> proficientValue
+				else -> 0
+			}
+
+			// TODO (2020-07-09)
+			// if armed and ammunition is needed? : need free second hand, need ammunition in second hand.
+		}
+
+		return attack + mod + prof
+	}
 }
 
 /* The base ability score.*/

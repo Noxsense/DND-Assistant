@@ -37,42 +37,43 @@ fun main() {
 	println(playerAbilitiesHorizontally(pc, false, true))
 
 	val weapon =  Weapon("Dagger", 1.0, Money(gp=2),
-		isMartial = false, isRanged = false, range = (1..5),
-		dmgDice = DiceTerm(Die(4)),
-		dmgType = "piercing",
-		weightClass = 1 /*Weapon.WEIGHT_CLASS_LIGHT*/,
+		weightClass = WeightClass.LIGHT,
+		weaponType = Weapon.Type.SIMPLE_MELEE,
+		damageType = arrayOf(DamageType.PIERCING),
+		damage = DiceTerm(D4),
+		throwable = true,
 		isFinesse = true,
 		note = "Finesse, light, thrown (range 20/60)")
 
-	pc.inventory += weapon
+	pc.pickupItem(weapon)
 
 	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
 
-	// pc.wield(pc.inventory[0] as Weapon)
+	pc.wield(pc.inventory[0] as Weapon)
 
 	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
-	// logger.info("Onyx' wields: ${pc.equippedHandMain}, ${pc.equippedHandOff}")
-	// logger.info("Onyx' hits: ${pc.attackRoll()}")
+	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
+	logger.info("Onyx' hits: ${pc.rollAttack()}")
 
-	// pc.unwield(both = true)
+	pc.unwield(both = true)
 
 	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
-	// logger.info("Onyx' wields: ${pc.equippedHandMain}, ${pc.equippedHandOff}")
-	// logger.info("Onyx' hits: ${pc.attackRoll()}")
+	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
+	logger.info("Onyx' hits: ${pc.rollAttack()}")
 
 	logger.info("Sell the weapon (${weapon})")
 	pc.sellItem(weapon)
 
 	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
-	// logger.info("Onyx' wields: ${pc.equippedHandMain}, ${pc.equippedHandOff}")
-	// logger.info("Onyx' hits: ${pc.attackRoll()}")
+	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
+	logger.info("Onyx' hits: ${pc.rollAttack()}")
 
 	logger.info("Buy the weapon (${weapon})")
 	pc.buyItem(weapon)
 
 	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
-	// logger.info("Onyx' wields: ${pc.equippedHandMain}, ${pc.equippedHandOff}")
-	// logger.info("Onyx' hits: ${pc.attackRoll()}")
+	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
+	logger.info("Onyx' hits: ${pc.rollAttack()}")
 }
 
 fun testDice() : Boolean {
