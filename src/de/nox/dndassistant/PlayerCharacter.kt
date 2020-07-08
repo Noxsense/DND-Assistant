@@ -4,6 +4,8 @@ import kotlin.math.floor;
 
 private fun getModifier(value : Int) = floor((value - 10) / 2.0).toInt()
 
+private val logger = LoggerFactory.getLogger("PlayerCharacter")
+
 data class PlayerCharacter(
 	val name : String,
 	val race: String = "Human" /*TODO*/,

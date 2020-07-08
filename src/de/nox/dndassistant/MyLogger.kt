@@ -1,5 +1,8 @@
 package de.nox.dndassistant
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 object LoggerFactory {
 	fun getLogger(name: String) : Logger = Logger(name)
 }
@@ -13,8 +16,13 @@ data class Logger(
 	val level: LoggingLevel = LoggingLevel.ERROR
 ) {
 
+	private val formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss")
+
 	fun log(t: LoggingLevel, s: Any?) {
-		print("Logger %s: %-10s - ".format(name, t.toString()))
+		print("%s %-16s %-8s - ".format(
+			LocalDateTime.now().format(formatter),
+			name + ":",
+			t.toString()))
 		println(s)
 	}
 
@@ -25,9 +33,11 @@ data class Logger(
 	fun error(s: Any?) {
 		log(LoggingLevel.ERROR, s)
 	}
+
 	fun verbose(s: Any?) {
 		log(LoggingLevel.VERBOSE, s)
 	}
+
 	fun debug(s: Any?) {
 		log(LoggingLevel.DEBUG, s)
 	}
