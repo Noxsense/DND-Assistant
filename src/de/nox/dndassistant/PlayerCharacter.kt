@@ -116,13 +116,6 @@ data class PlayerCharacter(
 
 	fun initiativeRoll() : Int = initiative + D20.roll()
 
-	val armorClass : Int get() {
-		// TODO (2020-06-26)
-		// Look up, what the PC's wearing. Maybe add DEX modifier.
-		// Not wearing anything: AC 10 + DEX
-		return 10 + abilityModifier.getOrDefault(Ability.DEX, 0)
-	}
-
 	val maxHitPoints : Int get()
 		= -1 // TODO(2020-06-26)
 
@@ -164,6 +157,101 @@ data class PlayerCharacter(
 
 	var knownLanguages : List<String>
 		= listOf("Common")
+
+	var purse : Money = Money()
+
+	var inventory :  List<Item>
+		= listOf()
+		private set
+
+	/*
+	 * Lifting and Carrying (https://dnd.wizards.com/products/tabletop/players-basic-rules#lifting-and-carrying)
+	 */
+
+	/* Maximum of the weight, this character could carry. */
+	fun carryingCapacity() : Double
+		= abilityScore(Ability.STR) * 15.0
+
+	/* Weight of the inventory and the purse.*/
+	fun inventoryWeight() : Double
+		= inventory.sumByDouble { it.weight } + purse.weight
+
+	/** Variant: Encumbrance
+	 * The rules for lifting and carrying are intentionally simple. Here is a
+	 * variant if you are looking for more detailed rules for determining how
+	 * a character is hindered by the weight of equipment. When you use this
+	 * variant, ignore the Strength column of the Armor table in chapter 5.
+	 *
+	 * If you carry weight in excess of 5 times your Strength score, you are
+	 * encumbered, which means your speed drops by 10 feet.
+	 *
+	 * If you carry weight in excess of 10 times your Strength score, up to
+	 * your maximum carrying capacity, you are instead heavily encumbered, which
+	 * means your speed drops by 20 feet and you have disadvantage on ability
+	 * checks, attack rolls, and saving throws that use Strength, Dexterity, or
+	 * Constitution.
+	 */
+	fun carryEncumbranceLevel() : Double
+		= inventoryWeight() / abilityScore(Ability.STR)
+
+	/* Try to buy an item. On success, return true. */
+	fun buyItem(i: Item) : Boolean {
+		if (purse >= i.cost) {
+			purse -= i.cost // give money
+			pickupItem(i) // get item
+			logger.info("${name} - Bought new ${i} for ${i.cost}, left ${purse}")
+			return true
+		} else {
+			val missed = (purse - i.cost)
+			logger.info("${name} - Not enough money to buy. Missed: ${missed}")
+			return false
+		}
+	}
+
+	/* Try to sell an item. On success, return true. */
+	fun sellItem(i: Item) : Boolean {
+		if (i in inventory) {
+			purse += i.cost // earn the money
+			dropItem(i) // remove from inventory.
+			logger.info("${name} - Sold own ${i} for ${i.cost}, now ${purse}")
+			return true
+		} else {
+			logger.info("${name} - Cannot sell the item (${i}), they do not own this.")
+			return false
+		}
+	}
+
+	fun pickupItem(i: Item) {
+		inventory += i
+		logger.info("${name} - Picked up ${i}")
+	}
+
+	fun dropItem(i: Item) : Boolean {
+		// return true on success.
+		if (i in inventory) {
+			inventory -= (i) // remove from inventory.
+			logger.info("${name} - Dropped ${i}")
+			return true
+		}
+		return false
+	}
+
+	fun dropItemAt(i: Int) : Item? {
+		// return true on success.
+		// TODO (2020-07-08) implement
+		logger.info("${name} - Dropped ${i}th item")
+		return null
+	}
+
+	////////////////////////////////////////////////
+
+	val armorClass : Int get() {
+		// TODO (2020-06-26)
+		// Look up, what the PC's wearing. Maybe add DEX modifier.
+		// Not wearing anything: AC 10 + DEX
+		return 10 + abilityModifier.getOrDefault(Ability.DEX, 0)
+	}
+
 }
 
 /* The base ability score.*/

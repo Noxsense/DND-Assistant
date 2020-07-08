@@ -15,6 +15,9 @@ data class Money(
 	val asCopper: Int
 		= cp + (SP_CP * (sp + (EP_SP * ep + (GP_SP * (gp + (PP_GP * pp))))))
 
+	/** Weight of that money pile, where 50 coins have 50 lb.*/
+	val weight: Double = (cp + sp + ep + gp + pp) / 50.0
+
 	/* Constants.*/
 	companion object {
 		const val PP = 0; const val PP_GP = 10 /*10gp.*/
@@ -26,7 +29,10 @@ data class Money(
 
 	override fun compareTo(other: Money) = asCopper - other.asCopper
 
-	override fun toString() : String = "${pp}pp ${gp}gp ${ep}ep ${sp}sp ${cp}cp"
+	override fun toString() : String
+		= Regex("\\s*\\b0[pgesc]p\\s*")
+			.replace("${pp}pp ${gp}gp ${ep}ep ${sp}sp ${cp}cp", "")
+			.let { str -> if (str == "") "0cp" else str }
 
 	/* Add two Money piles to each other. */
 	operator fun plus(other: Money) : Money
