@@ -2,11 +2,13 @@ package de.nox.dndassistant
 
 interface Item {
 	val name: String
-	val weight: Float
+	val weight: Double
 	val cost: Money
 }
 
-/** Weapon.
+///////////////////////////////////////////////////////////////////////////////
+
+/** Weapon <- Skillable.
  * "Your class grants proficiency in certain Weapons, reflecting both the
  * class’s focus and the tools you are most likely to use. Whether you favor a
  * Longsword or a Longbow, your weapon and your ability to wield it effectively
@@ -22,7 +24,7 @@ interface Item {
 data class Weapon(
 	/* Inherit from item.*/
 	override val name: String, // inherit from Item
-	override val weight: Float, // inherit from item
+	override val weight: Double, // inherit from item
 	override val cost: Money, // inherit from item
 
 	/* Weapon specific attributs.*/
@@ -38,7 +40,7 @@ data class Weapon(
 	val isVersatile: Boolean = false, // can also be used two-handed => creates a "new" weapon.
 	val isTwoHanded: Boolean = false, // needs two hand to wield, no off-hand possible.
 	val isThrowable: Boolean = false  // can be thrown => creates a "new" weapon.
-) : Item, AbstractSkill {
+) : Item, Skillable {
 
 	final val WEIGHT_CLASS_NONE = 0
 	final val WEIGHT_CLASS_LIGHT = 1
@@ -47,10 +49,11 @@ data class Weapon(
 	// load wepon.
 
 	override fun toString() : String = name
-
 }
 
-/** ToolSkill.
+///////////////////////////////////////////////////////////////////////////////
+
+/** Tool <- Skillable.
  * "A tool helps you to do something you couldn't otherwise do, such as craft
  * or repair an item, forge a document, or pick a lock. Your race, class,
  * Background, or feats give you proficiency with certain tools. Proficiency with
@@ -62,15 +65,16 @@ data class Weapon(
  */
 data class Tool(
 	override val name: String,
-	override val weight: Float,
+	override val weight: Double,
 	override val cost: Money,
 
 	val toolType: Int
 
-) : Item, AbstractSkill {
+) : Item, Skillable {
 
 	final val TYPE_ARTISIAN_TOOL      = 0
 	final val TYPE_GAMING_SET         = 1
 	final val TYPE_MUSICAL_INSTRUMENT = 2
 	final val TYPE_VEHICLE            = 3
+	override fun toString() : String = name
 }

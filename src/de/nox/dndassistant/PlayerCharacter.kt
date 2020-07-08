@@ -36,7 +36,7 @@ data class PlayerCharacter(
 		= mapOf()
 		private set
 
-	var proficiencies : Map<AbstractSkill, Proficiency>
+	var proficiencies : Map<Skillable, Proficiency>
 		= mapOf()
 		private set
 
@@ -45,6 +45,11 @@ data class PlayerCharacter(
 
 	fun rollAbilityScores() {
 		abilityScore = abilityScore.mapValues { D20.roll() }
+		setAbilityModifiers()
+	}
+
+	fun setAbilityScores(xs: Map<Ability,Int>) {
+		abilityScore = xs
 		setAbilityModifiers()
 	}
 

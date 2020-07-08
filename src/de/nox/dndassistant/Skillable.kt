@@ -7,11 +7,10 @@ enum class Proficiency(val factor: Int){
 	EXPERT(2)
 }
 
-interface AbstractSkill {
-}
+interface Skillable
 
 /* Body skill.*/
-enum class Skill(val source: Ability) : AbstractSkill {
+enum class Skill(val source: Ability) : Skillable {
 	ATHLETICS(Ability.STR),
 
 	ACROBATICS(Ability.DEX),
