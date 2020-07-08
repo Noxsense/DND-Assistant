@@ -10,6 +10,12 @@ private val logger = LoggerFactory.getLogger("Dice")
 class DiceTerm(val dice : Array<SimpleDice>) {
 
 	companion object {
+
+		/** Parse string to DiceTerm.
+		  * @param str the string to parse.
+		  * @throws Error If the string term was invalid (doesn't contain a dice term)
+		  * @return DiceTerm which is described by the string.
+		  */
 		fun parse(str: String) : DiceTerm {
 
 			// remove whitespaces.
@@ -53,6 +59,13 @@ class DiceTerm(val dice : Array<SimpleDice>) {
 		}
 	}
 
+	constructor(d: SimpleDice) : this(arrayOf(d)) {
+	}
+
+	/** Get the average value to expeced from the dice term.*/
+	fun average() : Int
+		= dice.map { it.average() }.sum()
+
 	/** Get the sum of all dice and and constants in this term.
 	  *@return sum:Int
 	  */
@@ -82,6 +95,15 @@ data class SimpleDice(val max: Int, val times: Int = 1) : Comparable<SimpleDice>
 	override fun toString() : String
 		= "%+d".format(times) + (if (absMax > 1) "D${absMax}" else "")
 
+	/** Get the average value of the dice. */
+	fun average() : Int
+		= (absTimes * absMax) / (when {
+			absMax == 1 && timesNeg -> -1
+			absMax == 1 -> 1
+			timesNeg -> -2
+			else -> 2
+		})
+
 	/** Roll this die.
 	  * @return random int between one and max.
 	  */
@@ -109,51 +131,12 @@ data class SimpleDice(val max: Int, val times: Int = 1) : Comparable<SimpleDice>
 }
 
 fun Bonus(v : Int) : SimpleDice = SimpleDice(1, v)
-fun Die(v : Int) : SimpleDice = SimpleDice(v, 1)
 
-/** Parse string to DiceTerm.
-  * @param str the string to parse.
-  * @throws Error If the string term was invalid (doesn't contain a dice term)
-  * @return DiceTerm which is described by the string.
-  */
-fun parseDiceTerm(str: String) : DiceTerm {
-
-	// remove whitespaces.
-	val nowhite = Regex("\\s").replace(str, "")
-
-	// split before + or -
-	val terms = Regex("(?=[\\+-])").split(nowhite)
-
-	val valid = Regex("([\\+-]?\\d*)([dD])?(\\d*)")
-
-	/* Check, if all terms are valid on the first view. */
-	if (! terms.all { valid.matches(it) } ) {
-		println("Throw Error!")
-		throw Exception()
-	}
-
-	println(str)
-
-	/* Map terms to parsed simple dice terms.*/
-	val parsedDice = terms.map {
-		val match = valid.find(it)!!
-			val (numStr, d, dieStr) = match.destructured
-
-		val num = when (numStr) {
-			"" -> 1
-			"+" -> 1
-			"-" -> -1
-			else -> numStr.toInt(10)
-		}
-		val die = if (dieStr == "") 1 else dieStr.toInt(10)
-
-		/* parsed a die without max.*/
-		if (d != "" && dieStr == "") {
-			throw Exception("Invalid die.")
-		}
-
-		SimpleDice(die, num)
-	}
-
-	return DiceTerm(parsedDice.toTypedArray())
-}
+val D2 : SimpleDice = SimpleDice(2, 1)
+val D4 : SimpleDice = SimpleDice(4, 1)
+val D6 : SimpleDice = SimpleDice(6, 1)
+val D8 : SimpleDice = SimpleDice(8, 1)
+val D10 : SimpleDice = SimpleDice(10, 1)
+val D12 : SimpleDice = SimpleDice(12, 1)
+val D20 : SimpleDice = SimpleDice(20, 1)
+val D100 : SimpleDice = SimpleDice(100, 1)

@@ -44,7 +44,7 @@ data class PlayerCharacter(
 		= 2
 
 	fun rollAbilityScores() {
-		abilityScore = abilityScore.mapValues { Die(20).roll() }
+		abilityScore = abilityScore.mapValues { D20.roll() }
 		setAbilityModifiers()
 	}
 
@@ -78,13 +78,13 @@ data class PlayerCharacter(
 		= abilityModifier.getOrDefault(a, 10)
 
 	/* Get a random roll (D20) for a requesting ability, adding its bonus.*/
-	fun rollCheck(a: Ability) : Int = Die(20).roll() + abilityModifier(a)
+	fun rollCheck(a: Ability) : Int = D20.roll() + abilityModifier(a)
 
 	/* Get a random roll (D20) for a requesting skill, adding its bonus.*/
-	fun rollCheck(s: Skill) : Int = Die(20).roll() + skillScore(s)
+	fun rollCheck(s: Skill) : Int = D20.roll() + skillScore(s)
 
 	/* Get a random roll (D20) for a requesting saving throw, adding its bonus.*/
-	fun rollSave(a: Ability) : Int = Die(20).roll() + savingScore(a)
+	fun rollSave(a: Ability) : Int = D20.roll() + savingScore(a)
 
 	fun getProficiencyFor(skill: Skill) : Proficiency
 		= proficientSkills.getOrDefault(skill, Proficiency.NONE)
@@ -109,7 +109,7 @@ data class PlayerCharacter(
 		= this.abilityModifier.getOrDefault(Ability.DEX,
 			getModifier(this.abilityScore.getOrDefault(Ability.DEX, 0)))
 
-	fun initiativeRoll() : Int = initiative + Die(20).roll()
+	fun initiativeRoll() : Int = initiative + D20.roll()
 
 	val armorClass : Int get() {
 		// TODO (2020-06-26)

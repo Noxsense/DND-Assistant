@@ -14,9 +14,6 @@ fun main() {
 	testMoney()
 	logger.info("=============================")
 
-	// val diceRegexInvalid = "3d8 + d12 + 3 + 3 - 3 + 12d"
-	// parseDiceTerm(diceRegexInvalid)
-
 	val pc : PlayerCharacter = PlayerCharacter("Onyx Necklace", race = "Gnome", player = "Nox")
 
 	pc.rollAbilityScores()
@@ -58,7 +55,7 @@ fun testDice() : Boolean {
 
 	logger.info(diceTerm)
 
-	logger.info(Die(6).rollTake(3, 4, true))
+	logger.info(D6.rollTake(3, 4, true))
 
 	return passed;
 }
