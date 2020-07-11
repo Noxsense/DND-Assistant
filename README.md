@@ -5,7 +5,7 @@ Also to create a new one and roll anything needed.
 
 ## Planned Features
 - [ ] overview a character, load, unload and delete them
-- [ ] roll skills, attack saving throws
+- [x] roll skills, attack saving throws
 - [ ] create a new character
 - [ ] level up
 - [ ] maintain spells, focus, stats
@@ -16,8 +16,8 @@ Also to create a new one and roll anything needed.
 - [ ] sharing and positioning during a session with other people
 
 ## To do
-- [ ] replace `Makefile` with `gradle.build`
-- [ ] display main stats, first page (CLI)
+- [x] replace `Makefile` with `gradle.build`
+- [ ] display main stats, first page (CUI/TUI)
 - [ ] display main stats, first page (web interface, locally hosted)
 - [ ] display main stats, first page (android app)
 - [x] add dice parser for string

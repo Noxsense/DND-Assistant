@@ -1,6 +1,6 @@
 package de.nox.dndassistant
 
-import kotlin.math.floor;
+import kotlin.math.floor
 
 private fun getModifier(value : Int) = floor((value - 10) / 2.0).toInt()
 
