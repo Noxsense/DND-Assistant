@@ -19,11 +19,9 @@ data class Logger(
 	private val formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss")
 
 	fun log(t: LoggingLevel, s: Any?) {
-		print("%s %-16s %-8s - ".format(
-			LocalDateTime.now().format(formatter),
-			name + ":",
-			t.toString()))
-		println(s)
+		println("%s %-16s %-8s - ".format(
+			LocalDateTime.now().format(formatter), name + ":", t.toString()) +
+			s) // avoid formatting.
 	}
 
 	fun info(s: Any?) {
