@@ -71,7 +71,7 @@ class DiceTerm(vararg ds: SimpleDice) {
 			other == null -> false
 			other !is DiceTerm -> false
 			else -> (same(other)
-				|| contract().dice.contentEquals(other.contract().dice))
+				|| contracted().dice.contentEquals(other.contracted().dice))
 		}
 
 	/** Dice term is equal by elements with another Dice term.*/
@@ -79,7 +79,7 @@ class DiceTerm(vararg ds: SimpleDice) {
 		= (dice.sorted() == other.dice.sorted())
 
 	/** Contract dice with same faces.*/
-	fun contract() : DiceTerm
+	fun contracted() : DiceTerm
 		= DiceTerm(*dice.toList().sortedDescending()
 		.fold<SimpleDice, List<SimpleDice>>(listOf(), { xs, x -> when {
 			!xs.isEmpty() && xs.last().faces == x.faces -> {
@@ -191,8 +191,9 @@ data class SimpleDice(val max: Int, val times: Int = 1) : Comparable<SimpleDice>
 	  */
 	fun roll() : Int
 		= when {
-			faces < 2 -> factor // return constant / bonus (one or less face on die)
-			else -> (1..count).map { (1..faces).random() * sign }.sum()
+			faces == 0 -> 0
+			faces == 1 -> factor
+			else -> (count..(count * faces)).random() * sign
 		}
 
 	/* Roll the SimpleDice {num} times, take {take} best/worst values. */

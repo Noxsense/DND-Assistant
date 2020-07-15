@@ -51,11 +51,18 @@ class DiceTest {
 	}
 
 	@Test
-	fun testD20() {
-		val dice = D20
-		val rolled = (1..1000).map { dice.roll() }
+	fun testRoll() {
+		var dice = D20 // d20
+		var rolled = (1..1000).map { dice.roll() }.sorted()
 		println("Roll: $dice: $rolled")
 		for (i in 1..20) {
+			assertTrue(i in rolled, "Thrown $i with $dice")
+		}
+
+		dice = SimpleDice(5, 9) // 9d5 => (all 1: 9) upto (all 5: 45)
+		rolled = (1..1000).map { dice.roll() }.sorted()
+		println("Roll: $dice: $rolled")
+		for (i in 9..(5*9)) {
 			assertTrue(i in rolled, "Thrown $i with $dice")
 		}
 	}
@@ -125,7 +132,7 @@ class DiceTest {
 			SimpleDice(8, 2),
 			SimpleDice(1, +3)
 		)
-		val simplified = dice.contract()
+		val simplified = dice.contracted()
 
 		println("Expected: $expected")
 		println("Input:    $dice")
