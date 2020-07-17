@@ -11,7 +11,7 @@ fun main() {
 	val pc : PlayerCharacter
 		= PlayerCharacter("Onyx Necklace", race = "Gnome", player = "Nox")
 
-	pc.rollAbilityScores()
+	// pc.rollAbilityScores()
 	printPlayer(pc)
 
 	logger.debug("Proficent Skills: " + pc.proficientSkills)
@@ -48,27 +48,23 @@ fun main() {
 
 	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
 	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
-	logger.info("Onyx' hits: ${pc.rollAttack()}")
 
 	pc.unwield(both = true)
 
 	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
 	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
-	logger.info("Onyx' hits: ${pc.rollAttack()}")
 
 	logger.info("Sell the weapon (${weapon})")
 	pc.sellItem(weapon)
 
 	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
 	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
-	logger.info("Onyx' hits: ${pc.rollAttack()}")
 
 	logger.info("Buy the weapon (${weapon})")
 	pc.buyItem(weapon)
 
 	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
 	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
-	logger.info("Onyx' hits: ${pc.rollAttack()}")
 }
 
 fun playerAbilitiesHorizontally(

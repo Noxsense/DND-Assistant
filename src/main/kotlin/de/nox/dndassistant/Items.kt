@@ -174,7 +174,7 @@ data class Armor(
 	override val weight: Double, // inherit from item
 	override val cost: Money, // inherit from item
 
-	val type: Type,
+	val type: BodyType,
 	val armorClass: Int,
 	val strength: Int, // bad for DEX, reduced movement, if STR 13 or 15 (mentioned) not hit.
 	val stealhy: Boolean, // disadvantage on stealth.
@@ -190,16 +190,6 @@ data class Armor(
 		LIGHT, // for agile adventures: DEX plus armor's AC
 		MEDIUM, // bad for movement, DEX (max +2) plus armor's AC
 		HEAVY // worst for movement, no DEX modifier
-	}
-
-	enum class Type {
-		HAT, HELMET, // only one // HEAD
-		CLOAK, // only one // SHOULDERS
-		AMULET, // only one // NECK?
-		GLOVE, // one pair at a time (2), if just one of a pair, maybe no boni // HANDS
-		RING, // up to ... #fingers at a time // HANDS
-		BOOT, // one pair at a time (2), if just one of a pair, maybe no boni // FEET
-		SHIELD // only one // ARM
 	}
 
 	override fun toString() : String = name

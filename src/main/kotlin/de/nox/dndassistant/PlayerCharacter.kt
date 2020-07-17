@@ -2,51 +2,46 @@ package de.nox.dndassistant
 
 import kotlin.math.floor
 
-private fun getModifier(value : Int) = floor((value - 10) / 2.0).toInt()
+private fun getModifier(value: Int) = floor((value - 10) / 2.0).toInt()
 
 private val logger = LoggerFactory.getLogger("PlayerCharacter")
 
 data class PlayerCharacter(
-	val name : String,
+	val name: String,
 	val race: String = "Human" /*TODO*/,
 	val gender: String = "divers",
 	val player: String = ""
 	) {
 
-	var expiriencePoints : Int
+	var expiriencePoints: Int
 		= 0
 
-	var abilityScore : Map<Ability, Int>
+	var abilityScore: Map<Ability, Int>
 		= enumValues<Ability>().map { it }.associateWith { 10 }
 		private set
 
-	var abilityModifier : Map<Ability, Int>
+	var abilityModifier: Map<Ability, Int>
 		= abilityScore.mapValues { getModifier(it.value) }
 		private set
 
-	var savingThrows : List<Ability>
+	var savingThrows: List<Ability>
 		= listOf()
 		private set
 
-	var proficientSkills : Map<Skill, Proficiency>
+	var proficientSkills: Map<Skill, Proficiency>
 		= mapOf()
 		private set
 
-	var proficientTools : Map<String, Proficiency>
+	var proficientTools: Map<String, Proficiency>
 		= mapOf()
 		private set
 
-	var proficiencies : Map<Skillable, Proficiency>
+	var proficiencies: Map<Skillable, Proficiency>
 		= mapOf()
 		private set
 
-	var proficientValue : Int
+	var proficientValue: Int
 		= 2
-
-	fun rollAbilityScores() {
-		abilityScore = abilityScore.mapValues { D20.roll() }
-		setAbilityModifiers()
-	}
 
 	fun setAbilityScores(xs: Map<Ability,Int>) {
 		abilityScore = xs
@@ -60,11 +55,8 @@ data class PlayerCharacter(
 	/* Set the attributes' values.
 	 * If a param is set to (-1), it will be rolled with a D20.
 	 */
-	fun setAbilityScore(a : Ability, v: Int) {
-		val d20 : SimpleDice = SimpleDice(20, 1);
-
-		abilityScore += Pair(a, if (v > 0) v else d20.roll())
-
+	fun setAbilityScore(a: Ability, v: Int) {
+		abilityScore += Pair(a, if (v > 0) v else 0)
 		abilityModifier = abilityScore.mapValues { getModifier(it.value) }
 	}
 
@@ -82,25 +74,16 @@ data class PlayerCharacter(
 	fun abilityModifier(a: Ability) : Int
 		= abilityModifier.getOrDefault(a, 10)
 
-	/* Get a random roll (D20) for a requesting ability, adding its bonus.*/
-	fun rollCheck(a: Ability) : Int = D20.roll() + abilityModifier(a)
-
-	/* Get a random roll (D20) for a requesting skill, adding its bonus.*/
-	fun rollCheck(s: Skill) : Int = D20.roll() + skillScore(s)
-
-	/* Get a random roll (D20) for a requesting saving throw, adding its bonus.*/
-	fun rollSave(a: Ability) : Int = D20.roll() + savingScore(a)
-
 	fun getProficiencyFor(skill: Skill) : Proficiency
 		= proficientSkills.getOrDefault(skill, Proficiency.NONE)
 
 	/* Add proficiency to saving trhow.*/
-	fun addProficiency(saving : Ability) {
+	fun addProficiency(saving: Ability) {
 		if (!(saving in savingThrows)) savingThrows += saving
 	}
 
 	/* Add proficiency to a skill. If twice, add expertise.*/
-	fun addProficiency(skill : Skill) {
+	fun addProficiency(skill: Skill) {
 		val level = if (skill in proficientSkills.keys) {
 				Proficiency.EXPERT
 			} else {
@@ -110,25 +93,23 @@ data class PlayerCharacter(
 		proficientSkills += Pair(skill, level)
 	}
 
-	val initiative : Int get()
+	val initiative: Int get()
 		= this.abilityModifier.getOrDefault(Ability.DEX,
 			getModifier(this.abilityScore.getOrDefault(Ability.DEX, 0)))
 
-	fun initiativeRoll() : Int = initiative + D20.roll()
-
-	val maxHitPoints : Int get()
+	val maxHitPoints: Int get()
 		= -1 // TODO(2020-06-26)
 
-	val curHitPoints : Int get()
+	val curHitPoints: Int get()
 		= -1 // TODO(2020-06-26)
 
-	val tmpHitPoints : Int get()
+	val tmpHitPoints: Int get()
 		= -1 // TODO(2020-06-26)
 
-	val hasTmpHitpoints : Boolean get()
+	val hasTmpHitpoints: Boolean get()
 		= tmpHitPoints > 0 && tmpHitPoints != maxHitPoints
 
-	var deathSaves : Array<Int> = arrayOf(0, 0, 0, 0, 0) // maximal 5 chances.
+	var deathSaves: Array<Int> = arrayOf(0, 0, 0, 0, 0) // maximal 5 chances.
 		private set
 
 	fun resetDeathSaves() {
@@ -155,12 +136,12 @@ data class PlayerCharacter(
 		// TODO (2020-06-26)
 	}
 
-	var knownLanguages : List<String>
+	var knownLanguages: List<String>
 		= listOf("Common")
 
-	var purse : Money = Money()
+	var purse: Money = Money()
 
-	var inventory :  List<Item>
+	var inventory:  List<Item>
 		= listOf()
 		private set
 
@@ -245,14 +226,14 @@ data class PlayerCharacter(
 
 	////////////////////////////////////////////////
 
-	val armorClass : Int get() {
+	val armorClass: Int get() {
 		// TODO (2020-06-26)
 		// Look up, what the PC's wearing. Maybe add DEX modifier.
 		// Not wearing anything: AC 10 + DEX
 		return 10 + abilityModifier.getOrDefault(Ability.DEX, 0)
 	}
 
-	var equippedArmor : List<Armor> = listOf()
+	var equippedArmor: List<Armor> = listOf()
 		private set
 
 	/* Equip a piece of armor.
@@ -269,15 +250,13 @@ data class PlayerCharacter(
 		val wornSize = worn.size
 
 		/* Human specific. Update for others! TODO */
-		var free : Boolean = when (a.type) {
-			Armor.Type.HAT -> wornSize < 1
-			Armor.Type.HELMET -> wornSize < 1
-			Armor.Type.CLOAK -> wornSize < 1
-			Armor.Type.AMULET -> wornSize < 1
-			Armor.Type.RING -> wornSize < 10
-			Armor.Type.GLOVE -> wornSize < 2
-			Armor.Type.BOOT -> wornSize < 2
-			Armor.Type.SHIELD -> wornSize < 1
+		var free: Boolean = when (a.type) {
+			BodyType.HEAD -> wornSize < 1
+			BodyType.SHOULDERS -> wornSize < 1
+			BodyType.ACCESSOIRE -> wornSize < 1
+			BodyType.HAND -> wornSize < 2
+			BodyType.RING -> wornSize < 10
+			BodyType.FOOT -> wornSize < 2
 		}
 
 		/* Replace the worn equipment, put back to inventory.*/
@@ -295,10 +274,10 @@ data class PlayerCharacter(
 
 	///////////////////////////////////////////////
 
-	var handMain : Weapon? = null
+	var handMain: Weapon? = null
 		private set
 
-	var handOff : Weapon? = null
+	var handOff: Weapon? = null
 		private set
 
 	fun hand(main: Boolean = true) : Weapon? = when (main) {
@@ -325,7 +304,7 @@ data class PlayerCharacter(
 			return
 		}
 
-		var success : Boolean = true
+		var success: Boolean = true
 
 		if (replace) unwield(mainHand)
 
@@ -389,71 +368,24 @@ data class PlayerCharacter(
 			handOff = null
 		}
 	}
-
-	/** Roll, if an attack is hitting.*/
-	fun rollAttack(
-		mainHand: Boolean = true,
-		unarmed: Boolean = false,
-		targetDistance: Int = 5)
-		: Int {
-		val attack = D20.roll() // attack roll
-
-		// misses anyways.
-		if (attack < 2) {
-			return 1 // nat 1
-		}
-
-		// hits anyways
-		if (attack > 19) {
-			return 20 // nat 20
-		}
-
-		// add modifiers
-		val str = abilityModifier(Ability.STR)
-		val dex = abilityModifier(Ability.DEX)
-
-		val mod : Int
-		val prof : Int
-
-		// mainHand uses boni, off-hand not except if dual-wielder and co.
-		// TODO (2020-07-08) implement
-
-		// no weapon in chosen hand, or kick
-		if (unarmed || !isWieldingAny() || !isWielding(mainHand)) {
-			// unarmed strike
-			// TODO (2020-07-07) with monk in classes maxOf(dex, str)
-			mod = str
-			prof = proficientValue
-		} else {
-			// armed strike with main hand
-			val wpn = handMain ?: handOff!!
-			mod = when {
-				// use main hand (weapuon)
-				!wpn.weaponType.melee -> dex // must use DEX
-				wpn.isFinesse -> maxOf(str, dex) // DEX or STR
-
-				// any other
-				else -> str
-			}
-			prof = when (wpn.weaponType in proficiencies || wpn in proficiencies) {
-				true -> proficientValue
-				else -> 0
-			}
-
-			// TODO (2020-07-09)
-			// if armed and ammunition is needed? : need free second hand, need ammunition in second hand.
-		}
-
-		return attack + mod + prof
-	}
 }
 
 /* The base ability score.*/
-enum class Ability(val fullname : String) {
+enum class Ability(val fullname: String) {
 	STR("STRENGTH"),
 	DEX("DEXTERITY"),
 	CON("CONSTITUTION"),
 	INT("INTELLIGENCE"),
 	WIS("WISDOM"),
 	CHA("CHARISMA")
+}
+
+enum class BodyType {
+	HEAD, // hat, helmet...
+	SHOULDERS, // like cloaks ...
+	ACCESSOIRE, // like necklace ...
+	HAND, // like for one glove (2x)
+	RING, // for fingers (10x... species related)
+	FOOT, // for one shoe or so (2x)
+	// SHIELD // only one // ARM
 }
