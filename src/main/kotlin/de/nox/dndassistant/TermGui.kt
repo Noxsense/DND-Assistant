@@ -4,30 +4,42 @@ private val logger = LoggerFactory.getLogger("TermGUI")
 
 fun main() {
 	println(
-		"DnD Application, display stats and roll your dice!\n"
-		+ "Happy Gaming! :D\n"
-		+ "==================================================\n");
+		"""
+		DnD Application, display stats and roll your dice!
+		Happy Gaming! :D
+		==================================================
+		""".trimIndent())
 
+	playgroundWithOnyx()
+}
+
+fun playgroundWithOnyx() {
 	val pc : PlayerCharacter
 		= PlayerCharacter("Onyx Necklace", race = "Gnome", player = "Nox")
 
 	// pc.rollAbilityScores()
 	printPlayer(pc)
 
-	logger.debug("Proficent Skills: " + pc.proficientSkills)
-	pc.addProficiency(Skill.SLEIGHT_OF_HAND)
-	logger.debug("Proficent Skills: " + pc.proficientSkills)
-	pc.addProficiency(Skill.STEALTH)
-	logger.debug("Proficent Skills: " + pc.proficientSkills)
-	pc.addProficiency(Skill.SLEIGHT_OF_HAND)
-	logger.debug("Proficent Skills: " + pc.proficientSkills)
-	pc.addProficiency(Ability.DEX)
-	pc.addProficiency(Ability.INT)
+	pc.setAbilityScores(mapOf(
+		Ability.STR to 6,
+		Ability.DEX to 17,
+		Ability.CON to 11,
+		Ability.INT to 16,
+		Ability.WIS to 15,
+		Ability.CHA to 10
+	))
 
 	logger.info("=============================\n\n\n")
 	printPlayer(pc)
 
-	println("\n\n\n")
+	pc.addProficiency(Skill.SLEIGHT_OF_HAND) // proficient
+	pc.addProficiency(Skill.ARCANA) // proficient
+	pc.addProficiency(Skill.STEALTH) // proficient
+	pc.addProficiency(Skill.SLEIGHT_OF_HAND) // expert
+	pc.addProficiency(Ability.DEX) // saving throw
+	pc.addProficiency(Ability.INT) // saving throw
+
+	logger.debug("Proficent Skills: " + pc.proficiencies)
 
 	println(playerAbilitiesHorizontally(pc, false, true))
 
@@ -65,6 +77,12 @@ fun main() {
 
 	logger.info("Onyx' inventory: ${pc.inventoryWeight} lb, ${pc.inventory}, ${pc.purse}")
 	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
+
+	(1..60).forEach { pc.pickupItem(weapon) } // get +60 daggers => inventory +60lb
+	// pc.pickupItem(Item("Crowbar", 5.0, Money())
+
+	printPlayer(pc)
+
 }
 
 fun playerAbilitiesHorizontally(
