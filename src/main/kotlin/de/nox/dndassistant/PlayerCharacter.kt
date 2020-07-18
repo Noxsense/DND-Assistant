@@ -92,14 +92,9 @@ data class PlayerCharacter(
 		= this.abilityModifier.getOrDefault(Ability.DEX,
 			getModifier(this.abilityScore.getOrDefault(Ability.DEX, 0)))
 
-	val maxHitPoints: Int get()
-		= -1 // TODO(2020-06-26)
-
-	val curHitPoints: Int get()
-		= -1 // TODO(2020-06-26)
-
-	val tmpHitPoints: Int get()
-		= -1 // TODO(2020-06-26)
+	var maxHitPoints: Int = -1
+	var curHitPoints: Int = -1
+	var tmpHitPoints: Int = -1
 
 	val hasTmpHitpoints: Boolean get()
 		= tmpHitPoints > 0 && tmpHitPoints != maxHitPoints
@@ -145,11 +140,11 @@ data class PlayerCharacter(
 	 */
 
 	/* Maximum of the weight, this character could carry. */
-	fun carryingCapacity() : Double
+	val carryingCapacity: Double get ()
 		= abilityScore(Ability.STR) * 15.0
 
 	/* Weight of the inventory and the purse.*/
-	fun inventoryWeight() : Double
+	val inventoryWeight: Double get()
 		= inventory.sumByDouble { it.weight } + purse.weight
 
 	/** Variant: Encumbrance
@@ -168,7 +163,7 @@ data class PlayerCharacter(
 	 * Constitution.
 	 */
 	fun carryEncumbranceLevel() : Double
-		= inventoryWeight() / abilityScore(Ability.STR)
+		= inventoryWeight / abilityScore(Ability.STR)
 
 	/* Try to buy an item. On success, return true. */
 	fun buyItem(i: Item) : Boolean {

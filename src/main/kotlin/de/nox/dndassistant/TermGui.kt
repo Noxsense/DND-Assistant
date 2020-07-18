@@ -42,28 +42,28 @@ fun main() {
 
 	pc.pickupItem(weapon)
 
-	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
+	logger.info("Onyx' inventory: ${pc.inventoryWeight} lb, ${pc.inventory}, ${pc.purse}")
 
 	pc.wield(pc.inventory[0] as Weapon)
 
-	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
+	logger.info("Onyx' inventory: ${pc.inventoryWeight} lb, ${pc.inventory}, ${pc.purse}")
 	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
 
 	pc.unwield(both = true)
 
-	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
+	logger.info("Onyx' inventory: ${pc.inventoryWeight} lb, ${pc.inventory}, ${pc.purse}")
 	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
 
 	logger.info("Sell the weapon (${weapon})")
 	pc.sellItem(weapon)
 
-	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
+	logger.info("Onyx' inventory: ${pc.inventoryWeight} lb, ${pc.inventory}, ${pc.purse}")
 	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
 
 	logger.info("Buy the weapon (${weapon})")
 	pc.buyItem(weapon)
 
-	logger.info("Onyx' inventory: ${pc.inventoryWeight()} lb, ${pc.inventory}, ${pc.purse}")
+	logger.info("Onyx' inventory: ${pc.inventoryWeight} lb, ${pc.inventory}, ${pc.purse}")
 	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
 }
 
