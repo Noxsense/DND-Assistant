@@ -28,14 +28,6 @@ data class PlayerCharacter(
 		= listOf()
 		private set
 
-	var proficientSkills: Map<Skill, Proficiency>
-		= mapOf()
-		private set
-
-	var proficientTools: Map<String, Proficiency>
-		= mapOf()
-		private set
-
 	var proficiencies: Map<Skillable, Proficiency>
 		= mapOf()
 		private set
@@ -75,7 +67,13 @@ data class PlayerCharacter(
 		= abilityModifier.getOrDefault(a, 10)
 
 	fun getProficiencyFor(skill: Skill) : Proficiency
-		= proficientSkills.getOrDefault(skill, Proficiency.NONE)
+		= proficiencies.getOrDefault(skill, Proficiency.NONE)
+
+	fun getProficiencyFor(saving: Ability) : Proficiency
+		= when (saving in savingThrows) {
+			true -> Proficiency.PROFICIENT
+			else -> Proficiency.NONE
+		}
 
 	/* Add proficiency to saving trhow.*/
 	fun addProficiency(saving: Ability) {
@@ -85,7 +83,7 @@ data class PlayerCharacter(
 	/* Add proficiency to a skill. If twice, add expertise.*/
 	fun addProficiency(skill: Skill) {
 		// increase the proficcient value.
-		proficientSkills += Pair(skill, Proficiency.PROFICIENT + proficientSkills[skill])
+		proficiencies += Pair(skill, Proficiency.PROFICIENT + proficiencies[skill])
 	}
 
 	val initiative: Int get()

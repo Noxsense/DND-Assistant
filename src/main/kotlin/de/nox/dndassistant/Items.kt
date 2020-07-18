@@ -55,7 +55,7 @@ data class Weapon(
 	val range: Range = Range(5), // range in feet. => disadvantage out of range.
 
 	/* The damage, which is dealt, on hit. */
-	val damageType: Array<DamageType>,
+	val damageType: Set<DamageType>,
 
 	val damage: DiceTerm, // damage on hit and type.
 
