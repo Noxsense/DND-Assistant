@@ -84,13 +84,8 @@ data class PlayerCharacter(
 
 	/* Add proficiency to a skill. If twice, add expertise.*/
 	fun addProficiency(skill: Skill) {
-		val level = if (skill in proficientSkills.keys) {
-				Proficiency.EXPERT
-			} else {
-				Proficiency.PROFICIENT
-			}
-
-		proficientSkills += Pair(skill, level)
+		// increase the proficcient value.
+		proficientSkills += Pair(skill, Proficiency.PROFICIENT + proficientSkills[skill])
 	}
 
 	val initiative: Int get()

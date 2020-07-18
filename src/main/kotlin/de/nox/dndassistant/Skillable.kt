@@ -1,10 +1,32 @@
 package de.nox.dndassistant
 
 /* Proficiency level.*/
-enum class Proficiency(val factor: Int){
-	NONE(0),
-	PROFICIENT(1),
-	EXPERT(2)
+enum class Proficiency{
+	NONE,
+	PROFICIENT,
+	EXPERT;
+
+	val factor: Int get() = this.ordinal
+
+	val symbol: Char get() = when (this) {
+		NONE -> ' '
+		PROFICIENT -> '*'
+		EXPERT -> '#'
+	}
+
+	operator fun plus(other: Proficiency?) = when {
+		other == null -> this // null as NONE.
+		this == NONE -> other // NONE(0) + ANY(x) = x
+		this == PROFICIENT && other == NONE -> this // PROF(1) + NONE(0) = PROF (1)
+		else -> EXPERT // (X>=1) + (Y>=1) = Z(>1)
+	}
+
+	operator fun minus(other: Proficiency?) = when {
+		other == null -> this // this(?) - null(0) = this
+		other == NONE -> this // this(?) - NONE(0) = this
+		this == EXPERT && other == PROFICIENT -> PROFICIENT // this(2) - other(1) = 1
+		else -> NONE // this(>=1) - other(>=1) = 0
+	}
 }
 
 interface Skillable
@@ -32,5 +54,8 @@ enum class Skill(val source: Ability) : Skillable {
 	DECEPTION(Ability.CHA),
 	INTIMIDATION(Ability.CHA),
 	PERFORMANCE(Ability.CHA),
-	PERSUASION(Ability.CHA)
+	PERSUASION(Ability.CHA);
+
+	val fullname: String get()
+		= name.toLowerCase().replace("_", " ")
 }
