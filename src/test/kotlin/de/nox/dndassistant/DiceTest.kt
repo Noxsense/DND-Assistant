@@ -13,7 +13,7 @@ class DiceTest {
 		var str = "Just null, 0d20"
 		assertEquals("+0", SimpleDice(20, 0).toString(), str)
 		assertEquals("+0", SimpleDice(0, 20).toString(), str)
-		assertEquals(SimpleDice(20, 0), SimpleDice(0, 20))
+		assertEquals(SimpleDice(20, 0), SimpleDice(0, 20), str)
 
 		str = "default, 1d20 / d20"
 		assertEquals("+1d20", SimpleDice(20).toString(), str)
@@ -21,20 +21,20 @@ class DiceTest {
 		assertEquals("+1d20", SimpleDice(20, 1).toString(), str)
 		assertEquals(SimpleDice(20, 1), SimpleDice(20))
 		assertEquals(SimpleDice(20, 1), SimpleDice(-20, -1))
-		assertEquals(SimpleDice(20), SimpleDice(-20, -1))
+		assertEquals(SimpleDice(20), SimpleDice(-20, -1), str)
 
 		str = "Minus, 1d(-3) => d(-3)"
 		assertEquals("-1d3", SimpleDice(max = -3, times = 1).toString(), str)
 		assertEquals("-1d3", SimpleDice(max = 3, times = -1).toString(), str)
-		assertEquals(SimpleDice(-3), SimpleDice(-3, 1))
-		assertEquals(SimpleDice(-3), SimpleDice(3, -1))
+		assertEquals(SimpleDice(-3), SimpleDice(-3, 1), str)
+		assertEquals(SimpleDice(-3), SimpleDice(3, -1), str)
 
 		str = "Bonus, (-3)d1 => (-3)"
 		assertEquals("-3", SimpleDice(max = 1, times = -3).toString(), str)
 		assertEquals("-3", SimpleDice(max = -1, times = 3).toString(), str)
 		assertEquals("-3", Bonus(-3).toString(), str)
-		assertEquals(SimpleDice(1, -3), SimpleDice(-1, 3))
-		assertEquals(SimpleDice(1, -3), Bonus(-3))
+		assertEquals(SimpleDice(1, -3), SimpleDice(-1, 3), str)
+		assertEquals(SimpleDice(1, -3), Bonus(-3), str)
 	}
 
 	@Test
@@ -116,6 +116,9 @@ class DiceTest {
 	@Test
 	fun testSimplifyTerm() {
 		val dice = DiceTerm(
+			// + 3 + 3 - 3 + 3d8 - d8 + 5d12 + d12 + 2d21 - d21
+			// (+ 3 + 3 - 3) (+ 3d8 - d8) (+ 5d12 + d12) (+ 2d21 - d21)
+			// (+ 3) (+ 2d8) (+ 6d12) (+ 1d21)
 			Bonus(+3),
 			SimpleDice(8, 3),
 			SimpleDice(12),
@@ -127,6 +130,7 @@ class DiceTest {
 			SimpleDice(12, 5)
 		)
 		val expected = DiceTerm(
+			// 2d21 + 6d12 + 2d8 + 3
 			SimpleDice(21),
 			SimpleDice(12, 6),
 			SimpleDice(8, 2),
@@ -138,7 +142,7 @@ class DiceTest {
 		println("Input:    $dice")
 		println("Simple:   $simplified")
 
-		assertTrue(expected.same(simplified), "expected exactly the same as simplified")
+		assertTrue(expected.same(simplified), "Simple: {$dice \u21D2 $simplified} vs {$expected}")
 
 		assertEquals(expected, simplified, "simplified as expected")
 		assertEquals(dice, simplified, "same rolls (simplified)")
@@ -146,7 +150,15 @@ class DiceTest {
 
 		val splitInput = dice.split()
 
-		println("Split:    $splitInput")
+		val dice2 = DiceTerm(0) + Bonus(-2) // +0 -2
+		val expect2 = DiceTerm(Bonus(-2)) // -2
+		val simple2 = dice2.contracted()
+
+		assertTrue(expect2.same(simple2), "Simple (v2): {$dice2 \u21D2 $simple2} vs {$expect2}")
+
+		assertEquals(expect2, simple2, "simplified as expected")
+		assertEquals(dice2, simple2, "same rolls (simplified)")
+		assertEquals(expect2, dice2, "same rolls (in the first place)")
 
 		// will roll the same.
 		assertEquals(dice, splitInput, "will also roll the same.")

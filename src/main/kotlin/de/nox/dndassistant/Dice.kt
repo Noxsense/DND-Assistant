@@ -83,9 +83,9 @@ class DiceTerm(vararg ds: SimpleDice) {
 		= DiceTerm(*dice.toList().sortedDescending()
 		.fold<SimpleDice, List<SimpleDice>>(listOf(), { xs, x -> when {
 			!xs.isEmpty() && xs.last().faces == x.faces -> {
-				xs.dropLast(1) + xs.last().addDie(x.factor)
+				xs.dropLast(1) + xs.last().addDie(x.factor) // add to the same faced die.
 			}
-			else -> xs + x
+			else -> xs + x // add a new faced die.
 		}}).toTypedArray())
 
 	/** Split all dice to single die.*/
@@ -135,7 +135,7 @@ class DiceTerm(vararg ds: SimpleDice) {
 data class SimpleDice(val max: Int, val times: Int = 1) : Comparable<SimpleDice> {
 	internal val sign = if (times < 0 != max < 0) -1 else 1
 	internal val count = abs(times)
-	val faces = if (times == 0) 0 else abs(max) /* faces of the die.*/
+	val faces = if (times == 0 || max == 0) 1 else abs(max) /* faces of the die.*/
 	val factor = if (max == 0) 0 else count * sign /* how often */
 
 	/* Compare by highst (lowest) value.*/
@@ -171,7 +171,11 @@ data class SimpleDice(val max: Int, val times: Int = 1) : Comparable<SimpleDice>
 		= when {
 			other == null -> false
 			other !is SimpleDice -> false
-			else -> ((faces == other.faces) && (factor == other.factor))
+			else -> (((faces == other.faces) && (factor == other.factor))
+				// 0d20 == 21d0
+				|| ((factor == 0 || faces == 0)
+				&& (other.factor == 0 || other.faces == 0))
+			)
 		}
 
 	/** String representation of simpleDice.*/
@@ -181,6 +185,9 @@ data class SimpleDice(val max: Int, val times: Int = 1) : Comparable<SimpleDice>
 			factor == 0 || faces < 2 -> "%+d".format(factor) // constant (d1)
 			else -> "%+dd%d".format(factor, faces) // default term: +1d6
 		}
+
+	fun toStringFaces() : String
+		= "${factor}d${faces}"
 
 	/** Get the average value of the dice. */
 	val average : Double get()
