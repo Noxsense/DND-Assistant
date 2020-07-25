@@ -8,12 +8,13 @@ Also to create a new one and roll anything needed.
 - [x] roll skills, attack saving throws
 - [ ] create a new character
 - [ ] level up
-- [ ] maintain spells, focus, stats
-- [ ] equip certain items from inventory (and unequip)
+- [x] maintain spells, focus, stats
+- [x] equip certain items from inventory (and unequip)
 - [ ] features and traits not just as text
 - [ ] handle notes, pets, hostile beasts and other environmental features
 - [ ] maybe an initiative / battle tracker
 - [ ] sharing and positioning during a session with other people
+- [ ] connecting with other players and a game master
 
 ## To do
 - [x] replace `Makefile` with `gradle.build`

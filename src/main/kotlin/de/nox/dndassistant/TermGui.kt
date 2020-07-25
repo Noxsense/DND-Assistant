@@ -85,6 +85,54 @@ fun playgroundWithOnyx() {
 	(1..60).forEach { pc.pickupItem(dagger) } // get +60 daggers => inventory +60lb
 	// pc.pickupItem(Item("Crowbar", 5.0, Money()))
 
+	val mageHand = Spell(
+		"Mage Hand", // name
+		"Conjuration", 0, // school, level
+		"1 action", "30 feet", "V,S", 60, false, // casting time, range, components, duration, concentration
+		"""
+		Vansishes over 30ft range, or re-cast;
+		manipulate objects, open / unlock container, stow / retrive item, pour contents;
+		cannot attack, cannot activate magic items, cannot carry more than 10 pounds
+		""",
+		false)
+
+	val guidance = Spell(
+		"Guidance", // name
+		"Divination", // school
+		0, // spell level
+		"1 action", // casting time
+		"Touch", // range
+		"V,S", // components
+		60, true, // duration, concentration
+		"""
+		1. Touch a willing creature.
+		2. Roll d4, add to one ability check of choice (pre/post). End.
+		""".trimIndent(), // description
+		false // is ritual
+		)
+
+	var slots : List<Int> = (0..9).map { if (it == 0) -1 else Math.max(D10.roll() - D20.roll(), 0) }
+
+	val spells: List<LearntSpell> = listOf(
+		  LearntSpell(Spell("Spell 5", "Illusion",      5, "1 action", "5 feet", "V", 1,     false,"...", true) , "Druid")
+		, LearntSpell(Spell("Spell 1", "Conjuration",   1, "1 action", "Touch",  "V", 60,    false,"...", false), "Gnome")
+		, LearntSpell(mageHand, "Bard")
+		, LearntSpell(Spell("Spell 0", "Abjuration",    0, "1 action", "Touch",  "V", 60,    false,"...", false), "Wizard")
+		, LearntSpell(Spell("Spell 6", "Necromancy",    6, "1 action", "6 feet", "V", 1,     false,"...", false), "Ranger")
+		, LearntSpell(guidance, "Druid")
+		, LearntSpell(Spell("Spell 2", "Divination",    2, "1 action", "1 feet", "V", 1,     false,"...", false), "Ranger")
+		, LearntSpell(Spell("Spell 4", "Evocation",     4, "1 action", "4 feet", "V", 86400, false,"...", true) , "Wizard")
+		, LearntSpell(Spell("Spell 7", "Transmutation", 7, "1 action", "7 feet", "V", 60,    false,"...", false), "Tiefling")
+		, LearntSpell(Spell("Spell 3", "Enchantment",   3, "1 action", "3 feet", "V", 1,     false,"...", false), "Tiefling")
+		)
+
+	spells.find{ it.spell == guidance }!!.cast()
+	spells.find{ it.spell.name == "Spell 4" }!!.prepare()
+	spells.find{ it.spell.name == "Spell 4" }!!.cast()
+	spells.find{ it.spell.name == "Spell 7" }!!.prepare()
+
+	pc.spellsLearnt = spells
+
 	val display = PCDisplay(pc, "Nox")
 	pc.maxHitPoints = 12
 	pc.curHitPoints = 7
@@ -388,109 +436,26 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 	/** Show the available spells. */
 	fun showSpells(unfold: Boolean = false) : String {
-		// TODO (2020-07-18) Implement PlayerCharacter's spells.
-
-		data class Spell(
-			val name: String,
-			val school: String,
-			val level: Int,
-			val castingTime: String,
-			val range: String,
-			val components: String,
-			val concentration: Boolean = false,
-			val duration: String,
-			val note: String) {
-			override fun toString()
-				= "$name (" + when (level) {
-					0 -> "Cantrip"
-					1 -> "1st-level"
-					2 -> "2nd-level"
-					3 -> "3rd-level"
-					else -> "${level}th-level"
-				} + " $school)"
-		}
-
-		data class SpellState(
-			val prepared: Boolean,
-			val learned: Boolean,
-			val learnedAs: String // Class name: eg. learned as Bard or Druid
-			)
-
-		val mageHand = Spell(
-			"Mage Hand",
-			"Conjuration", 0, "1 action", "30 feet", "V,S", false, "1 Minute",
-			"""
-			Vansishes over 30ft range, or re-cast;
-			manipulate objects, open / unlock container, stow / retrive item, pour contents;
-			cannot attack, cannot activate magic items, cannot carry more than 10 pounds
-			""")
-
-		val guidance = Spell(
-			"Guidance",
-			"Divination", 0, "1 action", "Touch", "V,S", true, "Concentation, 1 Minute",
-			"""
-			1. Touch a willing creature.
-			2. Roll d4, add to one ability check of choice (pre/post). End.
-			""")
-
-		var slots : List<Int> = (0..9).map { if (it == 0) -1 else Math.max(D10.roll() - D20.roll(), 0) }
-
-		var concentrated: Spell? = guidance //  to 60 /*seconds*/
-		var prepared : Map<Spell, String> = mapOf(
-			mageHand to "Bard",
-			Spell("Spell 1", "Abjuration", 0, "1 action", "Touch", "V", false, "1 hour", "Magic")  to "slot 5 / Wizard",
-			Spell("Spell 2", "Conjuration", 0, "1 action", "Touch", "V", false, "1 hour", "Magic")  to "Gnome")
-		var learnt : Map<Spell, String> = mapOf(
-			mageHand to "Bard",
-			guidance to "Druid",
-			Spell("Spell 1", "Abjuration",    1, "1 action", "Touch", "V", false, "1 hour", "Magic")  to "slot 5 / Wizard",
-			Spell("Spell 2", "Conjuration",   0, "1 action", "Touch", "V",  false, "1 hour", "Magic")  to "Gnome",
-			Spell("Spell 3", "Divination",    1, "1 action", "1 feet", "V", false, "Instantious", "Magic")  to "Ranger",
-			Spell("Spell 4", "Enchantment",   2, "1 action", "3 feet", "V", false, "Instantious", "Magic")  to "Tiefling",
-			Spell("Spell 5", "Evocation",     3, "1 action", "4 feet", "V", false, "Instantious", "Magic")  to "Wizard",
-			Spell("Spell 6", "Illusion",      4, "1 action", "5 feet", "V", false, "Instantious", "Magic")  to "Druid",
-			Spell("Spell 7", "Necromancy",    5, "1 action", "6 feet", "V", false, "Instantious", "Magic")  to "Ranger",
-			Spell("Spell 8", "Transmutation", 6, "1 action", "7 feet", "V", false, "1 hour", "Magic")  to "Tiefling")
-
 		var content: String = ""
 		var preview: String = ""
 
 		/* Spell slots. */
 		content += "\n|# Spell slots"
-		content += "\n|| " + slots.joinToString(" | ", "[ ", " ]", transform = {
+		content += "\n|| " + char.spellSlots.joinToString(" | ", "[ ", " ]", transform = {
 			if (it < 0) "\u221E" /* infinity */ else "$it"
 		})
 
-		/* Concentration. */
-		if (concentrated != null) {
-			content += "\n|# Concentration on"
-			content += "\n|| * ${concentrated.name}"
-			preview += "!!${concentrated.name}!! / "
-		}
-
-		/* Prepared spells (and cantrips). */
-		content += "\n|# Prepeared Spells"
-		if (prepared.size > 0) {
-			/* Prepared spells (and cantrips):
-			 * Name, using spell slot, ability source|score, maybe damage. */
-			preview += "{"
-			prepared.entries.forEach {
-				content += "\n|| * %${-width * 2 / 3}s %${width / 3 - 6}s"
-					.format(it.key.name, it.value)
-				preview += "${it.key.name}, "
-			}
-			preview = preview.substring(0, preview.length - 2) + "} / "
-		}
-
 		/* All known spells. */
-		content += "\n|# Known Spells"
-		content += "\n|| " + learnt.entries
-			.joinToString("\n|| * ", "* ", "\n", transform = {
-				it.key.name
-			})
+		content += "\n|# Learnt Spells"
+		content += char.spellsLearnt.sorted().joinToString("\n| * ", "\n| * ", "\n")
 
 		/* Print left spellslots in the end. */
-		preview += "${(0..9).filter{ slots[it] > 0 }.joinToString("|") }"
+		preview += "${char.spellsLearnt
+			.filter { it.leftDuration > 0 }
+			.joinToString(", ", "{", "}, ", transform = {
+				(if (it.holdsConcentration) "*" else "" ) + it.spell.name
+			})}"
+		preview += "${(0..9).filter{ char.spellSlots[it] > 0 }.joinToString(":", "slots: [", "]") }"
 
 		return "# Spells (${preview})" + if (unfold) content else ""
 	}

@@ -127,6 +127,84 @@ data class PlayerCharacter(
 	var knownLanguages: List<String>
 		= listOf("Common")
 
+	var spellSlots : List<Int> = (0..9).map { if (it == 0) -1 else Math.max(D10.roll() - D20.roll(), 0) }
+		// private set
+
+	var spellsLearnt : List<LearntSpell> = listOf()
+		// private set
+
+	/** Learn a new spell with the given source, this character has.
+	 * If the spell is already learnt, do no update.
+	 * If the spell source is unfitting for the spell or the spell caster (this),
+	 * the spell is also not learnt.
+	 * @param spell the new spell to learn.
+	 * @param spellSource the source and spellcasting ability, the spell is learnt on the first place.
+	 */
+	fun learnSpell(spell: Spell, spellSource: String) {
+		/* Abort, if the spell is already known. */
+		if (spellsLearnt.any{ it.spell == spell })
+			return
+
+		/* Abort, if the spell cannot be learnt with the current classes and race. */
+		if (false) // TODO (2020-07-25)
+			return
+
+		/* If all checked, add new spell to learnt spells. */
+		spellsLearnt += LearntSpell(spell, spellSource)
+	}
+
+	/** Prepare a (learnt) spell.
+	 * Prepare a spell for a spell slot.
+	 * @param index index of the spell in the current spell list.
+	 * @param slot spell slot to cast the spell, minimum/default: spell's level.
+	 */
+	fun prepareSpell(index: Int, slot: Int = 0) {
+		/* Use like: "abcd"[-2] = 'c' */
+		when {
+			index < 0 -> {
+				val posIndex = spellsLearnt.size + index
+				if (posIndex >= 0) {
+					prepareSpell(posIndex)
+				}
+			}
+			index < spellsLearnt.size -> {
+				spellsLearnt[index].prepare(slot)
+			}
+		}
+	}
+
+	/** Prepare a (learnt) spell.
+	 * @see prepareSpell(Int, Int).
+	 */
+	fun prepareSpell(spell: Spell, slot: Int = 0) {
+		val index = spellsLearnt.indexOfFirst{ it.spell == spell }
+		if (index > -1) {
+			prepareSpell(index, slot)
+		}
+	}
+
+	/** Cast a learnt spell.
+	 * If neccessary, the spell must also be prepared to be casted.
+	 * If the new spell holds concentration, and another spell is already
+	 * holding concentration, replace/deactivate that old spell.
+	 * Also use up the used spell slot.
+	 * If there is no spell slot left, abort the spell cast.
+	 * If spell is unknown, abort the spell cast.
+	 * If preparation was a requirement, but not done, abort the spell cast.
+	 * @param index index of the spell in the current spell list.
+	 * @param slot intended spell slot to use, minimum spell.level.
+	 */
+	fun castSpell(index: Int, slot: Int = 0) {
+		// TODO (2020-07-25)
+	}
+
+	/** Cast a learnt spell.
+	 * @see castSpell(Int,Int)
+	 */
+	fun castSpell(spell: Spell, slot: Int = 0) {
+		// TODO (2020-07-25)
+	}
+
 	var purse: Money = Money()
 
 	var inventory:  List<Item>
