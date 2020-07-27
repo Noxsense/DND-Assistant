@@ -15,7 +15,17 @@ fun main() {
 
 fun playgroundWithOnyx() {
 	val pc : PlayerCharacter
-		= PlayerCharacter("Onyx Necklace", race = "Gnome", player = "Nox")
+		= PlayerCharacter(
+			"Onyx Necklace",
+			race = "Gnome",
+			background = Background(
+				name = "Sage",
+				proficiencies = listOf(Skill.ARCANA, Skill.HISTORY),
+				equipment = listOf(/*bottle,ink,pen,small knife, letter,clothes*/),
+				money = Money(gp=10)).apply {
+					extraLanguages = 2
+				},
+			player = "Nox")
 
 	// pc.rollAbilityScores()
 
@@ -29,7 +39,6 @@ fun playgroundWithOnyx() {
 	))
 
 	pc.addProficiency(Skill.SLEIGHT_OF_HAND) // proficient
-	pc.addProficiency(Skill.ARCANA) // proficient
 	pc.addProficiency(Skill.STEALTH) // proficient
 	pc.addProficiency(Skill.SLEIGHT_OF_HAND) // expert
 	pc.addProficiency(Ability.DEX) // saving throw
@@ -134,6 +143,22 @@ fun playgroundWithOnyx() {
 	val display = PCDisplay(pc, "Nox")
 	pc.maxHitPoints = 12
 	pc.curHitPoints = 7
+
+	pc.speciality = "Libarian"
+	pc.trait = "Watch and Learn."
+	pc.ideal = "Knowledge."
+	pc.bonds = "Protect the weak."
+	pc.flaws = "Stupid, hurtful men."
+
+	pc.history += "Born in a gnome village"
+	pc.history += "Childhood with loving and caring gnome parents, both libarians"
+	pc.history += "Still childhood, Parents left for own small adventure, but disappeared unplanned"
+	pc.history += "Raised by village and friend's parent"
+	pc.history += "Friend left for better lifestyle without being judged"
+	pc.history += "Left to search friend and parents"
+	pc.history += "Got abducted, sold into a brothel "
+	pc.history += "Run away after learning how to fight back by mysterious elf woman"
+	pc.history += "Became Assassin (Rogue)"
 
 	println("\n".repeat(5))
 	display.display()
@@ -513,9 +538,9 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 							preview += ", ${it.name}" // also add spell to preview
 					}
 				}
-				
+
 				val leftSide = "${prep}${it}"
-				
+
 				("\n| * $leftSide %${width - leftSide.length - 5}s".format(
 					duration
 				))
@@ -561,7 +586,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 	fun showRaces(unfold: Boolean = false) : String {
 		var content = ""
-	
+
 		// TODO (2020-07-19) Implement PlayerCharacter's Races.
 
 		val raceName = "???"
@@ -578,21 +603,33 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 		var content = ""
 
 		// TODO (2020-07-18) Implement PlayerCharacter's Background and Aligmnent.
-
-		val background = "???"
-		val alignment = "???"
+		val age = when {
+			char.age < 0 -> "${-char.age} days"
+			else -> "${char.age} yrs"
+		}
 
 		if (unfold) {
 			content += "\n"
 
 			val len = width / 4 - 2
-			val motives = "???"
 
-			content += "| * %${-len}s %s\n".format("Background:", background)
-			content += "| * %${-len}s %s\n".format("Alignment:", alignment)
-			content += "| * %${-len}s %s\n".format("Motives:", motives)
+			content += "| * %${-len}s %s\n".format("Age:", age)
+			content += "| * %${-len}s %s\n".format("Background:", char.background)
+			content += "| * %${-len}s %s\n".format("Alignment:", char.alignment)
+
+			content += "| * Motives:\n"
+			content += "| | %${-len}s %s\n".format("* Speciality:", char.speciality)
+			content += "| | %${-len}s %s\n".format("* Trait:", char.trait)
+			content += "| | %${-len}s %s\n".format("* Ideal:", char.ideal)
+			content += "| | %${-len}s %s\n".format("* Bonds:", char.bonds)
+            content += "| | %${-len}s %s\n".format("* Flaws:", char.flaws)
+
+			content += ("| * Story:"
+				+ char.history.joinToString("\n| | * ","\n| | * ", "\n"))
 		}
-		val preview = " ($background, $alignment)" // show background name and alignment.
+
+		// show background name and alignment.
+		val preview = " (${age} (${char.alignment.abbreviation}), ${char.background})"
 		return "# Background" + preview + content
 	}
 
@@ -610,10 +647,8 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 			val len = width / 4 - 2
 
-			content += "| * %${-len}s %s\n".format("Height:", "?\" / ? cm")
-			content += "| * %${-len}s %s\n".format("Weight:", "90lb / ?kg")
-			content += "| * %${-len}s %s\n".format("Form:", form)
-			content += "| * %${-len}s %s\n".format("Size:", size)
+			content += "| * %${-len}s %s\n".format("Height:", "?\" / ? cm, ${size}")
+			content += "| * %${-len}s %s\n".format("Weight:", "90lb / ?kg, ${form}")
 			content += "| * %${-len}s %s\n".format("More:", "$etc, ???")
 
 			// TODO (2020-07-18) Add (ASCII) picture?

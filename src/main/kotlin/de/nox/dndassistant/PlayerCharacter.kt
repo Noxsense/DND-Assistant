@@ -9,6 +9,7 @@ private val logger = LoggerFactory.getLogger("PlayerCharacter")
 data class PlayerCharacter(
 	val name: String,
 	val race: String = "Human" /*TODO*/,
+	val background: Background,
 	val gender: String = "divers",
 	val player: String = ""
 	) {
@@ -29,7 +30,7 @@ data class PlayerCharacter(
 		private set
 
 	var proficiencies: Map<Skillable, Proficiency>
-		= mapOf()
+		= background.proficiencies.associateWith { Proficiency.PROFICIENT }
 		private set
 
 	var proficientValue: Int
@@ -90,6 +91,28 @@ data class PlayerCharacter(
 		= this.abilityModifier.getOrDefault(Ability.DEX,
 			getModifier(this.abilityScore.getOrDefault(Ability.DEX, 0)))
 
+	/* Age of the character, in years. (If younger than a year, use negative as days.) */
+	var age : Int = 0
+
+	val alignment : Alignment = Alignment.NEUTRAL_NEUTRAL;
+
+	/* The history of the character. */
+	var speciality : String = ""
+	var trait : String = ""
+	var ideal : String = ""
+	var bonds : String = ""
+	var flaws : String = ""
+
+	/* The history of the character. */
+	var history : List<String>
+		= listOf()
+
+	var classes : List<String> = listOf()
+		private set
+
+	var knownLanguages: List<String>
+		= listOf("Common")
+
 	var maxHitPoints: Int = -1
 	var curHitPoints: Int = -1
 	var tmpHitPoints: Int = -1
@@ -122,10 +145,11 @@ data class PlayerCharacter(
 	fun rest(shortRest: Boolean = true) {
 		println("Rest " + (if (shortRest) "short" else "long"))
 		// TODO (2020-06-26)
+		if (shortRest) {
+			// use up to all hit dice and add rolled hit points up to full HP.
+			// do other reloadings.
+		}
 	}
-
-	var knownLanguages: List<String>
-		= listOf("Common")
 
 	var spellSlots : List<Int> = (0..9).map { if (it == 0) -1 else Math.max(D10.roll() - D20.roll(), 0) }
 		// private set
@@ -491,6 +515,25 @@ enum class Ability(val fullname: String) {
 	CHA("CHARISMA")
 }
 
+enum class Alignment {
+	LAWFUL_GOOD,
+	LAWFUL_NEUTRAL,
+	LAWFUL_EVIL,
+	NEUTRAL_GOOD,
+	NEUTRAL_NEUTRAL,
+	NEUTRAL_EVIL,
+	CHAOTIC_GOOD,
+	CHAOTIC_NEUTRAL,
+	CHAOTIC_EVIL;
+
+	val abbreviation : String
+		= name.split("_").toList().joinToString(
+			"","","", transform = { it[0].toString() } )
+
+	override fun toString() : String
+		= name.toLowerCase().replace("_", " ")
+}
+
 enum class BodyType {
 	HEAD, // hat, helmet...
 	SHOULDERS, // like cloaks ...
@@ -499,4 +542,23 @@ enum class BodyType {
 	RING, // for fingers (10x... species related)
 	FOOT, // for one shoe or so (2x)
 	// SHIELD // only one // ARM
+}
+
+data class Background(
+	val name: String,
+	val proficiencies : List<Skillable>, // skill, tool proficiencies
+	val equipment : List<Item>,
+	val money: Money) {
+
+	override fun toString() : String = name
+
+	var description : String = ""
+	var extraLanguages : Int = 0 // addionally learnt languages.
+
+	var suggestedSpeciality : List<String> = listOf()
+
+	var suggestedTraits : List<String> = listOf()
+	var suggestedIdeals : List<String> = listOf()
+	var suggestedBonds : List<String> = listOf()
+	var suggestedFlaws : List<String> = listOf()
 }
