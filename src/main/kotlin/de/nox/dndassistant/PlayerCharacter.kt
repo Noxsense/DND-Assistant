@@ -130,8 +130,23 @@ data class PlayerCharacter(
 	var spellSlots : List<Int> = (0..9).map { if (it == 0) -1 else Math.max(D10.roll() - D20.roll(), 0) }
 		// private set
 
-	var spellsLearnt : List<LearntSpell> = listOf()
-		// private set
+	// spell, spellcasting source, prepared?
+	private var spellsLearnt : Map<Spell, String> = mapOf()
+		private set
+
+	/** List the spells, the character has learnt. */
+	val spellsKnown: List<Spell> get() = spellsLearnt.keys.toList()
+
+	var spellsPrepared: Map<Spell, Int> = mapOf()
+		private set // changes in prepareSpell(Spell,Int)
+
+	/** A map of activated spells with their left duration (seconds). */
+	var spellsActive: Map<Spell, Int> = mapOf()
+		private set // changes on spellCast(Spell,Int) and spellEnd(Spell)
+
+	/** Get the (first) active spell, which needs concentration. */
+	val spellConcentration: Spell? get()
+		= spellsActive.keys.find { it.concentration }
 
 	/** Learn a new spell with the given source, this character has.
 	 * If the spell is already learnt, do no update.
@@ -142,7 +157,7 @@ data class PlayerCharacter(
 	 */
 	fun learnSpell(spell: Spell, spellSource: String) {
 		/* Abort, if the spell is already known. */
-		if (spellsLearnt.any{ it.spell == spell })
+		if (spellsLearnt.containsKey(spell))
 			return
 
 		/* Abort, if the spell cannot be learnt with the current classes and race. */
@@ -150,36 +165,37 @@ data class PlayerCharacter(
 			return
 
 		/* If all checked, add new spell to learnt spells. */
-		spellsLearnt += LearntSpell(spell, spellSource)
-	}
+		spellsLearnt += spell to spellSource
+		logger.info("Learnt spell ${spell}  (as ${spellSource})")
 
-	/** Prepare a (learnt) spell.
-	 * Prepare a spell for a spell slot.
-	 * @param index index of the spell in the current spell list.
-	 * @param slot spell slot to cast the spell, minimum/default: spell's level.
-	 */
-	fun prepareSpell(index: Int, slot: Int = 0) {
-		/* Use like: "abcd"[-2] = 'c' */
-		when {
-			index < 0 -> {
-				val posIndex = spellsLearnt.size + index
-				if (posIndex >= 0) {
-					prepareSpell(posIndex)
-				}
-			}
-			index < spellsLearnt.size -> {
-				spellsLearnt[index].prepare(slot)
-			}
+		/* Always prepared cantrip.*/
+		if (spell.level < 1) {
+			prepareSpell(spell)
 		}
 	}
 
 	/** Prepare a (learnt) spell.
+	 * Prepare a spell for a spell slot.
+	 * @param spell the spell to prepare
+	 * @param slot the spell level, to prepare the spell for,
+	 *     if not given or zero, the prepartion level is set to the spell level,
+	 *     if lesse than zero, a prepared spell will be unprepared.
 	 * @see prepareSpell(Int, Int).
 	 */
 	fun prepareSpell(spell: Spell, slot: Int = 0) {
-		val index = spellsLearnt.indexOfFirst{ it.spell == spell }
-		if (index > -1) {
-			prepareSpell(index, slot)
+		/* Do not prepare unknown spell. */
+		if (!spellsLearnt.containsKey(spell)) {
+			return
+		}
+
+		if (slot < 0 && spell.level > 0) {
+			/* Unprepare (except of cantrips, which cannot be unprepared). */
+			spellsPrepared -= spell
+			logger.info("Not prepared anymore: ${spell.name}")
+		} else {
+			/* Prepare spell, at least spell level. */
+			spellsPrepared += spell to Math.max(slot, spell.level)
+			logger.info("Prepared: ${spell.name}")
 		}
 	}
 
@@ -194,15 +210,44 @@ data class PlayerCharacter(
 	 * @param index index of the spell in the current spell list.
 	 * @param slot intended spell slot to use, minimum spell.level.
 	 */
-	fun castSpell(index: Int, slot: Int = 0) {
+	fun castSpell(spell: Spell, slot: Int = 0) {
+		/* If the spell is unknown, it cannot be casted (abort). */
+		if (!spellsLearnt.containsKey(spell)) {
+			return
+		}
+
 		// TODO (2020-07-25)
+		/* If the spell caster needs to prepare,
+		 * check if the spell is prepared, otherwise abort casting.*/
+		if (false && !spellsPrepared.containsKey(spell)) {
+			return
+		}
+
+		/* If the new spell needs concentration,
+		 * but another spell also holds concentration, replace the old spell. */
+
+		if (spell.concentration) {
+			spellConcentration ?. let {
+				spellsActive -= it // remove old concentration spell
+			}
+		}
+
+		// TODO (2020-07-27) SLOT power?
+
+		/* Cast spell for at least 1 second (instantious). */
+		spellsActive += spell to Math.max(1, spell.duration)
+
+		logger.info("Casts ${spell.name}, left duration ${spell.duration} seconds")
 	}
 
-	/** Cast a learnt spell.
-	 * @see castSpell(Int,Int)
+	/** Decrease left duration of all activated spells.
+	 * Remove spells, with left duration below 1 seconds.
+	 * @param sec seconds to reduce from active spells.
 	 */
-	fun castSpell(spell: Spell, slot: Int = 0) {
-		// TODO (2020-07-25)
+	fun tickSpellsActivated(sec: Int = 6) {
+		spellsActive = spellsActive
+			.mapValues { it.value -  Math.abs(sec) }
+			.filterValues { it > 0 }
 	}
 
 	var purse: Money = Money()

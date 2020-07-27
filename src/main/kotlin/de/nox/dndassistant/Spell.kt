@@ -11,8 +11,11 @@ data class Spell(
 	val components: String,
 	val duration: Int, // seconds.
 	val concentration: Boolean = false,
-	val note: String = "",
-	val ritual: Boolean = false
+	val ritual: Boolean = false,
+	// val attackSave: Ability? = null,
+	// val damageEffect: String = "",
+	// spellTag: String = "", // heal, damage, social, buff, debug, environmental, poison, ...
+	val note: String = ""
 	)
 	: Comparable<Spell> {
 
@@ -27,130 +30,6 @@ data class Spell(
 			3 -> "3rd-level"
 			else -> "${level}th-level"
 		} + " $school)"
-}
-
-/* Wrapper for a spell, which is learned with a certain class.
- * This also holds the current states, the spell caster initiated.
- */
-data class LearntSpell (
-	val spell: Spell,
-	val learnedAs: String // Class name: eg. learned as Bard or Druid => important for ability score.
-	) : Comparable<LearntSpell> {
-
-	var preparedSlot: Int = -1
-		private set
-
-	/** Check, if the spell is readied for a spell slot (or a cantrip). */
-	val prepared: Boolean get()
-		= spell.level == 0 || preparedSlot >= spell.level
-
-	var usedSpellSlot: Int = 0
-		private set
-
-	var holdsConcentration: Boolean = false
-		private set
-
-	var leftDuration: Int = 0 /* as seconds */
-		private set
-
-	/** Return the DC, to resist the spell.
-	 * @return 8 + (Spellcasting Ability Modifier) + (Proficiency Bonus) + (Any Special Modifier). */
-	val savingThrow: Int get()
-		= 0 // TODO (2020-07-24)
-
-	/** Return the possible dealt damage of the spell.
-	 * @return (spellcasting ability modifier) + (proficiency bonus). */
-	val attackDamage: Int get()
-		= 0 // TODO (2020-07-24)
-
-	/** Prepare the wrapped spell, to cast. */
-	fun prepare(spellSlot: Int = 0) {
-		preparedSlot = when {
-			spellSlot == 0 -> spell.level // default: prepare on matching level.
-			spellSlot < spell.level -> -1 // unprepare.
-			else -> spellSlot
-		}
-	}
-
-	/** Cast a prepared spell with the default or chosen slot level.
-	 * If the spell is not prepared, nothing will change.
-	 * The spell will not prepared anymore.
-	 * Concentration, may be triggered, duration will start.
-	 * @param level the slot level, the spell should be activated with, used at least the spell level.
-	 * @return the used spell level, if not casted at all, 0 is returned.
-	 */
-	fun cast(level: Int = -1) : Int {
-		// TODO (2020-07-25) needs to be prepared, needs not to be prepared?
-		val mustBePrepared = false
-		if (mustBePrepared && (spell.level != 0 || preparedSlot < 0)) {
-			return -1 // abort, not casting at all.
-		}
-
-		leftDuration = spell.duration
-		holdsConcentration = spell.concentration
-		usedSpellSlot = Math.min(9, Math.max(spell.level, level))
-		return usedSpellSlot
-	}
-
-	/** This decrease the left duration.
-	 * If the left duration ran out and concentration was held, release concentration.
-	 */
-	fun spentTime(seconds: Int = 6) {
-		leftDuration -= seconds
-
-		if (leftDuration < 1) {
-			endSpell()
-			holdsConcentration = false
-		}
-	}
-
-	/** This resets the left duration and maybe held concentration.*/
-	fun endSpell() {
-		leftDuration = 0
-		holdsConcentration = false
-	}
-
-	/** Compare two learnt spells.
-	 * If they are activated, put spells with concentration first.
-	 * Then by left duration (short to long).
-	 * If not activated, put prepared first.
-	 * If also no spell is prepared, sort by spell level.
-	 */
-	override fun compareTo(other: LearntSpell) : Int
-		= when {
-			holdsConcentration != other.holdsConcentration ->
-				-holdsConcentration.compareTo(other.holdsConcentration)
-			leftDuration != other.leftDuration ->
-				-leftDuration + other.leftDuration
-			prepared != other.prepared ->
-				-prepared.compareTo(other.prepared)
-			prepared ->
-				-preparedSlot + other.preparedSlot
-			else ->
-				spell.compareTo(other.spell)
-		}
-
-	override fun toString() : String {
-		val preparedState = when {
-			spell.level < 1 -> "{C} "
-			prepared -> "{${preparedSlot}} "
-			else -> ""
-		}
-
-		/* Show prepared slot and spell information. */
-		val left = "${preparedState}${spell}"
-
-		/* Not casted => show only left side. */
-		if (leftDuration < 1)
-			return left
-
-		val activationState = when {
-			holdsConcentration -> "Concentration for %6ds!"
-			else -> "active for %6ds."
-		}.format(leftDuration)
-
-		return "%s %${70 - left.length}s".format(left, activationState)
-	}
 }
 
 /** A school of magic, which categories a certain spell and may apply own rules

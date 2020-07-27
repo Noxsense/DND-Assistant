@@ -89,12 +89,12 @@ fun playgroundWithOnyx() {
 		"Mage Hand", // name
 		"Conjuration", 0, // school, level
 		"1 action", "30 feet", "V,S", 60, false, // casting time, range, components, duration, concentration
-		"""
+		ritual = false,
+		note = """
 		Vansishes over 30ft range, or re-cast;
 		manipulate objects, open / unlock container, stow / retrive item, pour contents;
 		cannot attack, cannot activate magic items, cannot carry more than 10 pounds
-		""",
-		false)
+		""")
 
 	val guidance = Spell(
 		"Guidance", // name
@@ -104,34 +104,32 @@ fun playgroundWithOnyx() {
 		"Touch", // range
 		"V,S", // components
 		60, true, // duration, concentration
-		"""
+		ritual = false, // is ritual
+		note = """
 		1. Touch a willing creature.
 		2. Roll d4, add to one ability check of choice (pre/post). End.
-		""".trimIndent(), // description
-		false // is ritual
+		""".trimIndent() // description
 		)
 
-	var slots : List<Int> = (0..9).map { if (it == 0) -1 else Math.max(D10.roll() - D20.roll(), 0) }
-
-	val spells: List<LearntSpell> = listOf(
-		  LearntSpell(Spell("Spell 5", "Illusion",      5, "1 action", "5 feet", "V", 1,     false,"...", true) , "Druid")
-		, LearntSpell(Spell("Spell 1", "Conjuration",   1, "1 action", "Touch",  "V", 60,    false,"...", false), "Gnome")
-		, LearntSpell(mageHand, "Bard")
-		, LearntSpell(Spell("Spell 0", "Abjuration",    0, "1 action", "Touch",  "V", 60,    false,"...", false), "Wizard")
-		, LearntSpell(Spell("Spell 6", "Necromancy",    6, "1 action", "6 feet", "V", 1,     false,"...", false), "Ranger")
-		, LearntSpell(guidance, "Druid")
-		, LearntSpell(Spell("Spell 2", "Divination",    2, "1 action", "1 feet", "V", 1,     false,"...", false), "Ranger")
-		, LearntSpell(Spell("Spell 4", "Evocation",     4, "1 action", "4 feet", "V", 86400, false,"...", true) , "Wizard")
-		, LearntSpell(Spell("Spell 7", "Transmutation", 7, "1 action", "7 feet", "V", 60,    false,"...", false), "Tiefling")
-		, LearntSpell(Spell("Spell 3", "Enchantment",   3, "1 action", "3 feet", "V", 1,     false,"...", false), "Tiefling")
+	val spells: List<Spell> = listOf(
+		  Spell("Spell 5", "Illusion",      5, "1 action", "5 feet", "V", 1,     false, true , "...")
+		, Spell("Spell 1", "Conjuration",   1, "1 action", "Touch",  "V", 60,    false, false, "...")
+		, mageHand
+		, Spell("Spell 0", "Abjuration",    0, "1 action", "Touch",  "V", 60,    false, false, "...")
+		, Spell("Spell 6", "Necromancy",    6, "1 action", "6 feet", "V", 1,     false, false, "...")
+		, guidance
+		, Spell("Spell 2", "Divination",    2, "1 action", "1 feet", "V", 1,     false, false, "...")
+		, Spell("Spell 4", "Evocation",     4, "1 action", "4 feet", "V", 86400, false, true , "...")
+		, Spell("Spell 7", "Transmutation", 7, "1 action", "7 feet", "V", 60,    false, false, "...")
+		, Spell("Spell 3", "Enchantment",   3, "1 action", "3 feet", "V", 1,     false, false, "...")
 		)
 
-	spells.find{ it.spell == guidance }!!.cast()
-	spells.find{ it.spell.name == "Spell 4" }!!.prepare()
-	spells.find{ it.spell.name == "Spell 4" }!!.cast()
-	spells.find{ it.spell.name == "Spell 7" }!!.prepare()
+	spells.forEach { pc.learnSpell(it, "Wizard") }
 
-	pc.spellsLearnt = spells
+	pc.castSpell(spells.find{ it == guidance }!!)
+	pc.prepareSpell(spells.find{ it.name == "Spell 4" }!!)
+	pc.castSpell(spells.find{ it.name == "Spell 4" }!!)
+	pc.prepareSpell(spells.find{ it.name == "Spell 7" }!!)
 
 	val display = PCDisplay(pc, "Nox")
 	pc.maxHitPoints = 12
@@ -434,6 +432,54 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 			+ if (unfold) content else "" )
 	}
 
+	/** Compare a spell depending on the player character.
+	 * If they are activated, put spells with concentration first.
+	 * Then by left duration (short to long).
+	 * If not activated, put prepared first.
+	 * If also no spell is prepared, sort by spell level.
+	 */
+	private inner class ComparatorSpell : Comparator<Spell> {
+		override fun compare(a: Spell, b: Spell) : Int {
+			if (a == b) return 0 // same spell.
+
+			/* If any spell is active, check if a or b can be top. */
+			if (char.spellsActive.size > 0) {
+				val activeA = char.spellsActive.getOrDefault(a, 0)
+				val activeB = char.spellsActive.getOrDefault(b, 0)
+
+				/* If a or be hold concentration, put that spell before the other. */
+				when {
+					a.concentration -> return -1 // sort reversed.
+					b.concentration -> return 1 // sort reversed.
+				}
+
+				/* If a spell is active, put it on top. */
+				if (activeA > 0 || activeB > 0) {
+					return -activeA.compareTo(activeB) // sort reversed.
+				}
+			}
+
+			/* If any spell is prepared, put also top of rest. */
+			if (char.spellsPrepared.size > 0) {
+				val preparedA = char.spellsPrepared.getOrDefault(a, -1)
+				val preparedB = char.spellsPrepared.getOrDefault(b, -1)
+
+				/* If a or b are prepared, return their comparisson. */
+				when {
+					preparedA > -1 && preparedB > -1 -> {
+						return preparedA.compareTo(preparedB)
+					}
+					preparedA > -1 -> return -1
+					preparedB > -1 -> return 1
+				}
+			}
+
+			return a.compareTo(b) // default comparisson
+		}
+	}
+
+	private val comparingSpells = ComparatorSpell()
+
 	/** Show the available spells. */
 	fun showSpells(unfold: Boolean = false) : String {
 		var content: String = ""
@@ -445,17 +491,35 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 			if (it < 0) "\u221E" /* infinity */ else "$it"
 		})
 
-		/* All known spells. */
-		content += "\n|# Learnt Spells"
-		content += char.spellsLearnt.sorted().joinToString("\n| * ", "\n| * ", "\n")
+		preview += "${(0..9).filter{ char.spellSlots[it] > 0 }
+			.joinToString(":", "left slots: [", "]") }"
 
-		/* Print left spellslots in the end. */
-		preview += "${char.spellsLearnt
-			.filter { it.leftDuration > 0 }
-			.joinToString(", ", "{", "}, ", transform = {
-				(if (it.holdsConcentration) "*" else "" ) + it.spell.name
-			})}"
-		preview += "${(0..9).filter{ char.spellSlots[it] > 0 }.joinToString(":", "slots: [", "]") }"
+		content += "\n|# Learnt Spells"
+		content += char.spellsKnown.sortedWith(comparingSpells)
+			.joinToString("", "", "\n", transform = {
+				val prepSlot = char.spellsPrepared.getOrDefault(it, -1)
+				val activeLeft = char.spellsActive.getOrDefault(it, -1)
+
+				val prep = if (prepSlot < it.level) "" else "${prepSlot} \u21d0 "
+
+				val duration = when {
+					activeLeft < 1 -> "."
+					it.concentration ->
+						"Concentration for ${activeLeft} second!".also { _ ->
+							preview += ", *${it.name}" // also add spell to preview.
+					}
+					else ->
+						"Active for ${activeLeft} second.".also { _ ->
+							preview += ", ${it.name}" // also add spell to preview
+					}
+				}
+				
+				val leftSide = "${prep}${it}"
+				
+				("\n| * $leftSide %${width - leftSide.length - 5}s".format(
+					duration
+				))
+			})
 
 		return "# Spells (${preview})" + if (unfold) content else ""
 	}
