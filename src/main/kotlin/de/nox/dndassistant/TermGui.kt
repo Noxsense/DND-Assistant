@@ -163,6 +163,13 @@ fun playgroundWithOnyx() {
 	println("\n".repeat(5))
 	display.display()
 
+	pc.conditions += Condition.UNCONSCIOUS
+	pc.deathSavesSuccess()
+	pc.deathSavesFail()
+	pc.deathSavesFail()
+	pc.deathSavesSuccess()
+	pc.deathSavesSuccess()
+
 	println("\n".repeat(5))
 	display.display(true, true, true, true, true, true, true, true, true, true)
 }
@@ -195,8 +202,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 		println(showHealthBar())
 		println()
 
-		println("+------+")
-		println()
+		println(showCombatStats())
 
 		println(showProficiencies(unfoldProficiencies))
 		println(showInventory(unfoldInventory))
@@ -277,6 +283,46 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 		}
 
 		return str
+	}
+
+	fun showCombatStats() : String {
+		// TODO (2020-07-27) Combat stats.
+		val len = width / 2 - 1 // len of a column.
+
+		val colLine1 = ("+${"-".repeat(len)}").repeat(2) + "+\n"
+		val colLine2 = ("+${"=".repeat(len)}").repeat(2) + "+\n"
+		val outLine1 = ("+${"-".repeat(width - 2)}+\n")
+		val outLine2 = ("+${"=".repeat(width - 2)}+\n")
+
+		val format = (colLine2
+			+ "| Armor Class: %${len - 15}s | Initiative:  %+${len - 15}d |\n" + colLine1
+			+ "| Hit Dice:    %${len - 15}s | Death Saves:  %${len - 16}s |\n" + colLine1
+			)
+
+		return (format.format(
+				char.armorClass,
+				char.initiative,
+				listOf(D8, D8, D8).joinToString(",", "[", "]", transform = {
+					"d${it.faces}"
+				}),
+				char.deathSaves.toList().joinToString("", "", "",
+					transform = {when (it) {
+						-1 -> "\u2620" // failed (death head)
+						0 -> ""
+						else -> "\u2661" // success (white heart)
+				}}))
+
+			+ "| %${-width + 4}s |\n".format("Conditions:")
+			+ char.conditions.joinToString("", "", "", transform = {
+				"| %${-width + 4}s |\n".format("* $it")
+			})
+			+ outLine1
+
+			+ "| %${-width + 4}s |\n".format("Speed:")
+			+ char.speed.toList().joinToString("", "", "", transform = {
+				"| %${-width + 4}s |\n".format("* ${it.second}ft (${it.first})")
+			})
+			+ outLine2)
 	}
 
 	/** Show health bar.*/
@@ -563,14 +609,14 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 			content += "\n"
 
 			content += classes.joinToString(
-				prefix = "|# ",
-				separator = "\n|# ",
+				prefix = "| # ",
+				separator = "\n| # ",
 				postfix = "\n",
 				transform = {
 					("${it.first}, level ${it.second}"
 					+ it.third.joinToString(
-						prefix    = "\n|| * ",
-						separator = "\n|| * "
+						prefix    = "\n| | * ",
+						separator = "\n| | * "
 					))
 				}
 			)

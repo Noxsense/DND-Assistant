@@ -91,6 +91,24 @@ data class PlayerCharacter(
 		= this.abilityModifier.getOrDefault(Ability.DEX,
 			getModifier(this.abilityScore.getOrDefault(Ability.DEX, 0)))
 
+	var conditions : Set<Condition> = setOf()
+
+	private var speedMap : Map<String, Int> = mapOf("walking" to 0 /*feet*/)
+	// TODO (2020-07-27) add walking speed from race
+	// TODO (2020-07-27) add walking speed from items / mounts
+
+	val speed : Map<String, Int> get()
+		= if (conditions.any{ when (it) {
+			Condition.GRAPPLED, Condition.INCAPACITATED, Condition.PARALYZED,
+			Condition.PETRIFIED, Condition.PRONE, Condition.RESTRAINED,
+			Condition.STUNNED, Condition.UNCONSCIOUS -> true
+			else -> false
+		}}) {
+			mapOf("prone" to 0)
+		} else {
+			speedMap
+		}
+
 	/* Age of the character, in years. (If younger than a year, use negative as days.) */
 	var age : Int = 0
 
@@ -122,6 +140,24 @@ data class PlayerCharacter(
 
 	var deathSaves: Array<Int> = arrayOf(0, 0, 0, 0, 0) // maximal 5 chances.
 		private set
+
+	fun deathSavesSuccess() {
+		for (i in (0 until deathSaves.size)) {
+			if (deathSaves[i] == 0) {
+				deathSaves[i] = 1
+				break
+			}
+		}
+	}
+
+	fun deathSavesFail() {
+		for (i in (0 until deathSaves.size)) {
+			if (deathSaves[i] == 0) {
+				deathSaves[i] = -1
+				break
+			}
+		}
+	}
 
 	fun resetDeathSaves() {
 		deathSaves.map { _ -> 0 }
