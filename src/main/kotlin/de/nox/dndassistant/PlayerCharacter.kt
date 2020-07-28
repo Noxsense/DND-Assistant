@@ -8,7 +8,6 @@ private val logger = LoggerFactory.getLogger("PlayerCharacter")
 
 data class PlayerCharacter(
 	val name: String,
-	val race: String = "Human" /*TODO*/,
 	val gender: String = "divers",
 	val player: String = ""
 	) {
@@ -108,7 +107,6 @@ data class PlayerCharacter(
 			speedMap
 		}
 
-
 	/* Age of the character, in years. (If younger than a year, use negative as days.) */
 	var age : Int = 0
 
@@ -173,6 +171,18 @@ data class PlayerCharacter(
 
 	var classes : List<String> = listOf()
 		private set
+
+	var race: SubRace = SubRace("Human", "-", 30)
+		private set
+
+	private var raceSet = false
+
+	/** Set the race. */
+	fun setRace(newRace: SubRace) {
+		if (raceSet) return
+		raceSet = true
+		race = newRace
+	}
 
 	var knownLanguages: List<String>
 		= listOf("Common")
@@ -410,6 +420,7 @@ data class PlayerCharacter(
 	fun sellItem(i: Item) : Boolean {
 		if (i in inventory) {
 			purse += i.cost // earn the money
+			// TODO (2020-07-28) not always the same value of stock items.
 			dropItem(i) // remove from inventory.
 			logger.info("${name} - Sold own ${i} for ${i.cost}, now ${purse}")
 			return true
@@ -643,4 +654,37 @@ data class Background(
 	var suggestedIdeals: List<String> = listOf()
 	var suggestedBonds: List<String> = listOf()
 	var suggestedFlaws: List<String> = listOf()
+}
+
+data class SubRace(
+	val superRace: String,
+	val name: String,
+	val speed: Int,
+	val abilityChanges: Map<Ability, Int> = mapOf(),
+	val darkvision: Int = 0,
+	val languages: List<String> = listOf()
+) {
+	var description: String = "${name} description"
+
+	var racialTraits: Map<String, String> = if(darkvision > 0) {
+			mapOf("Darkvision ${darkvision} ft" to "")
+		} else {
+			mapOf()
+		}
+		private set
+
+	fun addTrait(title: String, description: String = "") {
+		racialTraits += title to description
+	}
+
+	override fun equals(other: Any?) : Boolean = when {
+		other == null -> false
+		other !is SubRace -> false
+		else -> (superRace == other.superRace) && (name == other.name)
+	}
+
+	override fun toString() : String = when {
+		name == superRace || name == "-" -> superRace
+		else -> "${superRace} ({$name})"
+	}
 }

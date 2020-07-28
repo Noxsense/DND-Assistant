@@ -15,7 +15,7 @@ fun main() {
 
 fun playgroundWithOnyx() {
 	val pc : PlayerCharacter
-		= PlayerCharacter("Onyx Necklace", race = "Gnome", player = "Nox")
+		= PlayerCharacter("Onyx Necklace", player = "Nox")
 
 	// pc.rollAbilityScores()
 
@@ -142,6 +142,15 @@ fun playgroundWithOnyx() {
 		extraLanguages = 2
 		},
 		true)
+
+	pc.setRace(SubRace("Gnome", "Forest",
+		abilityChanges = mapOf(Ability.INT to 1),
+		darkvision = 60,
+		speed = 25,
+		languages = listOf("Gnomish")).apply {
+			description = "$description. ".repeat(80)
+			addTrait("Gnome Cunning", "Advantage on INT, WIS, CHA saves against Magic")
+		})
 
 	pc.speciality = "Libarian"
 	pc.trait = "Watch and Learn."
@@ -634,14 +643,27 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 		// TODO (2020-07-19) Implement PlayerCharacter's Races.
 
-		val raceName = "???"
-		val subRace = "???"
-
-		if (unfold) {
-			content += "\n| " + "{??? Race notes ???}" + "\n"
+		val raceName = "${char.race.superRace}"
+		val subRace = "${char.race.name}"
+		val darkvision = when (char.race.darkvision) {
+			0 -> ""
+			else -> ", darkvision ${char.race.darkvision}"
 		}
 
-		return "# Races ($raceName, $subRace)" + content
+		if (unfold) {
+			content += char.race.racialTraits.toList().joinToString(
+				"\n| * ", "\n| * ", "\n", transform = { (item, text) ->
+					item + when (text) {
+						"" -> ""
+						else -> ":\n" + text.wrap("| | | ")
+					}
+				})
+			content += "|\n"
+			content += char.race.description.wrap("| ")
+			content += "\n"
+		}
+
+		return "# Races (${raceName}, ${subRace}${darkvision})" + content
 	}
 
 	fun showBackground(unfold: Boolean = false) : String {
