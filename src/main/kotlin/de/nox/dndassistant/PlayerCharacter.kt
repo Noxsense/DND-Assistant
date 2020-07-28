@@ -9,7 +9,6 @@ private val logger = LoggerFactory.getLogger("PlayerCharacter")
 data class PlayerCharacter(
 	val name: String,
 	val race: String = "Human" /*TODO*/,
-	val background: Background,
 	val gender: String = "divers",
 	val player: String = ""
 	) {
@@ -30,7 +29,7 @@ data class PlayerCharacter(
 		private set
 
 	var proficiencies: Map<Skillable, Proficiency>
-		= background.proficiencies.associateWith { Proficiency.PROFICIENT }
+		= mapOf()
 		private set
 
 	var proficientValue: Int
@@ -109,12 +108,16 @@ data class PlayerCharacter(
 			speedMap
 		}
 
+
 	/* Age of the character, in years. (If younger than a year, use negative as days.) */
 	var age : Int = 0
 
 	val alignment : Alignment = Alignment.NEUTRAL_NEUTRAL;
 
 	/* The history of the character. */
+	var background: Background = Background("Just Born", listOf(), listOf(), Money())
+		private set
+
 	var speciality : String = ""
 	var trait : String = ""
 	var ideal : String = ""
@@ -124,6 +127,49 @@ data class PlayerCharacter(
 	/* The history of the character. */
 	var history : List<String>
 		= listOf()
+
+	private var backgroundSet = false
+
+	/** Set background, but only once! */
+	fun setBackground(
+		bg: Background,
+		addProf: Boolean = false,
+		addItems: Boolean = false,
+		chooseSpecial: Int = -1,
+		chooseTrait: Int = -1,
+		chooseIdeal: Int = -1,
+		chooseBonds: Int = -1,
+		chooseFlaws: Int = -1
+	) {
+		if (backgroundSet) return // only set once!
+
+		background = bg
+		backgroundSet = true
+
+		if (addProf) {
+			// add only as proficient.
+			proficiencies += bg.proficiencies.associateWith { Proficiency.PROFICIENT }
+		}
+
+		if (addItems) {
+			inventory += bg.equipment
+		}
+
+		if (chooseSpecial in (1 until bg.suggestedSpeciality.size))
+			speciality = bg.suggestedSpeciality[chooseSpecial]
+
+		if (chooseTrait in (1 until bg.suggestedTraits.size))
+			trait = bg.suggestedTraits[chooseTrait]
+
+		if (chooseIdeal in (1 until bg.suggestedIdeals.size))
+			ideal = bg.suggestedIdeals[chooseIdeal]
+
+		if (chooseBonds in (1 until bg.suggestedBonds.size))
+			bonds = bg.suggestedBonds[chooseBonds]
+
+		if (chooseFlaws in (1 until bg.suggestedFlaws.size))
+			flaws = bg.suggestedFlaws[chooseFlaws]
+	}
 
 	var classes : List<String> = listOf()
 		private set
@@ -588,13 +634,13 @@ data class Background(
 
 	override fun toString() : String = name
 
-	var description : String = ""
-	var extraLanguages : Int = 0 // addionally learnt languages.
+	var description: String = ""
+	var extraLanguages: Int = 0 // addionally learnt languages.
 
-	var suggestedSpeciality : List<String> = listOf()
+	var suggestedSpeciality: List<String> = listOf()
 
-	var suggestedTraits : List<String> = listOf()
-	var suggestedIdeals : List<String> = listOf()
-	var suggestedBonds : List<String> = listOf()
-	var suggestedFlaws : List<String> = listOf()
+	var suggestedTraits: List<String> = listOf()
+	var suggestedIdeals: List<String> = listOf()
+	var suggestedBonds: List<String> = listOf()
+	var suggestedFlaws: List<String> = listOf()
 }

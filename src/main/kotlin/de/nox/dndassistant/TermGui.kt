@@ -15,17 +15,7 @@ fun main() {
 
 fun playgroundWithOnyx() {
 	val pc : PlayerCharacter
-		= PlayerCharacter(
-			"Onyx Necklace",
-			race = "Gnome",
-			background = Background(
-				name = "Sage",
-				proficiencies = listOf(Skill.ARCANA, Skill.HISTORY),
-				equipment = listOf(/*bottle,ink,pen,small knife, letter,clothes*/),
-				money = Money(gp=10)).apply {
-					extraLanguages = 2
-				},
-			player = "Nox")
+		= PlayerCharacter("Onyx Necklace", race = "Gnome", player = "Nox")
 
 	// pc.rollAbilityScores()
 
@@ -143,6 +133,15 @@ fun playgroundWithOnyx() {
 	val display = PCDisplay(pc, "Nox")
 	pc.maxHitPoints = 12
 	pc.curHitPoints = 7
+
+	pc.setBackground(Background(
+		name = "Sage",
+		proficiencies = listOf(Skill.ARCANA, Skill.HISTORY),
+		equipment = listOf(/*bottle,ink,pen,small knife, letter,clothes*/),
+		money = Money(gp=10)).apply {
+		extraLanguages = 2
+		},
+		true)
 
 	pc.speciality = "Libarian"
 	pc.trait = "Watch and Learn."
@@ -711,5 +710,27 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 		} else {
 			""
 		}
+	}
+
+	fun String.wrap(indent: String = "") : String {
+		var lines : List<String> = listOf() // this.chunked(len), on char.
+		var line = ""
+
+		val len = width - indent.length
+
+		this.forEach {
+			if (line.length >= len && it == ' ' ) {
+				lines += line
+				line = ""
+			} else {
+				line += it
+			}
+		}
+
+		if (line != "") {
+			lines += line
+		}
+
+		return lines.joinToString("\n${indent}", "${indent}", "")
 	}
 }
