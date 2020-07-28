@@ -91,9 +91,7 @@ data class PlayerCharacter(
 
 	var conditions : Set<Condition> = setOf()
 
-	private var speedMap : Map<String, Int> = mapOf("walking" to 0 /*feet*/)
-	// TODO (2020-07-27) add walking speed from race
-	// TODO (2020-07-27) add walking speed from items / mounts
+	private var speedMap : Map<String, Int> = mapOf("walking" to 30 /*feet*/)
 
 	val speed : Map<String, Int> get()
 		= if (conditions.any{ when (it) {
@@ -172,7 +170,7 @@ data class PlayerCharacter(
 	var classes : List<String> = listOf()
 		private set
 
-	var race: SubRace = SubRace("Human", "-", 30)
+	var race: SubRace = SubRace("Human", "-", mapOf("walking" to 30))
 		private set
 
 	private var raceSet = false
@@ -182,6 +180,7 @@ data class PlayerCharacter(
 		if (raceSet) return
 		raceSet = true
 		race = newRace
+		speedMap += race.speed
 	}
 
 	var knownLanguages: List<String>
@@ -608,25 +607,6 @@ enum class Ability(val fullname: String) {
 	CHA("CHARISMA")
 }
 
-enum class Alignment {
-	LAWFUL_GOOD,
-	LAWFUL_NEUTRAL,
-	LAWFUL_EVIL,
-	NEUTRAL_GOOD,
-	NEUTRAL_NEUTRAL,
-	NEUTRAL_EVIL,
-	CHAOTIC_GOOD,
-	CHAOTIC_NEUTRAL,
-	CHAOTIC_EVIL;
-
-	val abbreviation : String
-		= name.split("_").toList().joinToString(
-			"","","", transform = { it[0].toString() } )
-
-	override fun toString() : String
-		= name.toLowerCase().replace("_", " ")
-}
-
 enum class BodyType {
 	HEAD, // hat, helmet...
 	SHOULDERS, // like cloaks ...
@@ -635,56 +615,4 @@ enum class BodyType {
 	RING, // for fingers (10x... species related)
 	FOOT, // for one shoe or so (2x)
 	// SHIELD // only one // ARM
-}
-
-data class Background(
-	val name: String,
-	val proficiencies : List<Skillable>, // skill, tool proficiencies
-	val equipment : List<Item>,
-	val money: Money) {
-
-	override fun toString() : String = name
-
-	var description: String = ""
-	var extraLanguages: Int = 0 // addionally learnt languages.
-
-	var suggestedSpeciality: List<String> = listOf()
-
-	var suggestedTraits: List<String> = listOf()
-	var suggestedIdeals: List<String> = listOf()
-	var suggestedBonds: List<String> = listOf()
-	var suggestedFlaws: List<String> = listOf()
-}
-
-data class SubRace(
-	val superRace: String,
-	val name: String,
-	val speed: Int,
-	val abilityChanges: Map<Ability, Int> = mapOf(),
-	val darkvision: Int = 0,
-	val languages: List<String> = listOf()
-) {
-	var description: String = "${name} description"
-
-	var racialTraits: Map<String, String> = if(darkvision > 0) {
-			mapOf("Darkvision ${darkvision} ft" to "")
-		} else {
-			mapOf()
-		}
-		private set
-
-	fun addTrait(title: String, description: String = "") {
-		racialTraits += title to description
-	}
-
-	override fun equals(other: Any?) : Boolean = when {
-		other == null -> false
-		other !is SubRace -> false
-		else -> (superRace == other.superRace) && (name == other.name)
-	}
-
-	override fun toString() : String = when {
-		name == superRace || name == "-" -> superRace
-		else -> "${superRace} ({$name})"
-	}
 }

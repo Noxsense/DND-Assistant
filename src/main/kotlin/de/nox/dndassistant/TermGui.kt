@@ -146,7 +146,7 @@ fun playgroundWithOnyx() {
 	pc.setRace(SubRace("Gnome", "Forest",
 		abilityChanges = mapOf(Ability.INT to 1),
 		darkvision = 60,
-		speed = 25,
+		speed = mapOf("walking" to 25),
 		languages = listOf("Gnomish")).apply {
 			description = "$description. ".repeat(80)
 			addTrait("Gnome Cunning", "Advantage on INT, WIS, CHA saves against Magic")
