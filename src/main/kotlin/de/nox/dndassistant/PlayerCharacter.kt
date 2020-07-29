@@ -170,17 +170,30 @@ data class PlayerCharacter(
 	var classes : List<String> = listOf()
 		private set
 
-	var race: SubRace = SubRace("Human", "-", mapOf("walking" to 30))
+	var race: SubRace = SubRace( /* Default race. */
+		"Human", "", // race
+		mapOf("walking" to 30), // speed
+		"medium", 1.80, 75.0) // size, weight
 		private set
+
+	var space : String = "medium"
+	var height : Double = 5.5 /*feet*/
+	var weight : Double = 40.0 /*lb*/
+	var form: String = "" // short body fitness, description, headliner.
+	var appearance: String = "" // more description.
 
 	private var raceSet = false
 
 	/** Set the race. */
-	fun setRace(newRace: SubRace) {
+	fun setRace(newRace: SubRace, setSpace: Boolean = true, setHeight: Boolean = true, setWeight: Boolean = true) {
 		if (raceSet) return
 		raceSet = true
 		race = newRace
 		speedMap += race.speed
+
+		if (setSpace) space = race.space
+		if (setHeight) height = race.height
+		if (setWeight) weight = race.weight
 	}
 
 	var knownLanguages: List<String>

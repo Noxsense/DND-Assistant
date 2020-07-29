@@ -8,6 +8,9 @@ data class SubRace(
 	val superRace: String,
 	val name: String,
 	val speed: Map<String, Int>,
+	val space: String,
+	val height: Double, /* ft. */
+	val weight: Double, /* lb. */
 	val abilityChanges: Map<Ability, Int> = mapOf(),
 	val darkvision: Int = 0,
 	val languages: List<String> = listOf()

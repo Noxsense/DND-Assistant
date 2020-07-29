@@ -147,6 +147,9 @@ fun playgroundWithOnyx() {
 		abilityChanges = mapOf(Ability.INT to 1),
 		darkvision = 60,
 		speed = mapOf("walking" to 25),
+		space = "small",
+		height = (3.0 /*ft*/),
+		weight = (40.0 /*lb*/),
 		languages = listOf("Gnomish")).apply {
 			description = "$description. ".repeat(80)
 			addTrait("Gnome Cunning", "Advantage on INT, WIS, CHA saves against Magic")
@@ -705,17 +708,17 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 		// TODO (2020-07-18) Implement PlayerCharacter's appearance.
 
-		val size = "tiny|small|medium|large|giant"
-		val form = "slim|bulky|defined ..."
-		val etc = "pretty"
+		val size = char.space
+		val form = char.form
+		val etc = char.appearance
 
 		if (unfold) {
 			content += "\n"
 
 			val len = width / 4 - 2
 
-			content += "| * %${-len}s %s\n".format("Height:", "?\" / ? cm, ${size}")
-			content += "| * %${-len}s %s\n".format("Weight:", "90lb / ?kg, ${form}")
+			content += "| * %${-len}s %s\n".format("Height:", "${"%.2f".format(char.height * 30.5)} cm, ${char.space}")
+			content += "| * %${-len}s %s\n".format("Weight:", "${char.weight} lb, ${char.form} ")
 			content += "| * %${-len}s %s\n".format("More:", "$etc, ???")
 
 			// TODO (2020-07-18) Add (ASCII) picture?
@@ -734,7 +737,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 		}
 	}
 
-	fun String.wrap(indent: String = "") : String {
+	fun String.wrap(indent: String = "", alsoFirstIndent: Boolean = true) : String {
 		var lines : List<String> = listOf() // this.chunked(len), on char.
 		var line = ""
 
@@ -753,6 +756,9 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 			lines += line
 		}
 
-		return lines.joinToString("\n${indent}", "${indent}", "")
+		return lines.joinToString(
+			"\n${indent}",
+			if (alsoFirstIndent) "${indent}" else "",
+			"")
 	}
 }
