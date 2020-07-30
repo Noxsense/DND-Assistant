@@ -15,6 +15,37 @@ data class PlayerCharacter(
 	var expiriencePoints: Int
 		= 0
 
+	val level : Int get() = when {
+		expiriencePoints >= 355000 -> 20
+		expiriencePoints >= 305000 -> 19
+		expiriencePoints >= 265000 -> 18
+		expiriencePoints >= 225000 -> 17
+		expiriencePoints >= 195000 -> 16
+		expiriencePoints >= 165000 -> 15
+		expiriencePoints >= 140000 -> 14
+		expiriencePoints >= 120000 -> 13
+		expiriencePoints >= 100000 -> 12
+		expiriencePoints >= 85000 -> 11
+		expiriencePoints >= 64000 -> 10
+		expiriencePoints >= 48000 -> 9
+		expiriencePoints >= 34000 -> 8
+		expiriencePoints >= 23000 -> 7
+		expiriencePoints >= 14000 -> 6
+		expiriencePoints >= 6500 -> 5
+		expiriencePoints >= 2700 -> 4
+		expiriencePoints >= 900 -> 3
+		expiriencePoints >= 300 -> 2
+		else -> 1
+	}
+
+	val proficientValue: Int get() = when {
+		level >= 17 -> +6
+		level >= 13 -> +5
+		level >= 9 -> +4
+		level >= 5 -> +3
+		else -> +2
+	}
+
 	var abilityScore: Map<Ability, Int>
 		= enumValues<Ability>().map { it }.associateWith { 10 }
 		private set
@@ -30,9 +61,6 @@ data class PlayerCharacter(
 	var proficiencies: Map<Skillable, Proficiency>
 		= mapOf()
 		private set
-
-	var proficientValue: Int
-		= 2
 
 	fun setAbilityScores(xs: Map<Ability,Int>) {
 		abilityScore = xs
