@@ -195,8 +195,28 @@ data class PlayerCharacter(
 			flaws = bg.suggestedFlaws[chooseFlaws]
 	}
 
-	var classes : List<String> = listOf()
+	var klasses : Map<Klass, Pair<Int, String>> = mapOf()
 		private set
+
+	var klassTraits: Map<String, String> = mapOf()
+		private set
+
+	fun addKlassLevel(klass: Klass, specialisation: String = "") {
+		/* Check, if conditions are met, to gain a level for that class.*/
+		val curKlassLevels = klasses.values.sumBy { it.first }
+
+		if (curKlassLevels >= level) {
+			logger.log("WARN", "Cannot add another level, character level is already reached.")
+			return
+		}
+
+		val old = klasses.getOrDefault(klass, Pair(0, ""))
+
+		val newLevel = old.first + 1
+		val newSpecial = if (old.second == "") specialisation else old.second
+
+		klasses += klass to Pair(newLevel, newSpecial)
+	}
 
 	var race: SubRace = SubRace( /* Default race. */
 		"Human", "", // race

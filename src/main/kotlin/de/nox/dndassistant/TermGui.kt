@@ -143,6 +143,39 @@ fun playgroundWithOnyx() {
 		},
 		true)
 
+	val rogue = Klass("Rogue",
+	hitdie = D8,
+	savingThrows = arrayOf(Ability.DEX, Ability.INT),
+	klassLevelTable = setOf( // "table" of level features. == Features per Level.
+		Klass.Feature(1, "Experties", "Double skill prof & (skill prof | thieves' tools)."),
+		Klass.Feature(1, "Sneak Attack", "1x/turn + advantage* on creature + finesse/ranged \u21d2 +1d6 dmg"),
+		Klass.Feature(1, "Thieves' Cant", "dialect + 0.25% speed \u21d2 hide msg in normal conversation"),
+		Klass.Feature(2, "Cunning Action", "1x/turn \u21d2 bonus action: Dash, Disengage, Hide."),
+		Klass.Feature(3, "Roguish Archetype", "")
+	),
+	specialisations = mapOf(
+		"Thief" to setOf(
+			Klass.Feature(3, "Fast Hands", "Bonus Action (by Cunning Action): DEX (Sleight of Hand), Thieves' Tools against trap, Open Lock or Object use."),
+			Klass.Feature(3, "Second-Story Work", "Climb fast and long. Running Jumb."),
+			Klass.Feature(9, "Supreme Sneak", "Sneak, but not to half speed."),
+			Klass.Feature(13, "Use magic Device", "Use magic device despise class/race/level requirements!"),
+			Klass.Feature(17, "Thief's Reflexes", "Ambush, escape; Two turns (Initative, Initiative - 10) in first round in any combat.")
+		),
+		"Assassin" to setOf(
+			Klass.Feature(3, "Trait", "Description")
+		)
+	),
+	description = """
+	A scoundrel who uses stealth and trickery to overcome obstacles and enemies.
+	""".trimIndent())
+
+	pc.addKlassLevel(rogue)
+	pc.expiriencePoints = 3000 // at leat level 4
+	pc.addKlassLevel(rogue, "Assassin")
+	pc.addKlassLevel(rogue, "Assassin")
+	pc.addKlassLevel(Klass("Multithing"))
+	pc.addKlassLevel(Klass("Multithing"))
+
 	pc.setRace(SubRace("Gnome", "Forest",
 		abilityChanges = mapOf(Ability.INT to 1),
 		darkvision = 60,
@@ -195,7 +228,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 		unfoldInventory: Boolean = false,
 		unfoldAttacks: Boolean = false,
 		unfoldSpells: Boolean = false,
-		unfoldClasses: Boolean = false,
+		unfoldKlasses: Boolean = false,
 		unfoldRaces: Boolean = false,
 		unfoldBackground: Boolean = false,
 		unfoldAppearance: Boolean = false,
@@ -219,7 +252,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 		println(showInventory(unfoldInventory))
 		println(showAttacks(unfoldAttacks))
 		println(showSpells(unfoldSpells))
-		println(showClasses(unfoldClasses))
+		println(showKlasses(unfoldKlasses))
 		println(showRaces(unfoldRaces))
 		println(showBackground(unfoldBackground))
 		println(showAppearance(unfoldAppearance))
@@ -606,35 +639,45 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 		return "# Spells (${preview})" + if (unfold) content else ""
 	}
 
-	fun showClasses(unfold: Boolean = false) : String {
+	fun showKlasses(unfold: Boolean = false) : String {
 		var content = ""
 
 		// TODO (2020-07-18) Implement PlayerCharacter's classes.
 
-		val classes = listOf(
-			Triple("Class1: Archetype", 1, listOf("can-do1", "can-do2", "can-do3")),
-			Triple("Class2: Archetype", 1, listOf("can-do1", "can-do2"))
-			)
+		val classes = char.klasses
 
 		if (unfold) {
 			content += "\n"
 
-			content += classes.joinToString(
+			content += classes.toList().joinToString(
 				prefix = "| # ",
 				separator = "\n| # ",
 				postfix = "\n",
 				transform = {
-					("${it.first}, level ${it.second}"
-					+ it.third.joinToString(
+					val (l, s) = it.second
+
+					val features = it.first.getFeaturesAtLevel(l, s)
+
+					("${it.first}, level ${l}${if (s == "") s else " "}$s"
+					+ if (features.size < 1) "" else features.joinToString(
+						separator = "\n| | * ",
 						prefix    = "\n| | * ",
-						separator = "\n| | * "
+						transform = {
+							("${it.title}"
+							+ if (it.hasDescription) {
+								"\n" + it.description.wrap("| |   ") + "\n| |"
+							} else {
+								""
+							})
+						}
 					))
 				}
 			)
+
 		}
 
 		// preview of classes and levels.
-		val preview = classes.joinToString(
+		val preview = classes.toList().joinToString(
 			prefix = " (", postfix = ")", transform = {
 			"${it.first}:${it.second}"
 		})
