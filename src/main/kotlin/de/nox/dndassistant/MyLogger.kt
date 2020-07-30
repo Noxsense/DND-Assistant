@@ -24,6 +24,12 @@ data class Logger(
 			s) // avoid formatting.
 	}
 
+	fun log(t: String, s: Any?) {
+		println("%s %-16s %-8s - ".format(
+			LocalDateTime.now().format(formatter), name + ":", t) +
+			s) // avoid formatting.
+	}
+
 	fun info(s: Any?) {
 		log(LoggingLevel.INFO, s)
 	}
