@@ -218,13 +218,13 @@ data class PlayerCharacter(
 		klasses += klass to Pair(newLevel, newSpecial)
 	}
 
-	var race: SubRace = SubRace( /* Default race. */
-		"Human", "", // race
-		mapOf("walking" to 30), // speed
-		"medium", 1.80, 75.0) // size, weight
+	var race: Race = Race("Human")
 		private set
 
-	var space : String = "medium"
+	var subrace: String = ""
+		private set
+
+	var size : Size = Size.MEDIUM // the space this character uses.
 	var height : Double = 5.5 /*feet*/
 	var weight : Double = 40.0 /*lb*/
 	var form: String = "" // short body fitness, description, headliner.
@@ -233,15 +233,17 @@ data class PlayerCharacter(
 	private var raceSet = false
 
 	/** Set the race. */
-	fun setRace(newRace: SubRace, setSpace: Boolean = true, setHeight: Boolean = true, setWeight: Boolean = true) {
+	fun setRace(newRace: Race, newSubrace: String) {
 		if (raceSet) return
+
 		raceSet = true
 		race = newRace
-		speedMap += race.speed
+		subrace = newSubrace
+		size = newRace.size
 
-		if (setSpace) space = race.space
-		if (setHeight) height = race.height
-		if (setWeight) weight = race.weight
+		/* Add speed and languages. */
+		speedMap += newRace.speed
+		println(newRace.languages)
 	}
 
 	var knownLanguages: List<String>

@@ -176,17 +176,25 @@ fun playgroundWithOnyx() {
 	pc.addKlassLevel(Klass("Multithing"))
 	pc.addKlassLevel(Klass("Multithing"))
 
-	pc.setRace(SubRace("Gnome", "Forest",
-		abilityChanges = mapOf(Ability.INT to 1),
-		darkvision = 60,
+	pc.setRace(Race("Gnome",
+		abilityScoreIncrease = mapOf(Ability.INT to 2),
+		age = mapOf("adult" to 40, "dead" to 350, "limit" to 500),
+		size = Size.SMALL,
 		speed = mapOf("walking" to 25),
-		space = "small",
-		height = (3.0 /*ft*/),
-		weight = (40.0 /*lb*/),
-		languages = listOf("Gnomish")).apply {
-			description = "$description. ".repeat(80)
-			addTrait("Gnome Cunning", "Advantage on INT, WIS, CHA saves against Magic")
-		})
+		languages = listOf("Common", "Gnomish"),
+		darkvision = 60,
+		features = listOf(
+			Race.Feature("Gnome Cunning", "Advantage on INT, WIS, CHA saves against Magic")
+		),
+		subrace = mapOf(
+			"Forest" to listOf(
+				Race.Feature("Natural Illusionist", "Can cast 'Minor Illusion'")),
+			"Rock" to listOf(
+				Race.Feature("CON + 1", "(Ability Score Increase)")),
+			"Stone" to listOf()
+		)), newSubrace = "Forest")
+	pc.height = 1.99
+	pc.weight = 13.0
 
 	pc.speciality = "Libarian"
 	pc.trait = "Watch and Learn."
@@ -689,19 +697,19 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 		// TODO (2020-07-19) Implement PlayerCharacter's Races.
 
-		val raceName = "${char.race.superRace}"
-		val subRace = "${char.race.name}"
+		val raceName = "${char.race.name}"
+		val subRace = "${char.subrace}"
 		val darkvision = when (char.race.darkvision) {
 			0 -> ""
 			else -> ", darkvision ${char.race.darkvision}"
 		}
 
 		if (unfold) {
-			content += char.race.racialTraits.toList().joinToString(
-				"\n| * ", "\n| * ", "\n", transform = { (item, text) ->
-					item + when (text) {
-						"" -> ""
-						else -> ":\n" + text.wrap("| | | ")
+			content += char.race.allFeatures(char.subrace).joinToString(
+				"\n| * ", "\n| * ", "\n", transform = {
+					it.name + when (it.hasDescription) {
+						false -> ""
+						else -> ":\n" + it.description.wrap("| | | ")
 					}
 				})
 			content += "|\n"
@@ -709,7 +717,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 			content += "\n"
 		}
 
-		return "# Races (${raceName}, ${subRace}${darkvision})" + content
+		return "# Races (${raceName} (${subRace})${darkvision})" + content
 	}
 
 	fun showBackground(unfold: Boolean = false) : String {
@@ -751,7 +759,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 		// TODO (2020-07-18) Implement PlayerCharacter's appearance.
 
-		val size = char.space
+		val size = char.race.size.name.toLowerCase()
 		val form = char.form
 		val etc = char.appearance
 
@@ -760,14 +768,14 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 			val len = width / 4 - 2
 
-			content += "| * %${-len}s %s\n".format("Height:", "${"%.2f".format(char.height * 30.5)} cm, ${char.space}")
+			content += "| * %${-len}s %s\n".format("Height:", "${"%.2f".format(char.height * 30.5)} cm, ${size}")
 			content += "| * %${-len}s %s\n".format("Weight:", "${char.weight} lb, ${char.form} ")
 			content += "| * %${-len}s %s\n".format("More:", "$etc, ???")
 
 			// TODO (2020-07-18) Add (ASCII) picture?
 		}
 
-		val preview = " ($size, $form, $etc)" // show size/height/weight
+		val preview = " (${size}, $form, $etc)" // show size/height/weight
 		return "# Appearance" + preview + content
 	}
 
