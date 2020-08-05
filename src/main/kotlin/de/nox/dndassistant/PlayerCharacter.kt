@@ -430,6 +430,21 @@ data class PlayerCharacter(
 
 	var purse: Money = Money()
 
+	var armor: Armor? = null
+		private set
+
+	var clothes: Item? = null
+		private set
+
+	var hands: Pair<Item?, Item?> = Pair(null, null)
+		private set
+
+	var handsBoth: Item? = null
+		private set
+
+	var bag: Container? = null
+		private set
+
 	var inventory:  List<Item>
 		= listOf()
 		private set
@@ -442,9 +457,10 @@ data class PlayerCharacter(
 	val carryingCapacity: Double get ()
 		= abilityScore(Ability.STR) * 15.0
 
-	/* Weight of the inventory and the purse.*/
-	val inventoryWeight: Double get()
-		= inventory.sumByDouble { it.weight } + purse.weight
+	val carriedWeight: Double get()
+		= ((bag?.sumWeight() ?: 0.0)
+		+ (clothes?.weight ?: 0.0)
+		+ (armor?.weight ?: 0.0))
 
 	/** Variant: Encumbrance
 	 * The rules for lifting and carrying are intentionally simple. Here is a
@@ -462,7 +478,7 @@ data class PlayerCharacter(
 	 * Constitution.
 	 */
 	fun carryEncumbranceLevel() : Double
-		= inventoryWeight / abilityScore(Ability.STR)
+		= (carriedWeight / abilityScore(Ability.STR))
 
 	/* Try to buy an item. On success, return true. */
 	fun buyItem(i: Item) : Boolean {
@@ -492,12 +508,125 @@ data class PlayerCharacter(
 		}
 	}
 
-	fun pickupItem(i: Item) {
-		inventory += i
-		logger.info("${name} - Picked up ${i}")
+	/** Get an environmental item, and maybe store it into the bag.
+	 * If it's a bag and no bag is equpped, equip the bag.
+	 * If ${param:storeToBag} is false or no bag is not available,
+	 * hold it, maybe swap (if no storing was intended) it with currently hold items.
+	 */
+	fun pickupItem(i: Item, storeToBag: Boolean = true) {
+		// TODO (2020-08-01) sacks and pouches can be hung onto the belt
+
+		/* If no bag is equipped and
+		 * the new item is a handfree-carriable container,
+		 * use the container as bag. */
+		if (i is Container && bag == null) {
+			bag = i
+			logger.info("${name} - New bag: ${i}")
+			return
+		}
+
+		if (storeToBag && bag != null) {
+			/* Store it into the bag, if .*/
+			storeItem(i)
+			logger.info("${name} - Pick up: ${i}")
+		} else {
+			/* Maybe Hold item in the hand. */
+			hold(i, !storeToBag)
+		}
+	}
+
+	/** Hold a new item, maybe drop the recently hold items.
+	 * @param i the item to be hold
+	 * @param swap if true, replace the currently hold items,
+	 *   otherwise do not hold the new item,
+	 *   if the hands are filled.
+	 * @return a list of items, which were just hold and are replaced by the new item.*/
+	fun hold(i: Item, swap: Boolean = true) : List<Item> {
+		/* Do we need both hands? */
+		val bothHands = false
+
+		var justFreed : List<Item> = listOf()
+
+		/* If swap, maybe free the hands. */
+		if (swap) {
+			logger.info("Drop something, to hold new thing.")
+			justFreed += dropItem(handFirst = true)
+			logger.info("Dropped items: ${justFreed}")
+		}
+
+		if (bothHands) {
+			hands = Pair(null, null)
+			handsBoth = i
+			logger.info("Holding a big item: $handsBoth")
+		} else if (hands.first == null) {
+			/* Hold in main hand. */
+			hands = Pair(i, hands.second)
+			handsBoth = null
+			logger.info("Holding in main hand: ${hands.first}")
+		} else if (hands.second == null) {
+			/* Hold in second hand. */
+			hands = Pair(hands.first, i)
+			handsBoth = null
+			logger.info("Holding in off hand: ${hands.second}")
+		} else {
+			logger.warn("Cannot hold $i, no free hand, no will to swap.")
+		}
+		return justFreed
+	}
+
+	/** Put an item from the hands or environment into the bag.
+	 * If no bag is equipped, do not store the item.
+	 * @param i item to store. */
+	fun storeItem(i: Item) {
+		if (bag != null) {
+			bag?.add(i)
+			logger.info("${name} - Put item ${i} into bag (${bag})")
+		}
+	}
+
+	/** Drop one or more items.
+	 * @param handFirst if true, drop the item, which is currently held with the main hand.
+	 * @param handSecond if true, drop the item, which is currently held with the second hand.
+	 * @param bagRemove drop all items, which matches the filter.
+	 * @return a list of the dropped items.
+	 */
+	fun dropItem(handFirst: Boolean = true, handSecond: Boolean = false, dropFilter: Int = -1) : List<Item> {
+		var dropped: List<Item> = listOf()
+
+		logger.debug("Drop items: main hand: ${handFirst}, off hand: ${handSecond}, drop filter: ${dropFilter}")
+
+		/* Remove from first hand. */
+		if (handFirst && hands.first != null) {
+			dropped += (hands.first)!!
+			hands = Pair(null, hands.second)
+			logger.info("Dropped from first hand \u21d2 ${hands}.")
+		}
+
+		/* Remove from second hand. */
+		if (handSecond && hands.second != null) {
+			dropped += (hands.second)!!
+			hands = Pair(hands.first, null)
+			logger.info("Dropped from second hand \u21d2 ${hands}.")
+		}
+
+		/* Remove from both hands. */
+		if ((handFirst || handSecond) && handsBoth != null) {
+			dropped += handsBoth!!
+			handsBoth = null
+			logger.info("Dropped from both hands \u21d2 ${hands}.")
+		}
+
+		/* Remove from bag, if bag is equipped. */
+		if (bag != null) {
+			bag!!.removeAt(dropFilter)
+			logger.info("Dropped anything which matched the filter.")
+		}
+
+		return dropped
 	}
 
 	fun dropItem(i: Item) : Boolean {
+		// TODO (2020-08-06) refactor inventory
 		// return true on success.
 		if (i in inventory) {
 			inventory -= (i) // remove from inventory.
@@ -505,13 +634,6 @@ data class PlayerCharacter(
 			return true
 		}
 		return false
-	}
-
-	fun dropItemAt(i: Int) : Item? {
-		// return true on success.
-		// TODO (2020-07-08) implement
-		logger.info("${name} - Dropped ${i}th item")
-		return null
 	}
 
 	////////////////////////////////////////////////
@@ -531,6 +653,7 @@ data class PlayerCharacter(
 	 * otherwise do not equip.
 	 * Only armor, which is in inventory (in possession) can be equipped.*/
 	fun wear(a: Armor, replace: Boolean = true) {
+		// TODO (2020-08-06) refactor inventory
 		if (a !in inventory) { // abort
 			return
 		}
@@ -559,103 +682,6 @@ data class PlayerCharacter(
 		if (free) {
 			equippedArmor += a
 			inventory -= a
-		}
-	}
-
-	///////////////////////////////////////////////
-
-	var handMain: Weapon? = null
-		private set
-
-	var handOff: Weapon? = null
-		private set
-
-	fun hand(main: Boolean = true) : Weapon? = when (main) {
-		true -> handMain
-		false -> handOff
-	}
-
-	fun isWieldingAny() : Boolean
-		= handMain != null || handOff != null
-
-	/** Check if the hand is wielding a weapon.*/
-	fun isWielding(mainHand: Boolean) = when {
-		mainHand && handMain != null -> true
-		!mainHand && handOff != null -> true
-		else -> false
-	}
-
-	/* Equip a weapon.
-	 * If replace, put the currently wield weapon into inventory,
-	 * otherwise do not equip the weapon.
-	 * Only weapons, which is in inventory (in possession) can be equipped.*/
-	fun wield(w: Weapon, mainHand: Boolean = true, replace: Boolean = false) {
-		if (w !in inventory) { // abort
-			return
-		}
-
-		var success: Boolean = true
-
-		if (replace) unwield(mainHand)
-
-		if (w.isTwoHanded) {
-			// needs both hands to be free.
-			if (handMain == null && handOff == null) {
-				// free hands.
-				handMain = w
-				handOff = w
-			} else if (replace) {
-				unwield()
-				handMain = w
-				handOff = w
-			} else {
-				success = false
-			}
-		} else if (mainHand) {
-			if (handMain == null) {
-				handMain = w // free hand
-			} else if (replace) {
-				unwield()
-				handMain = w
-			} else {
-				success = false
-			}
-		} else {
-			if (handOff == null) {
-				handOff = w // free hand
-			} else if (replace) {
-				unwield()
-				handOff = w
-			} else {
-				success = false
-			}
-		}
-
-		if (success) inventory -= w // remove from inventory on success.
-	}
-
-	/** Unequip the current weapon(s). */
-	fun unwield(mainHand: Boolean = true, both: Boolean = false) {
-		if ((mainHand || both) && handMain != null) {
-			inventory += handMain!!
-
-			// unequip both hands.
-			if (handMain!!.isTwoHanded) {
-				handOff = null
-			}
-
-			handMain = null
-		}
-
-		if ((!mainHand || both) && handOff != null) {
-			inventory += handOff!!
-
-			// unequip both hands.
-			if (handOff!!.isTwoHanded) {
-				handMain = null
-			}
-
-			handOff = null
 		}
 	}
 }

@@ -54,32 +54,38 @@ fun playgroundWithOnyx() {
 		// versatile: 1d8
 		note = "Thrown (range 20/60) | versatile (1d8)")
 
+	pc.pickupItem(Container(
+		name = "Backpack",
+		weight = 5.0, cost = Money(gp=2),
+		capacity = "1 cubic foot/ 30 pounds; also items can be straped to the outside"
+	))
+
 	pc.pickupItem(spear)
 	pc.pickupItem(dagger)
 
-	logger.info("Onyx' inventory: ${pc.inventoryWeight} lb, ${pc.inventory}, ${pc.purse}")
+	// pc.wield(pc.inventory[1] as Weapon)
+	pc.hold(pc.bag!!.inside[0]) // a new spear.
+	pc.hold(pc.bag!!.inside[1], false) // a new dagger. (offhand, if free)
+	pc.hold(spear, false) // a new spear. (offhand, if free)
+	pc.hold(dagger, true) // a new dagger. swap main hand
 
-	pc.wield(pc.inventory[0] as Weapon)
+	logger.info("Onyx' wields/holds: ${pc.hands}, ${pc.handsBoth}")
 
-	logger.info("Onyx' inventory: ${pc.inventoryWeight} lb, ${pc.inventory}, ${pc.purse}")
-	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
+	pc.dropItem(true)
+	logger.info("Onyx' wields/holds: ${pc.hands}, ${pc.handsBoth}")
 
-	pc.unwield(both = true)
-
-	logger.info("Onyx' inventory: ${pc.inventoryWeight} lb, ${pc.inventory}, ${pc.purse}")
-	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
+	pc.dropItem(true, true)
+	logger.info("Onyx' wields/holds: ${pc.hands}, ${pc.handsBoth}")
 
 	logger.info("Sell the dagger (${dagger})")
 	pc.sellItem(dagger)
 
-	logger.info("Onyx' inventory: ${pc.inventoryWeight} lb, ${pc.inventory}, ${pc.purse}")
-	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
+	logger.info("Onyx' wields/holds: ${pc.hands}, ${pc.handsBoth}")
 
 	logger.info("Buy the dagger (${dagger})")
 	pc.buyItem(dagger)
 
-	logger.info("Onyx' inventory: ${pc.inventoryWeight} lb, ${pc.inventory}, ${pc.purse}")
-	logger.info("Onyx' wields: ${pc.handMain}, ${pc.handOff}")
+	logger.info("Onyx' wields/holds: ${pc.hands}, ${pc.handsBoth}")
 
 	(1..60).forEach { pc.pickupItem(dagger) } // get +60 daggers => inventory +60lb
 	// pc.pickupItem(Item("Crowbar", 5.0, Money()))
@@ -427,12 +433,12 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 		var content = ""
 		if (unfold) {
 			// this bar displays, how much of the carrying weight capacity is already carried.
-			val cur = "|(%.1f lb) [".format(char.inventoryWeight)
+			val cur = "|(%.1f lb) [".format(char.carriedWeight)
 			val cap = "] (%.1f lb)".format(char.carryingCapacity)
 			val fix = (cur + cap).length // length of the side chars, which are already used.
 
 			val full = width - fix
-			val part = (full * char.inventoryWeight / char.carryingCapacity).toInt()
+			val part = (full * char.carriedWeight / char.carryingCapacity).toInt()
 
 			val bar = "$".repeat(part) + "-".repeat(full - part)
 
@@ -444,22 +450,27 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 			// show equipped items.
 			content += "\n|# Equipped"
-			content += "\n||"
+			content += "\n|| * ${char.hands}"
+			content += "\n|| * ${char.handsBoth}"
 
-			// show other items.
-			content += "\n|# Bag"
-			char.inventory.groupBy { it.name }.forEach {
-				// add item, count and weight to list.
-				content += "\n|| * %s (%dx, %.1f lb)".format(
-					it.key,
-					it.value.size,
-					it.value.sumByDouble { it.weight }
-				)
+			if (char.bag != null) {
+				val bag : Container = char.bag!!
+				content += "\n|# Bag (\"${bag}\", weight: ${bag.sumWeight(true)} lb, value: ${bag.sumValue(true)})"
+				bag.inside.groupBy { it.name }.forEach {
+					// add item, count and weight to list.
+					content += "\n|| * %4d %c %${-width + 23}s %c %5.1f lb".format(
+						it.value.size, // items count
+						0xd7, // times symbol
+						it.key, // items name
+						0x3a3, // sum symbol
+						it.value.sumByDouble { it.weight } // summed weight
+					)
+				}
 			}
 
 			content += "\n"
 		}
-		val preview = " (%.1f lb, %s)".format(char.inventoryWeight, "${char.purse}")
+		val preview = " (%.1f lb, %s)".format(char.carriedWeight, "${char.purse}")
 		return "# Inventory" + preview + content
 	}
 

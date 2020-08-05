@@ -26,6 +26,64 @@ enum class Size {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+data class Container(
+	override val name: String,
+	override val weight: Double,
+	override val cost: Money,
+	val maxWeight: Double = 0.0,
+	val maxWItems: Int = 0,
+	val capacity: String
+) : Item {
+	var inside : List<Item> = listOf()
+		private set
+
+	/** The value of the items, maybe with the bag's value included.
+	 * @return a double, which represents the weight in lb. */
+	fun sumValue(thisInclusive: Boolean = false) : Money
+		= ((if (thisInclusive) cost else Money())
+		+ inside.fold(Money(), { acc, i -> i.cost + acc }))
+
+	/** The weight of the items, maybe add weight of the bag.
+	 * @return a double, which represents the weight in lb. */
+	fun sumWeight(thisInclusive: Boolean = false) : Double
+		= ((if (thisInclusive) weight else 0.0 )
+		+ inside.sumByDouble { it.weight })
+
+	/** Add a new item to the bag. */
+	fun add(item: Item) {
+		inside += item
+	}
+
+	/** Remove an item from the bag.
+	 * @param item item to remove. */
+	fun remove(item: Item) {
+		inside -= item
+	}
+
+	/** Remove an item from the bag.
+	 * @param index index of the item, which will be removed. */
+	fun removeAt(index: Int) : Item? {
+		if (index in (0 until inside.size)) {
+			val item = inside[index]
+
+			inside = inside.subList(0, index) + inside.subList(index + 1, inside.size)
+
+			return item
+
+		} else {
+			return null
+		}
+	}
+
+	override fun equals(other: Any?) : Boolean
+		= other != null && other is Container && name == other.name
+
+	override fun toString() : String
+		= name
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 /** Weapon <- Skillable.
  * "Your class grants proficiency in certain Weapons, reflecting both the
  * class’s focus and the tools you are most likely to use. Whether you favor a
