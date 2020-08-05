@@ -8,7 +8,7 @@ object LoggerFactory {
 }
 
 enum class LoggingLevel {
-	INFO, ERROR, VERBOSE, DEBUG
+	INFO, ERROR, WARN, VERBOSE, DEBUG
 }
 
 data class Logger(
@@ -32,6 +32,10 @@ data class Logger(
 
 	fun info(s: Any?) {
 		log(LoggingLevel.INFO, s)
+	}
+
+	fun warn(s: Any?) {
+		log(LoggingLevel.WARN, s)
 	}
 
 	fun error(s: Any?) {
