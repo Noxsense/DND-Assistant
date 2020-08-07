@@ -31,11 +31,28 @@ data class Container(
 	override val weight: Double,
 	override val cost: Money,
 	val maxWeight: Double = 0.0,
-	val maxWItems: Int = 0,
+	val maxItems: Int = 0,
 	val capacity: String
 ) : Item {
 	var inside : List<Item> = listOf()
 		private set
+
+	val insideGrouped: Map<String, List<Item>> get()
+		= inside.groupBy { it.name }
+
+	val size : Int get()
+		= inside.size
+
+	fun isEmpty() : Boolean
+		= inside.isEmpty()
+
+	/** Check, if this container is full. */
+	fun isFull() : Boolean = when {
+		maxWeight <= 0 && maxItems <= 0 -> false // unlimited.
+		maxWeight <= 0 -> maxItems <= inside.size // only item count => if more items than allowed.
+		maxItems <= 0 -> maxWeight <= sumWeight() // only weight => if max weight is reached or overstepped.
+		else -> maxItems <= inside.size || maxWeight <= sumWeight() // or at least one.
+	}
 
 	/** The value of the items, maybe with the bag's value included.
 	 * @return a double, which represents the weight in lb. */
@@ -47,10 +64,10 @@ data class Container(
 	 * @return a double, which represents the weight in lb. */
 	fun sumWeight(thisInclusive: Boolean = false) : Double
 		= ((if (thisInclusive) weight else 0.0 )
-		+ inside.sumByDouble { it.weight })
+		+ inside.sumByDouble { if (it is Container) it.sumWeight(true) else it.weight })
 
 	/** Add a new item to the bag. */
-	fun add(item: Item) {
+	fun insert(item: Item) {
 		inside += item
 	}
 

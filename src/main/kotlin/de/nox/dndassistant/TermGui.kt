@@ -57,38 +57,47 @@ fun playgroundWithOnyx() {
 	pc.pickupItem(Container(
 		name = "Backpack",
 		weight = 5.0, cost = Money(gp=2),
+		maxWeight = 30.0,
+		maxItems = 0,
 		capacity = "1 cubic foot/ 30 pounds; also items can be straped to the outside"
-	))
+	), "BAG:Backpack")
 
 	pc.pickupItem(spear)
 	pc.pickupItem(dagger)
 
 	// pc.wield(pc.inventory[1] as Weapon)
-	pc.hold(pc.bag!!.inside[0]) // a new spear.
-	pc.hold(pc.bag!!.inside[1], false) // a new dagger. (offhand, if free)
-	pc.hold(spear, false) // a new spear. (offhand, if free)
-	pc.hold(dagger, true) // a new dagger. swap main hand
+	// pc.holdItem(pc.bag!!.inside[0]) // a new spear.
+	// pc.holdItem(pc.bag!!.inside[1], false) // a new dagger. (offhand, if free)
+	pc.holdItem(spear, false) // a new spear. (offhand, if free)
+	pc.holdItem(dagger, true) // a new dagger. swap main hand
 
-	logger.info("Onyx' wields/holds: ${pc.hands}, ${pc.handsBoth}")
+	// logger.info("Onyx' wields/holds: ${pc.hands_}")
 
 	pc.dropItem(true)
-	logger.info("Onyx' wields/holds: ${pc.hands}, ${pc.handsBoth}")
+	// logger.info("Onyx' wields/holds: ${pc.hands_}")
 
 	pc.dropItem(true, true)
-	logger.info("Onyx' wields/holds: ${pc.hands}, ${pc.handsBoth}")
+	// logger.info("Onyx' wields/holds: ${pc.hands_}")
 
 	logger.info("Sell the dagger (${dagger})")
 	pc.sellItem(dagger)
 
-	logger.info("Onyx' wields/holds: ${pc.hands}, ${pc.handsBoth}")
+	// logger.info("Onyx' wields/holds: ${pc.hands_}")
 
 	logger.info("Buy the dagger (${dagger})")
 	pc.buyItem(dagger)
 
-	logger.info("Onyx' wields/holds: ${pc.hands}, ${pc.handsBoth}")
+	// logger.info("Onyx' wields/holds: ${pc.hands_}")
 
-	(1..60).forEach { pc.pickupItem(dagger) } // get +60 daggers => inventory +60lb
+	(1..60).forEach { pc.pickupItem(dagger, "BAG:Backpack") } // get +60 daggers => inventory +60lb
 	// pc.pickupItem(Item("Crowbar", 5.0, Money()))
+
+	val pouch = Container("Pouch", 1.0, Money(sp=5), 6.0, 0, "0.2 cubic foot / 6.0 lb")
+
+	pc.pickupItem(pouch.copy(), "BAG:Backpack")
+	pc.pickupItem(pouch.copy(), "BAG:Backpack")
+	pc.pickupItem(pouch.copy(), "BAG:Backpack:Pouch No. 1")
+	pc.pickupItem(pouch.copy(), "BAG:Backpack")
 
 	val mageHand = Spell(
 		"Mage Hand", // name
@@ -450,28 +459,55 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 			// show equipped items.
 			content += "\n|# Equipped"
-			content += "\n|| * ${char.hands}"
-			content += "\n|| * ${char.handsBoth}"
+			content += "\n|| * Hold: ${char.hands}"
+			content += "\n|| * ${char.worn}"
 
-			if (char.bag != null) {
-				val bag : Container = char.bag!!
-				content += "\n|# Bag (\"${bag}\", weight: ${bag.sumWeight(true)} lb, value: ${bag.sumValue(true)})"
-				bag.inside.groupBy { it.name }.forEach {
-					// add item, count and weight to list.
-					content += "\n|| * %4d %c %${-width + 23}s %c %5.1f lb".format(
-						it.value.size, // items count
-						0xd7, // times symbol
-						it.key, // items name
-						0x3a3, // sum symbol
-						it.value.sumByDouble { it.weight } // summed weight
-					)
-				}
+			if (!char.bags.isEmpty()) {
+				content += "\n|# Bags:"
+				content += char.bags.toList().joinToString(
+					separator = "",
+					transform = {
+						printBag(it.first, it.second)
+					}
+				)
 			}
 
 			content += "\n"
 		}
 		val preview = " (%.1f lb, %s)".format(char.carriedWeight, "${char.purse}")
 		return "# Inventory" + preview + content
+	}
+
+	private fun printBag(bagKey: String, bag: Container) : String {
+		val note : String
+
+		val weight = bag.sumWeight(true)
+		var items = ""
+
+		if (bag.isEmpty()) {
+			note = "empty"
+		} else if (bag.size < 2) {
+			note = "{${bag.inside[0]}}"
+		} else {
+			note = if (bag.isFull()) "full" else bag.capacity
+			bag.insideGrouped.forEach {
+				items += "\n|| | %4d %c %${-width + 23}s %c %5.1f lb".format(
+					it.value.size, // items count
+					0xd7, // times symbol
+					it.key, // items name
+					0x3a3, // sum symbol
+					it.value.sumByDouble {
+						// summed weight
+						if (it is Container) it.sumWeight(true) else it.weight
+					}
+				)
+			}
+		}
+
+		var firstLine = "\n|| * ${bag.name} ($weight lb, $note)"
+		firstLine = "$firstLine %${width - firstLine.length}s".format(bagKey)
+
+		return "${firstLine}${items}"
 	}
 
 	/** Show the available attacks, preview: most damage attack. */
@@ -520,6 +556,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 			DiceTerm(2), setOf())
 
 		/* Carried weapons in inventory. */
+		/*
 		attacks += char.inventory.toSet()
 			.filter { it is Weapon }
 			.map { Attack(
@@ -531,6 +568,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 				it.note,
 				it.isFinesse)
 			}.sorted().reversed()
+		*/
 
 		/* Failed improvised weapon attacks. */
 		// TODO (2020-07-19) proficient with improvised?
