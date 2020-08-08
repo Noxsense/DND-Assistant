@@ -449,9 +449,23 @@ data class PlayerCharacter(
 
 	/** Get the weight, the character is currenlty carrying. */
 	val carriedWeight: Double get()
-		= bags.values.sumByDouble {
-			if (it is Container) it.sumWeight(true) else it.weight
-		}
+		= (carriedWeightWorn // worn weight
+		+ carriedWeightHands // currently hold
+		+ carriedWeightBags) // in bags, with bags.
+
+	val carriedWeightWorn : Double get()
+		= worn.values.sumByDouble { it.weight }
+
+	val carriedWeightHands : Double get()
+		= hands.toList().sumByDouble { when {
+			it == null -> 0.0
+			it is Container -> it.sumWeight(true)
+			it is Item -> it.weight
+			else -> 0.0
+		}}
+
+	val carriedWeightBags : Double get()
+		= bags.values.sumByDouble { it.sumWeight(true) }
 
 	/** Variant: Encumbrance
 	 * The rules for lifting and carrying are intentionally simple.

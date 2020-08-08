@@ -459,11 +459,16 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 			// show equipped items.
 			content += "\n|# Equipped"
+			content += " (%.1f lb)".format(
+				char.carriedWeightHands
+				+ char.carriedWeightWorn
+			)
 			content += "\n|| * Hold: ${char.hands}"
 			content += "\n|| * ${char.worn}"
 
 			if (!char.bags.isEmpty()) {
 				content += "\n|# Bags:"
+				content += " (%.1f lb)".format(char.carriedWeightBags)
 				content += char.bags.toList().joinToString(
 					separator = "",
 					transform = {
