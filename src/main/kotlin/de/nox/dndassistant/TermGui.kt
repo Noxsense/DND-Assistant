@@ -46,7 +46,7 @@ fun playgroundWithOnyx() {
 		note = "Finesse, light, thrown (range 20/60)")
 
 	val spear =  Weapon("Spear", 3.0, Money(gp=1),
-		weightClass = WeightClass.LIGHT,
+		weightClass = WeightClass.NONE,
 		weaponType = Weapon.Type.SIMPLE_MELEE,
 		damage = DiceTerm(D6),
 		damageType = setOf(DamageType.PIERCING),
@@ -65,29 +65,18 @@ fun playgroundWithOnyx() {
 	pc.pickupItem(spear)
 	pc.pickupItem(dagger)
 
-	// pc.wield(pc.inventory[1] as Weapon)
-	// pc.holdItem(pc.bag!!.inside[0]) // a new spear.
-	// pc.holdItem(pc.bag!!.inside[1], false) // a new dagger. (offhand, if free)
-	pc.holdItem(spear, false) // a new spear. (offhand, if free)
-	pc.holdItem(dagger, true) // a new dagger. swap main hand
-
-	// logger.info("Onyx' wields/holds: ${pc.hands_}")
+	pc.pickupItem(dagger)
+	pc.pickupItem(dagger)
 
 	pc.dropItem(true)
-	// logger.info("Onyx' wields/holds: ${pc.hands_}")
 
 	pc.dropItem(true, true)
-	// logger.info("Onyx' wields/holds: ${pc.hands_}")
 
 	logger.info("Sell the dagger (${dagger})")
 	pc.sellItem(dagger)
 
-	// logger.info("Onyx' wields/holds: ${pc.hands_}")
-
 	logger.info("Buy the dagger (${dagger})")
 	pc.buyItem(dagger)
-
-	// logger.info("Onyx' wields/holds: ${pc.hands_}")
 
 	(1..60).forEach { pc.pickupItem(dagger, "BAG:Backpack") } // get +60 daggers => inventory +60lb
 	// pc.pickupItem(Item("Crowbar", 5.0, Money()))
@@ -536,12 +525,24 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 					else -> str
 				}
 
+			/** Attack Bonus: (STR or DEX) + (proficiency if proficient). */
 			val attackBonus: Int
 				= bonus +  (if (proficient) char.proficientValue else 0)
 
-			//  TODO (2020-07-19) How to set the damage roll.
+			/** Damage Modifier: Ability modifier, used for attack roll. */
 			val damageRoll: DiceTerm
-				= (damageRollPure + Bonus(bonus)).contracted()
+				= (damageRollPure + Bonus(bonus)).contracted().let {
+					if (it.dice.size == 1
+						&& (it.dice[0].faces < 2 && it.dice[0].factor < 0)) {
+							// logger.warn("Never Negative Damage")
+							DiceTerm(0)
+					} else {
+						it
+					}
+				}
+
+			val damageRollCritical: DiceTerm
+				= (damageRoll + damageRollPure).contracted()
 
 			override fun compareTo(other: Attack) : Int
 				= (damageRoll.average - other.damageRoll.average).toInt()
@@ -549,20 +550,32 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 		var attacks: List<Attack> = listOf()
 
+		/* Currently equipped weapon, if something equipped. */
+		char.hands.toList().forEach {
+			if (it != null && it is Weapon) {
+				val titleNote
+					= ("(held"
+					+ (if (it.weightClass == WeightClass.LIGHT) ", light" else "")
+					+ ")")
+
+				attacks += Attack(
+					"${it.name} $titleNote",
+					char.proficiencies.contains(it as Weapon) ||
+					char.proficiencies.contains(it.weaponType),
+					!it.weaponType.melee,
+					it.damage, it.damageType,
+					it.note,
+					it.isFinesse)
+			}
+		}
+
 		/* Unarmed Attack: Proficient, with STR, if not said otherwise. */
 		attacks += Attack("Unarmed", true, false,
 			DiceTerm(0), setOf(DamageType.BLUDGEONING),
 			"slap, hit, kick, push...")
 
-		/* Currently equipped weapon, if something equipped. */
-		attacks += Attack("Equipped / TODO (20200719)",
-			true,
-			true,
-			DiceTerm(2), setOf())
-
 		/* Carried weapons in inventory. */
-		/*
-		attacks += char.inventory.toSet()
+		attacks += char.bags.values.map { it.inside }.flatten().toSet()
 			.filter { it is Weapon }
 			.map { Attack(
 				it.name,
@@ -573,12 +586,13 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 				it.note,
 				it.isFinesse)
 			}.sorted().reversed()
-		*/
 
 		/* Failed improvised weapon attacks. */
 		// TODO (2020-07-19) proficient with improvised?
 		attacks += Attack("Improvised", false, false, DiceTerm(D4), setOf(), "Hit with somehting unfitting")
 		attacks += Attack("Improvised (thrown)", false, true, DiceTerm(D4), setOf(), "Throw a non-throwable weapon / item")
+
+		// TODO (2020-08-08) add attacks with damaging spells
 
 		val trFormat
 			= ("| %${-width / 3}s |"
