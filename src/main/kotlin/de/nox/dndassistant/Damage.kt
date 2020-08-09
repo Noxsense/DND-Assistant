@@ -1,11 +1,64 @@
 package de.nox.dndassistant
 
-/*
- * source: https://roll20.net/compendium/dnd5e/Combat#toc_50
-* Different attacks, damaging Spells, and other harmful Effects deal different
-* types of damage. Damage Types have no rules of their own, but other rules, such
-* as damage Resistance, rely on the types.
-*/
+/** Attack.
+ * Create an attack a Weapon or a Spell can make depending on the strength or
+ * dexterity and maybe proficiency value.
+ * @url (https://roll20.net/compendium/dnd5e/Combat#h-Making%20an%20Attack)
+ */
+data class Attack(
+	val name: String,
+	val ranged: Boolean,
+	val damage: Pair<DiceTerm, Set<DamageType>>,
+	val finesse: Boolean = false,
+	val proficientValue: Int = 0,
+	val modifierStrDex: Pair<Int, Int> = Pair(0, 0),
+	val note: String = ""
+): Comparable<Attack> {
+
+	/** Decide which bonus is added. */
+	val bonus: Int = when {
+		finesse -> modifierStrDex.run { Math.max(first, second) }
+		ranged -> modifierStrDex.second // dex
+		else -> modifierStrDex.first // str
+	}
+
+	/** Attack Bonus: (STR or DEX) + (proficiency if proficient). */
+	val attackBonus: Int
+		= bonus +  (proficientValue)
+
+	val damageRollPure : DiceTerm
+		= damage.first
+
+	val damageType : Set<DamageType>
+		= damage.second
+
+	/** Damage Modifier: Ability modifier, used for attack roll. */
+	val damageRoll: DiceTerm
+		= (damageRollPure + Bonus(bonus)).contracted().let {
+			if (it.dice.size == 1
+				&& (it.dice[0].faces < 2 && it.dice[0].factor < 0)) {
+				// logger.warn("Never Negative Damage")
+				DiceTerm(0)
+			} else {
+				it
+			}
+		}
+
+	/** The damage roll for a critical hit are twice the base attack damage dice. */
+	val damageRollCritical: DiceTerm
+		= (damageRoll + damageRollPure).contracted()
+
+	/** Compare an attack by it's average damage */
+	override fun compareTo(other: Attack) : Int
+		= (damageRoll.average - other.damageRoll.average).toInt()
+}
+
+/** DamageType.
+ * Different attacks, damaging Spells, and other harmful Effects deal different
+ * types of damage. Damage Types have no rules of their own, but other rules, such
+ * as damage Resistance, rely on the types.
+ * @url (https://roll20.net/compendium/dnd5e/Combat#h-Damage%20Types)
+ */
 enum class DamageType(val note: String) {
 
 	ACID(

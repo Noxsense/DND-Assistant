@@ -509,45 +509,6 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 		val str = char.abilityModifier(Ability.STR)
 		val dex = char.abilityModifier(Ability.DEX)
 
-		data class Attack(
-			val name: String,
-			val proficient: Boolean,
-			val ranged: Boolean,
-			val damageRollPure: DiceTerm,
-			val damageType: Set<DamageType>,
-			val note: String = "",
-			val finesse: Boolean = false)
-			: Comparable<Attack> {
-
-			val bonus: Int = when {
-					finesse -> Math.max(str, dex)
-					ranged -> dex
-					else -> str
-				}
-
-			/** Attack Bonus: (STR or DEX) + (proficiency if proficient). */
-			val attackBonus: Int
-				= bonus +  (if (proficient) char.proficientValue else 0)
-
-			/** Damage Modifier: Ability modifier, used for attack roll. */
-			val damageRoll: DiceTerm
-				= (damageRollPure + Bonus(bonus)).contracted().let {
-					if (it.dice.size == 1
-						&& (it.dice[0].faces < 2 && it.dice[0].factor < 0)) {
-							// logger.warn("Never Negative Damage")
-							DiceTerm(0)
-					} else {
-						it
-					}
-				}
-
-			val damageRollCritical: DiceTerm
-				= (damageRoll + damageRollPure).contracted()
-
-			override fun compareTo(other: Attack) : Int
-				= (damageRoll.average - other.damageRoll.average).toInt()
-		}
-
 		var attacks: List<Attack> = listOf()
 
 		/* Currently equipped weapon, if something equipped. */
@@ -558,39 +519,58 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 					+ (if (it.weightClass == WeightClass.LIGHT) ", light" else "")
 					+ ")")
 
+				val proficient
+					= (char.proficiencies.contains(it as Weapon)
+					|| char.proficiencies.contains(it.weaponType))
+
 				attacks += Attack(
 					"${it.name} $titleNote",
-					char.proficiencies.contains(it as Weapon) ||
-					char.proficiencies.contains(it.weaponType),
-					!it.weaponType.melee,
-					it.damage, it.damageType,
-					it.note,
-					it.isFinesse)
+					ranged = !it.weaponType.melee,
+					damage = it.damage to it.damageType,
+					note = it.note,
+					finesse = it.isFinesse,
+					proficientValue = if (proficient) char.proficientValue else 0,
+					modifierStrDex = str to dex)
 			}
 		}
 
 		/* Unarmed Attack: Proficient, with STR, if not said otherwise. */
-		attacks += Attack("Unarmed", true, false,
-			DiceTerm(0), setOf(DamageType.BLUDGEONING),
-			"slap, hit, kick, push...")
+		attacks += Attack("Unarmed",
+			ranged = false,
+			damage = DiceTerm(0) to setOf(DamageType.BLUDGEONING),
+			note = "slap, hit, kick, push...",
+			proficientValue = char.proficientValue, // always proficient.
+			modifierStrDex = str to dex)
 
 		/* Carried weapons in inventory. */
 		attacks += char.bags.values.map { it.inside }.flatten().toSet()
-			.filter { it is Weapon }
+			.filter { it is Weapon && it != char.hands.first && it != char.hands.second }
+			// set of unique weapons, which are also not carried.
 			.map { Attack(
-				it.name,
-				char.proficiencies.contains(it as Weapon) ||
-				char.proficiencies.contains(it.weaponType),
-				!it.weaponType.melee,
-				it.damage, it.damageType,
-				it.note,
-				it.isFinesse)
+				(it as Weapon).name,
+				ranged = !it.weaponType.melee,
+				damage = it.damage to it.damageType,
+				note = it.note,
+				finesse = it.isFinesse,
+				proficientValue = if (char.proficiencies.contains(it as Weapon) ||
+				char.proficiencies.contains(it.weaponType)) char.proficientValue else 0,
+				modifierStrDex = str to dex)
 			}.sorted().reversed()
 
 		/* Failed improvised weapon attacks. */
-		// TODO (2020-07-19) proficient with improvised?
-		attacks += Attack("Improvised", false, false, DiceTerm(D4), setOf(), "Hit with somehting unfitting")
-		attacks += Attack("Improvised (thrown)", false, true, DiceTerm(D4), setOf(), "Throw a non-throwable weapon / item")
+		attacks += Attack("Improvised",
+			ranged = false,
+			damage = DiceTerm(D4) to setOf(),
+			note = "Hit with somehting unfitting",
+			proficientValue = 0, // TODO (2020-07-19) proficient with improvised? => depends on intended weapon?
+			modifierStrDex = str to dex)
+
+		attacks += Attack("Improvised (thrown)",
+			ranged = true,
+			damage = DiceTerm(D4) to setOf(),
+			note = "Throw a non-throwable weapon / item",
+			proficientValue = 0, // TODO (2020-07-19) proficient with improvised? => depends on intended weapon?
+			modifierStrDex = str to dex)
 
 		// TODO (2020-08-08) add attacks with damaging spells
 
