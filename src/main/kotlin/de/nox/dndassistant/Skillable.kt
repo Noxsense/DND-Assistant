@@ -58,4 +58,7 @@ enum class Skill(val source: Ability) : Skillable {
 
 	val fullname: String get()
 		= name.toLowerCase().replace("_", " ")
+
+	override fun toString() : String
+		= fullname
 }

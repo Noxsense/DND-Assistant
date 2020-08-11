@@ -2,7 +2,7 @@ package de.nox.dndassistant
 
 private val logger = LoggerFactory.getLogger("TermGUI")
 
-fun main() {
+fun main(args: Array<String>) {
 	println(
 		"""
 		DnD Application, display stats and roll your dice!
