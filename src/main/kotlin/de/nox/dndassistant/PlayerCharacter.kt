@@ -532,7 +532,7 @@ data class PlayerCharacter(
 	}
 
 	private fun validStorage(storage: String) : Boolean
-		= storage.startsWith("BAG:") && bags.containsKey(storage)
+		= (storage.startsWith("BAG:") && bags.containsKey(storage))
 
 	/** Hold a new item, if the needed hands are not free, don't hold this item.
 	 * @param item the item to be hold
@@ -567,6 +567,25 @@ data class PlayerCharacter(
 		return false
 	}
 
+	/** If the item is held with two hands hold now with one hand,
+	 * otherwise if an item is hold with one hand and both hands are free,
+	 * hold with two hands.
+	 * @return true, if the state changed (on success), otherwise false. */
+	fun toggleBothHands() : Boolean {
+		if (hands.third) {
+			hands = Triple(hands.first, hands.second, false)
+			return true
+		} else if (hands.first != null && hands.second == null) {
+			hands = Triple(hands.second, null, true)
+			return true
+		} else if (hands.second != null && hands.first == null) {
+			hands = Triple(hands.second, null, true)
+			return true
+		} else {
+			return false // other hand is not free or no item is carried at all.
+		}
+	}
+
 	/** Put an item from the hands or environment into an container equipped by the key "bag".
 	 * If no bag is equipped, do not store the item.
 	 * @param bag key for a container to store the given item.
@@ -575,9 +594,10 @@ data class PlayerCharacter(
 	fun storeItem(item: Item, bag: String) : Boolean {
 		val bagContainer = bags.getOrElse(bag, { null })
 		if (bagContainer != null) {
-			bagContainer?.insert(item)
-			logger.info("${name} - Put item ${item} into bag (${bag}: ${bagContainer})")
-			return true
+			val s0 = bagContainer.size // count items insied
+			bagContainer.insert(item) // try to store, only reference differenciable objects.
+			val success = bagContainer.size != s0 // success, if one more.
+			return success
 		}
 		return false
 	}
@@ -588,15 +608,96 @@ data class PlayerCharacter(
 	 * @param bagRemove drop all items, which matches the filter.
 	 * @return a list of the dropped items.
 	 */
-	fun dropItem(handFirst: Boolean = true, handSecond: Boolean = false, dropFilter: Int = -1) : List<Item> {
+	fun dropFromHands(handFirst: Boolean = true, handSecond: Boolean = false) : List<Item> {
 		var dropped: List<Item> = listOf()
 
-		logger.debug("Drop items: main hand: ${handFirst}, off hand: ${handSecond}, drop filter: ${dropFilter}")
+		logger.debug("Drop items: main hand: ${handFirst}, off hand: ${handSecond}")
 
-		/* Remove from bag, if bag is equipped. */
+		/* Remove from hands first. */
+		if (handFirst || handSecond) {
+			if (hands.third) {
+				dropped += hands.toList()
+					.filter { it != null && it is Item }
+					.map { it as Item }
+				hands = Triple(null, null, false)
+			}
+
+			if (handFirst && hands.first != null) {
+				dropped += hands.first!!
+				hands = Triple(null, hands.second, false)
+			}
+
+			if (handSecond && hands.second != null) {
+				dropped += hands.second!!
+				hands = Triple(hands.second, null, false)
+			}
+		}
+
+		logger.info("Dropped ${dropped}")
 
 		return dropped
 	}
+
+	/** Drop matching items, which are stored in a held bag (also nested bags.)
+	 * @return a list of all dropped items. */
+	fun dropFromBags(bagKeys: Collection<String>, predicate: (index: Int, item: Item) -> Boolean) : List<Item> {
+		/* Drop from every valid bag, if the bagKeys are not specified. */
+		if (bagKeys.isEmpty()) {
+			return dropFromEveryBag(predicate)
+		}
+
+		var dropped: List<Item> = listOf()
+		logger.info("Drop fron ${bagKeys.associateWith { validStorage(it) } }")
+		bagKeys.forEach { key ->
+			if (validStorage(key)) {
+				// bag exists.
+				val d0 = bags[key]!!.removeAll(predicate)
+				logger.info("From $key, dropped ${d0.size} items ${d0}")
+				dropped += d0
+			}
+		}
+		logger.info("Totally dropped ${dropped.size} items:  ${dropped}")
+		return dropped
+	}
+
+	/** Drop matching items from one bag.
+	 * @see dropFromBags(Collection<String>,(Item)->Boolean) */
+	fun dropFromBag(bagKey: String, predicate: (index: Int, item: Item) -> Boolean) : List<Item>
+		= dropFromBags(listOf(bagKey), predicate)
+
+	/** Drop matching items from every bag.
+	 * @see dropFromBags(Collection<String>,(Item)->Boolean) */
+	fun dropFromEveryBag(predicate: (index: Int, item: Item) -> Boolean) : List<Item>
+		= dropFromBags(bags.keys, predicate)
+
+	/** Drop items on matching equipment positions.
+	 * (such as clothings or equipped bags, not nested bags.)
+	 * @return a list of all dropped items. */
+	fun dropEquipped(positions: Collection<String>) : List<Item> {
+		var dropped: List<Item> = listOf()
+
+		// drop clothings and what's worn.
+		dropped += worn.filterKeys { it in positions }.values
+		worn -= positions
+
+		// drop bags
+		// XXX do we also want to drop nested bags like that?
+		dropped += bags.filterKeys { it in positions }.values
+		bags -= positions
+
+		logger.info("Dropped ${dropped}")
+		return dropped
+	}
+
+	/** Drop items in matching positions.
+	 * @see dropEquipped(Collection<String>) */
+	fun dropEquipped(position: String) : List<Item>
+		= dropEquipped(listOf(position))
+
+	/** Drop items from all positions.
+	 * @see dropEquipped(Collection<String>) */
+	fun dropEquipped() : List<Item>
+		= dropEquipped(worn.keys + bags.keys)
 
 	/* Try to buy an item. On success, return true. */
 	fun buyItem(i: Item) : Boolean {

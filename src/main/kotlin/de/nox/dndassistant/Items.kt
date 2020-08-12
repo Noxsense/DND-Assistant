@@ -77,7 +77,7 @@ data class Container(
 	/** Check if the Container contains all requested items, by references. */
 	fun containsAll(items: Collection<Item>): Boolean
 		= items.all { contains(it) }
-	
+
 	/** Check if the Container contains all requested items names. */
 	fun containsAllNames(itemNames: Collection<String>) : Boolean
 		= itemNames.all { contains(it) }

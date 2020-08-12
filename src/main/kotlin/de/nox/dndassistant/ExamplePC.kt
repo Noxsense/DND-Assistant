@@ -57,9 +57,9 @@ fun playgroundWithOnyx() : PlayerCharacter {
 	pc.pickupItem(dagger)
 	pc.pickupItem(dagger)
 
-	pc.dropItem(true)
+	pc.dropFromHands(true)
 
-	pc.dropItem(true, true)
+	pc.dropFromHands(true, true)
 
 	logger.info("Sell the dagger (${dagger})")
 	pc.sellItem(dagger)
@@ -67,7 +67,7 @@ fun playgroundWithOnyx() : PlayerCharacter {
 	logger.info("Buy the dagger (${dagger})")
 	pc.buyItem(dagger)
 
-	(1..60).forEach { pc.pickupItem(dagger, "BAG:Backpack") } // get +60 daggers => inventory +60lb
+	(1..60).forEach { pc.pickupItem(dagger.copy(), "BAG:Backpack") } // get +60 daggers => inventory +60lb
 	// pc.pickupItem(Item("Crowbar", 5.0, Money()))
 
 	val pouch = Container("Pouch", 1.0, Money(sp=5), 6.0, 0, "0.2 cubic foot / 6.0 lb")
@@ -76,6 +76,8 @@ fun playgroundWithOnyx() : PlayerCharacter {
 	pc.pickupItem(pouch.copy(), "BAG:Backpack")
 	pc.pickupItem(pouch.copy(), "BAG:Backpack:Pouch No. 1")
 	pc.pickupItem(pouch.copy(), "BAG:Backpack")
+
+	pc.dropFromBag("BAG:Backpack", { index, item -> item == dagger && index < 10 })
 
 	val mageHand = Spell(
 		"Mage Hand", // name
