@@ -61,12 +61,6 @@ fun playgroundWithOnyx() : PlayerCharacter {
 
 	pc.dropFromHands(true, true)
 
-	logger.info("Sell the dagger (${dagger})")
-	pc.sellItem(dagger)
-
-	logger.info("Buy the dagger (${dagger})")
-	pc.buyItem(dagger)
-
 	(1..60).forEach { pc.pickupItem(dagger.copy(), "BAG:Backpack") } // get +60 daggers => inventory +60lb
 	// pc.pickupItem(Item("Crowbar", 5.0, Money()))
 

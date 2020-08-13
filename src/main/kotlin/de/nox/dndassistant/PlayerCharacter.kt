@@ -737,26 +737,6 @@ data class PlayerCharacter(
 	fun dropEquipped() : List<Item>
 		= dropEquipped(worn.keys + bags.keys)
 
-	/* Try to buy an item. On success, return true. */
-	fun buyItem(i: Item) : Boolean {
-		if (purse >= i.cost) {
-			purse -= i.cost // give money
-			pickupItem(i) // get item
-			logger.info("${name} - Bought new ${i} for ${i.cost}, left ${purse}")
-			return true
-		} else {
-			val missed = (purse - i.cost)
-			logger.info("${name} - Not enough money to buy. Missed: ${missed}")
-			return false
-		}
-	}
-
-	/* Try to sell an item. On success, return true. */
-	fun sellItem(i: Item) : Boolean {
-		// TODO (2020-08-06) implement.
-		return false
-	}
-
 	val armorClass: Int get() {
 		val dex = abilityModifier(Ability.DEX)
 		val dex2 = Math.min(dex, 2)
