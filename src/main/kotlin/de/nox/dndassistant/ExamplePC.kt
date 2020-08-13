@@ -79,6 +79,21 @@ fun playgroundWithOnyx() : PlayerCharacter {
 
 	pc.dropFromBag("BAG:Backpack", { index, item -> item == dagger && index < 10 })
 
+	val clothes = object: Wearable {
+		override val name = "Clothes, Common"
+		override val weight = 3.0
+		override val cost = Money(sp = 5)
+		override val position = BodyType.BODY
+
+		override fun toString() : String = name
+	}
+	pc.wear(clothes)
+	pc.wear(Armor("Leather Armor", 10.0, Money(gp = 10), Armor.Weight.LIGHT, 11, 0, true))
+
+	pc.dropEquipped(BodyType.ARMOR.name)
+
+	pc.wear(Armor("Leather Armor", 10.0, Money(gp = 10), Armor.Weight.LIGHT, 11, 0, true))
+
 	val mageHand = Spell(
 		"Mage Hand", // name
 		"Conjuration", 0, // school, level

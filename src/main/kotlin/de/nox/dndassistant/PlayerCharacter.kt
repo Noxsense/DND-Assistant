@@ -437,6 +437,10 @@ data class PlayerCharacter(
 	var hands: Triple<Item?, Item?, Boolean> = Triple(null, null, false)
 		private set
 
+	/** The number of free hands. */
+	val countFreeHands: Int get()
+		= hands.toList().filter { it == null }.size
+
 	/** List of extra storage containers.
 	 * Main bag, Bags hung on belt, skirt' pocket, a carried chest, etc. */
 	var bags: Map<String, Container> = mapOf()
@@ -489,8 +493,6 @@ data class PlayerCharacter(
 	 * @return true on success (the item is actually picked up), else false.
 	 */
 	fun pickupItem(item: Item, intoBag: String = "") : Boolean {
-		// TODO (2020-08-06) refactor inventory: pick up new item.
-
 		val validBag = validStorage(intoBag)
 		val newBag = intoBag.startsWith("BAG:") && item is Container
 
@@ -600,6 +602,43 @@ data class PlayerCharacter(
 			return success
 		}
 		return false
+	}
+
+	/** Put on clothes or armor.
+	 * If no neccessary position is free, don't wear the wearable item.
+	 * @param wearable the item to be worn.
+	 * @return true, if the wearable is successfully equipped, else false.
+	 */
+	fun wear(wearable: Wearable) : Boolean {
+		/* Check, if there is already something worn.*/
+		val bodyPosition = wearable.position
+		val wornThere = worn.filterKeys { it == bodyPosition.name }
+		val clothesCount = wornThere.size
+
+		/* Human specific. Update for others! TODO */
+		var full: Boolean = when (bodyPosition) {
+			BodyType.HEAD,
+			BodyType.SHOULDERS,
+			BodyType.NECK,
+			BodyType.BODY,
+			BodyType.SHIELD,
+			BodyType.ARMOR -> clothesCount > 0
+
+			BodyType.HAND,
+			BodyType.FOOT -> clothesCount > 1
+
+			BodyType.RING -> clothesCount > 9
+			else -> false
+		}
+
+		if (full) {
+			logger.info("Does not wear ${wearable}, already full at $bodyPosition")
+			return false
+		} else {
+			worn += bodyPosition.name to wearable
+			logger.info("Wears now ${wearable}")
+			return true
+		}
 	}
 
 	/** Drop one or more items.
@@ -719,39 +758,58 @@ data class PlayerCharacter(
 		return false
 	}
 
-
-	////////////////////////////////////////////////
-
 	val armorClass: Int get() {
-		// TODO (2020-06-26)
-		// Look up, what the PC's wearing. Maybe add DEX modifier.
-		// Not wearing anything: AC 10 + DEX
-		return 10 + abilityModifier.getOrDefault(Ability.DEX, 0)
-	}
+		val dex = abilityModifier(Ability.DEX)
+		val dex2 = Math.min(dex, 2)
 
-	var equippedArmor: List<Armor> = listOf()
-		private set
+		val wornArmor = worn[BodyType.ARMOR.name] as Armor?
+		val wornShield = worn[BodyType.SHIELD.name] as Armor?
 
-	/* Equip a piece of armor.
-	 * If replace, put the currently worn armor into inventory,
-	 * otherwise do not equip.
-	 * Only armor, which is in inventory (in possession) can be equipped.*/
-	fun wear(a: Armor, replace: Boolean = true) {
-		// TODO (2020-08-06) refactor inventory
+		val armorProcicienies = proficiencies
+			.filterKeys { it is Armor }
+			.map { (it.key as Armor).weightClass }
 
-		/* Check, if there is already something worn.*/
-		val worn = equippedArmor.filter { it.type == a.type }
-		val wornSize = worn.size
+		val L = Armor.Weight.LIGHT
+		val M = Armor.Weight.MEDIUM
+		val H = Armor.Weight.HEAVY
+		val S = Armor.Weight.SHIELD
 
-		/* Human specific. Update for others! TODO */
-		var free: Boolean = when (a.type) {
-			BodyType.HEAD -> wornSize < 1
-			BodyType.SHOULDERS -> wornSize < 1
-			BodyType.ACCESSOIRE -> wornSize < 1
-			BodyType.HAND -> wornSize < 2
-			BodyType.RING -> wornSize < 10
-			BodyType.FOOT -> wornSize < 2
+		/* if shield: (proficient & 0~1 one-handed weapon) or (0 weapon) => +2 */
+		val shieldAC = when {
+			wornShield == null -> 0
+			(S in armorProcicienies && countFreeHands < 2
+				|| countFreeHands > 1) -> wornShield.armorClass
+			else -> 0
 		}
+
+		val armed = wornArmor != null || wornShield != null
+		val unarmedeBoni = if (!armed && false) abilityModifier(Ability.WIS) else 0
+
+		val wAC = wornArmor?.armorClass ?: 0 // armored AC
+		val uAC = 10 + dex + unarmedeBoni // unarmored AC
+
+		// TODO (2020-08-13) unarmered defense
+		// - races and classes benefitting from unarmed defense / natural armor ...
+		// - no armor or few => alternative modifiers.
+		
+		// TODO (2020-08-13) additional spells, changed AC
+		// conditions, etc..
+
+		/* Eventually calculate
+		 * armored or unarmored armor class with modifiers.
+		 * - Not wearing anything: AC 10 + DEX
+		 * - LIGHT Armor: Armor's AC + DEX
+		 * - MEDIUM Armor: Armor's AC + Min(DEX, 2)
+		 * - HEAVY Armor: Armor's AC */
+		val ac = when {
+			wornArmor == null -> uAC
+			wornArmor.weightClass == L -> wAC + dex
+			wornArmor.weightClass == M -> wAC + dex2
+			wornArmor.weightClass == H -> wAC
+			else -> uAC
+		}
+		
+		return ac + shieldAC
 	}
 }
 
@@ -768,9 +826,11 @@ enum class Ability(val fullname: String) {
 enum class BodyType {
 	HEAD, // hat, helmet...
 	SHOULDERS, // like cloaks ...
-	ACCESSOIRE, // like necklace ...
+	NECK, // like necklace ...
+	BODY, // like main outfit, onsies or dresses ...
 	HAND, // like for one glove (2x)
 	RING, // for fingers (10x... species related)
 	FOOT, // for one shoe or so (2x)
-	// SHIELD // only one // ARM
+	ARMOR, // worn above clothes.
+	SHIELD; // only one // ARM or hand.
 }
