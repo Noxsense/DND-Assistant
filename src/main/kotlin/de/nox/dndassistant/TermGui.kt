@@ -239,7 +239,12 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 				+ char.carriedWeightWorn
 			)
 			content += "\n|| * Hold: ${char.hands}"
-			content += "\n|| * ${char.worn}"
+			content += "\n|| * " + char.worn.toList().joinToString("|| * ") {
+				"%${-width/3}s %s (%.1flb)\n".format(
+					"${it.first}:",
+					it.second.toString(),
+					it.second.weight)
+			}
 
 			if (!char.bags.isEmpty()) {
 				content += "\n|# Bags:"

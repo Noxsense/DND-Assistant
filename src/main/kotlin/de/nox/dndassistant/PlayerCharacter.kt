@@ -811,5 +811,5 @@ enum class BodyType {
 	RING, // for fingers (10x... species related)
 	FOOT, // for one shoe or so (2x)
 	ARMOR, // worn above clothes.
-	SHIELD; // only one // ARM or hand.
+	SHIELD; // only one; can strapped on one arm, maximally one weapon can be wield, and other non-combat items can be hold.
 }

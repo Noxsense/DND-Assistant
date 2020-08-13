@@ -177,7 +177,6 @@ data class Container(
  * special properties they possess. Every weapon is classified as either melee or
  * ranged. A melee weapon is used to Attack a target within 5 feet of you,
  * whereas a ranged weapon is used to Attack a target at a distance."
- *
  */
 data class Weapon(
 	/* Inherit from item.*/
@@ -309,6 +308,22 @@ interface Wearable : Item {
 	override val weight: Double
 	override val cost: Money
 	val position: BodyType
+}
+
+/** A basic class for wearable stuff, capes and neclaces included. */
+data class Clothes(
+	/* Inherit from item.*/
+	override val name: String, // inherit from Item
+	override val weight: Double, // inherit from item
+	override val cost: Money, // inherit from item
+
+	override val position: BodyType = BodyType.BODY,
+	val description : String = ""
+) : Wearable {
+
+	override fun toString(): String
+		= name
+
 }
 
 /** Armor <- Skillable

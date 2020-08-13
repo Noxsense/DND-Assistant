@@ -501,10 +501,16 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 				char.carriedWeightHands + char.carriedWeightWorn
 			))
 			+ "\n"
-			+ ul(
-				"\n" + li("Hold: ${char.hands}")
-				+ "\n" + li("Worn: ${char.worn}"))
+			+ table(
+				tr(td(b("Hold")) + td("${char.hands}")) + "\n"
+				+ char.worn.toList().joinToString("\n") {
+					tr(
+						td(b(it.first.toLowerCase().capitalize()))
+						+ td(it.second.toString()))
+				} + "\n",
+				"class='smaller'"
 			)
+		)
 
 		if (!char.bags.isEmpty()) {
 			content += "\n<br/>\n"
