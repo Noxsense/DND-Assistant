@@ -306,7 +306,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 					+ ")")
 
 				val proficient
-					= (char.proficiencies.contains(it as Weapon)
+					= (char.proficiencies.contains(it)
 					|| char.proficiencies.contains(it.weaponType))
 
 				attacks += Attack(
@@ -338,7 +338,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 				damage = it.damage to it.damageType,
 				note = it.note,
 				finesse = it.isFinesse,
-				proficientValue = if (char.proficiencies.contains(it as Weapon) ||
+				proficientValue = if (char.proficiencies.contains(it) ||
 				char.proficiencies.contains(it.weaponType)) char.proficientValue else 0,
 				modifierStrDex = str to dex)
 			}.sorted().reversed()

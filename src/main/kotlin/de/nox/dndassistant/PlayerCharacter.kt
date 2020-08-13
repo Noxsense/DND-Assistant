@@ -628,7 +628,6 @@ data class PlayerCharacter(
 			BodyType.FOOT -> clothesCount > 1
 
 			BodyType.RING -> clothesCount > 9
-			else -> false
 		}
 
 		if (full) {

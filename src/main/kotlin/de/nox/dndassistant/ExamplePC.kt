@@ -106,13 +106,13 @@ fun playgroundWithOnyx() : PlayerCharacter {
 		""")
 
 	val guidance = Spell(
-		"Guidance", // name
-		"Divination", // school
-		0, // spell level
-		"1 action", // casting time
-		"Touch", // range
-		"V,S", // components
-		60, true, // duration, concentration
+		name = "Guidance",
+		school = "Divination",
+		level = 0,
+		castingTime = "1 action",
+		range = "Touch",
+		components = "V,S",
+		duration = 60, concentration = true,
 		ritual = false, // is ritual
 		note = """
 		1. Touch a willing creature.
