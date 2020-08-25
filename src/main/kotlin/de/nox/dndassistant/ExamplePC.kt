@@ -22,6 +22,11 @@ fun playgroundWithOnyx() : PlayerCharacter {
 	pc.addProficiency(Skill.SLEIGHT_OF_HAND) // expert
 	pc.addProficiency(Ability.DEX) // saving throw
 	pc.addProficiency(Ability.INT) // saving throw
+	// pc.addProficiency(Skill.ARCANA) // proficient (set by sage)
+	// pc.addProficiency(Skill.HISTORY) // proficient (set by sage)
+	pc.addProficiency(Skill.INSIGHT) // proficient
+	pc.addProficiency(Skill.PERCEPTION) // proficient
+	pc.addProficiency(Skill.PERCEPTION) // expert
 
 	logger.debug("Proficent Skills: " + pc.proficiencies)
 
@@ -162,10 +167,10 @@ fun playgroundWithOnyx() : PlayerCharacter {
 	savingThrows = arrayOf(Ability.DEX, Ability.INT),
 	klassLevelTable = setOf( // "table" of level features. == Features per Level.
 		Klass.Feature(1, "Experties", "Double skill prof & (skill prof | thieves' tools)."),
-		Klass.Feature(1, "Sneak Attack", "1x/turn + advantage* on creature + finesse/ranged \u21d2 +1d6 dmg"),
+		Klass.Feature(1, "Sneak Attack", "1x/turn + advantage* on creature + finesse/ranged \u21d2 +2d6 dmg"),
 		Klass.Feature(1, "Thieves' Cant", "dialect + 0.25% speed \u21d2 hide msg in normal conversation"),
 		Klass.Feature(2, "Cunning Action", "1x/turn \u21d2 bonus action: Dash, Disengage, Hide."),
-		Klass.Feature(3, "Roguish Archetype", "")
+		Klass.Feature(3, "Roguish Archetype", "{:specialisations:}")
 	),
 	specialisations = mapOf(
 		"Thief" to setOf(
@@ -176,7 +181,7 @@ fun playgroundWithOnyx() : PlayerCharacter {
 			Klass.Feature(17, "Thief's Reflexes", "Ambush, escape; Two turns (Initative, Initiative - 10) in first round in any combat.")
 		),
 		"Assassin" to setOf(
-			Klass.Feature(3, "Trait", "Description")
+			Klass.Feature(3, "Assassinate", "Description")
 		)
 	),
 	description = """
