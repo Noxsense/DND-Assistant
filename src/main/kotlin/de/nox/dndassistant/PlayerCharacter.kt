@@ -510,7 +510,7 @@ data class PlayerCharacter(
 				if (storeItem(item = item, bag = intoBag)) {
 					// stored first, then add own bag key.
 
-					var bagKey = "${intoBag}:${item.name} No. "
+					var bagKey = "${intoBag}:NESTED ${item.name} No. "
 
 					// add an index number to the new key.
 					bagKey += (1 + bags.keys.filter{ it.startsWith(bagKey) }.size)

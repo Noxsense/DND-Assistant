@@ -68,7 +68,7 @@ fun playgroundWithOnyx() : PlayerCharacter {
 
 	pc.pickupItem(pouch.copy(), "BAG:Backpack")
 	pc.pickupItem(pouch.copy(), "BAG:Backpack")
-	pc.pickupItem(pouch.copy(), "BAG:Backpack:Pouch No. 1")
+	pc.pickupItem(pouch.copy(), "BAG:Backpack:NESTED Pouch No. 1")
 	pc.pickupItem(pouch.copy(), "BAG:Backpack")
 
 	pc.dropFromBag("BAG:Backpack", { index, item -> item == dagger && index < 10 })
