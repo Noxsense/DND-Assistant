@@ -547,7 +547,22 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 			note = if (bag.isFull()) "full" else bag.capacity
 			// sum items by category.
 			bag.insideGrouped.forEach {
-				if (it.value[0] !is Container) {
+				if (it.value[0] is Container) {
+					// display the sub containers.
+					it.value.forEach { subBag ->
+						items += "\n" + bagToListItem(subBag as Container)
+					}
+				} else if (it.value[0] is LooseItem) {
+					items += "\n" + li("%s <span class='preview'>(%.2f %s / %.1f lb)</span>".format(
+						it.key, // items name
+						999.9, // it.value.sumByDouble { (it as LooseItem).count }, // items count // TODO cannot be displayed.
+						"liter", // (it.value[0] as LooseItem).measure, // measure unit // TODO difficulties to display.
+						it.value.sumByDouble {
+							// summed weight
+							if (it is Container) it.sumWeight(true) else it.weight
+						}
+					))
+				} else {
 					items += "\n" + li("%4d %c %s <span class='preview'>(%c%5.1f lb)</span>".format(
 						it.value.size, // items count
 						0xd7, // times symbol
@@ -558,11 +573,6 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 							if (it is Container) it.sumWeight(true) else it.weight
 						}
 					))
-				} else {
-					// display the sub containers.
-					it.value.forEach { subBag ->
-						items += "\n" + bagToListItem(subBag as Container)
-					}
 				}
 			}
 			items = ul(items)

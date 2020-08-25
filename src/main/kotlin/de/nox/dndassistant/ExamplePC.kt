@@ -83,6 +83,22 @@ fun playgroundWithOnyx() : PlayerCharacter {
 
 	pc.wear(leather)
 
+	val healing = LooseItem(
+		name = "Potion of Healing",
+		weight = 0.5,
+		cost = Money(gp = 50),
+		validContainer = listOf(), // vial, bottle, flask, jug, pot, waterskin
+		count = 0.1137, // 4 ounces = 0.1137 l
+		measure = LooseItem.Measure.LITER,
+		filledDescription = "Vial (4 ounces): 0.5 lb"
+		)
+	
+	val vial = Container("Vial", 0.0, Money(gp = 1), 0.0, 1, "5 ounces liquid")
+
+	val vialHealing = vial.copy().apply { insert(healing) }
+
+	pc.pickupItem(vialHealing, "BAG:Backpack")
+
 	val mageHand = Spell(
 		"Mage Hand", // name
 		"Conjuration", 0, // school, level

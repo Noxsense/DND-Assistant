@@ -164,6 +164,23 @@ data class Container(
 		= name
 }
 
+data class LooseItem(
+	override val name: String,
+	override val weight: Double, // per unit. // may be calculated
+	override val cost: Money,
+	val validContainer: List<Container>,
+	val count: Double, // 1 (piece), 0.5 (liter), 15.5 (gramm)
+	val measure: LooseItem.Measure, // eg. ounce(s)
+	val filledDescription: String // e.g "Vial (4 ounces): 1lb"
+) : Item {
+
+	enum class Measure { PIECE, GRAMM, LITER; };
+
+	override fun toString() : String
+		= "${name}, ${count} ${measure}"
+
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /** Weapon <- Skillable.
