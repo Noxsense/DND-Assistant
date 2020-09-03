@@ -25,13 +25,7 @@ fun feetToMeter(feet: Double) : Double
 class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 	/* Print the Display for the player character to the standard output.*/
 	fun display() {
-		val htmlHorror = """
-		<!DOCTYPE html>
-		<html lang="en">
-		<head>
-		<meta charset="utf-8">
-		<title>D&amp;D Assitant</title>
-		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		val style = """
 		<style>
 		html, body {
 		background: white;
@@ -226,13 +220,19 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 		font-size:xx-small;
 		color: gray;
 		}
-		#spells .spell .activated {
-		font-weight: bold;
-		}
-		#spells .spell .concentration {
-		text-decoration: underline;
-		}
+		#spells .spell .activated { font-weight: bold; }
+		#spells .spell .concentration { text-decoration: underline; }
 		</style>
+		"""
+
+		val htmlHorror = """
+		<!DOCTYPE html>
+		<html lang="en">
+		<head>
+		<meta charset="utf-8">
+		<title>D&amp;D Assitant</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		${style}
 		</head>
 		<!-- //////////////////////////////////////////////////////////////////// -->
 		<body>
@@ -246,65 +246,10 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 		<div class="preview">${char.level} level, ${char.expiriencePoints} XP</div>
 		</div>
 		<div id="attributes" class="larger">${showAttributes()}</div>
-		<div id="hitpoints">
+		<div id="hitpoints-bar">
 		<div>${showHealthBar()}</div>
-		<div>
-		<table class="smaller">
-		<tr>
-		<td>
-		<b>Hit Points</b>
-		<div class="value" id="hitpoints-current">${char.curHitPoints}</div>
-		</td>
-		<td>
-		<b>Hit Dice</b>
-		<div class="roller value flex-container" id="hitdice" style="justify-content: center;">
-		${div("Long Rest", "class='bordered smaller' style='width:30%;border-width:2px;'")}
-		${DiceTerm(SimpleDice(8, 3)).split().dice.toList().joinToString("") { div("d${it.faces}", "class='bordered' style='width:20%;'") }}
 		</div>
-		{char.hitdice.split}
-		</td>
-		<td>
-		<b>Death Saves</b>
-		<!-- &#x2620; &#x2661; &#x2620; &#x2661; -->
-		<div class="flex-container">
-		<div class="value" style="width:10%;color:lightgray;" id="deathsaves-fail">&#x2620;</div>
-		<div class="value" style="width:75%;border:1px dashed #aaaaaa22;" id="deathsaves">&#x2620; &#x2661; &#x2620; &#x2661;</div>
-		<div class="value" style="width:10%;color:lightgray;" id="deathsaves-pass">&#x2661;</div>
-		</div>
-		</td>
-		</tr>
-		</table>
-		</div>
-		</div>
-		<div id="ac-init-speed">
-		<div>
-		<table class="smaller">
-		<tr>
-		<td>
-		<b>Armor Class</b>
-		<div id="ac" class="value" title= "Unarmored, no shield.">${char.armorClass}</div>
-		</td>
-		<td>
-		<b>Initiative</b>
-		<div class="roller value" id="initiative" title="Initiative! Roll for">${"%+d".format(char.initiative)}</div>
-		</td>
-		<td>
-		<b>Speed</b>
-		<div id="speed" class="value" title="Options: Stand Up, Climb, Dash, Etc. // Reset Feet">
-		${char.speed.toList().joinToString(""){ div("%dft (%s)".format(it.second, it.first)) }}
-		</div>
-		</td>
-		</tr>
-		<tr>
-		<td colspan="3">
-		<div class="flex-container" style="padding:2%;">
-		${char.conditions.joinToString("") { div("$it", "class='bordered'") }}
-		</div>
-		</td>
-		</tr>
-		</table>
-		</div>
-		</div>
+		${showCombatStats()}
 		<div id="rolls">
 		<br/>
 		<b>Extra Dice</b>
@@ -334,7 +279,7 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 		<li id="background-motives-alignment">${showBackground()}</li>
 		<li id="appearance">${showAppearance()} </li>
 		<li id="late rolls">
-		<div class="collapsible"><b>Roll History</b><span id="roll-preview" class="preview">(latest roll)</span> </div>
+		<div class="collapsible"><b>Roll History</b> <span id="roll-preview" class="preview">(latest roll)</span> </div>
 		<div class="content"><ul id="roll-history"><li>No entries</li></ul></div>
 		</li>
 		</ol>
@@ -344,24 +289,44 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 		<!-- //////////////////////////////////////////////////////////////////// -->
 		<!-- Scripts. -->
 		<script type="text/javascript">
-		var i;
-		/* Add EventListener to "collapsible". */
-		var coll = document.getElementsByClassName("collapsible");
-		for (i = 0; i < coll.length; i++) {
-		coll[i].addEventListener("click", function() {
-		this.classList.toggle("active");
-		var content = this.nextElementSibling;
-		if (!content.classList.contains("content")) {
-		return
-		} else if (content.style.display === "block") {
-		content.style.display = "none";
-		} else {
-		content.style.display = "block";
-		}
-		});
-		}
-		//---
-		/* Add EventListener to "roller". */
+			var i;
+			/* Add EventListener to "collapsible". */
+			var coll = document.getElementsByClassName("collapsible");
+			for (i = 0; i < coll.length; i++) {
+				coll[i].addEventListener("click", function() {
+					this.classList.toggle("active");
+					var content = this.nextElementSibling;
+					if (!content.classList.contains("content")) {
+						return
+					} else if (content.style.display === "block") {
+						content.style.display = "none";
+					} else {
+						content.style.display = "block";
+					}
+				});
+			}
+			/* ------------------------------------------------------------- */
+			/* reopen the attributes. */
+			var as = document.getElementById('attributes')
+				.getElementsByClassName('collapsible')
+			for (i = 0; i < as.length; i++) {
+				as[i].classList.toggle('active')
+				as[i].nextElementSibling.style.display = 'block'
+			}
+			/* Add EventListener to "roller". */
+		</script>
+		<script>
+			fun die(face) {
+				return (Math.random() % face) + 1 ;
+			}
+			fun roller(face, count) {
+				var i = 0;
+				var sum = 0;
+				for (i = 0; i < count; i++) {
+					sum += die(face);
+				}
+				return sum;
+			}
 		</script>
 		</body>
 		</html>
@@ -441,7 +406,103 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 
 	fun showCombatStats() : String {
 		// show initiative, armor class, death saves, etc.
-		return div("")
+
+		val deathsavePass = "&#x2661;"
+		val deathsaveFail = "&#x2620;"
+
+		val styleLongRest = "class='bordered smaller' style='width:30%;border-width:2px;' "
+		val styleShortRest =  "class='bordered smaller' style='width:20%;padding:5% 0%;' "
+
+		val styleLightGray = "class='value' style='width:10%;color:lightgray;' "
+
+		val styleGrayDashed = "class='value' style='width:75%;border:1px dashed #aaaaaa22;' "
+
+		return div(
+			table(
+				attributes = "class='smaller'",
+				content = tr(
+					attributes = "id='hitpoints'",
+					content =
+					td(
+						b("Hit Points")
+						+ div("${char.curHitPoints}", "class='value' id='hitpoints-current'")
+					)
+
+					+ td(
+						b("Hit Dice")
+						+ div(
+							// long rest: fill dice: ceil(dice / 2), full hp
+							div("zzZ", styleShortRest + " title='Long Rest.'")
+
+							// sort rest: roll some or all hit dice, get some hp
+							+ DiceTerm(SimpleDice(8, 3)).split().dice.toList().joinToString("") {
+								div("d${it.faces}", styleShortRest + " title='Short Rest.'")
+							},
+						"class='roller value flex-container' " +
+						"id='hitdice' " +
+						"style='justify-content: center;'")
+
+						+ "\${char.hitdice.split}"
+					)
+
+					// fail &#x2620; passed: &#x2661;
+					+ td(
+						b("Death Saves")
+						+ div(
+							div(deathsaveFail, styleLightGray + "id='deathsaves-fail' title='Failed.'")
+							+ div(char.deathSaves.toList().joinToString(""){ when(it) {
+									-1 -> deathsaveFail
+									1 -> deathsavePass
+									else -> ""
+							}}, styleGrayDashed + " id='deathsaves'")
+							+ div(deathsavePass, styleLightGray + "id='deathsaves-passed' title='Passed.'"),
+							"class='flex-container'")
+					)
+				)
+				+ tr(
+					attributes = "id='ac-init-speed'",
+					content =
+
+					td(
+					b("Armor Class")
+					+ div("${char.armorClass}", "id='ac' class='value' title= '${char.worn}'")
+					)
+
+
+					+ td(
+					b("Initiative")
+					+ div("%+d".format(char.initiative),
+					"class='roller value' id='initiative' title='Initiative! Roll for Initiative!'")
+					)
+
+					/* Difficult terrain: +1 feet spent for the normal feet
+					 * Climbing, Swimming, Crawling: +1 feet spent for the normal feet
+					 * Long Jump: ("Run 10ft: distance up to strength score | stading: 1/2 Strength score")
+					 * High Jump: ("Run 10ft: distance 3 + up to strength score | Stading: 1/2 that (extend arms to add 1.5x height"))
+					 */
+
+					+ td(
+					b("Speed")
+					+ div(char.speed.toList().joinToString(""){
+							div("%dft (%s)".format(it.second, it.first))
+						}, "id='speed' class='value' title=" + """
+						'Options:
+						- Dash (run 2x full speed (movement and main))
+						- Stand Up (0.5x speed)
+						- Climb/Crawl/Swim (spend extra +1)
+						- Difficult Terrain (spend extra +1)
+						- Long Jump (stand: 1/2 STR mod, run 10ft: STR mod),
+						- High Jump (stand: 1/2 STR mod + 1.5), run 10ft: STR mod + 3).'
+						""".trimIndent())
+					)
+				)
+				+ tr(
+					td(
+					div(char.conditions.joinToString("") {
+						div(it.name, "class='bordered' title='${it.note}'")
+					}, "class='flex-container' style='padding:2%;'"),
+					"colspan='3'"))
+			))
 	}
 
 	/** Show health bar.*/
@@ -526,7 +587,7 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 				})
 		}
 
-		val preview = span("(%.1f lb, %s)".format(
+		val preview = span("(%.1f lb / %s)".format(
 			char.carriedWeight,
 			"${char.purse}"), "class='preview'")
 
@@ -951,10 +1012,16 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 		val form = char.form
 		val etc = char.appearance
 
-		val preview = " (${size}, $form, $etc)" // show size/height/weight
+		// Preview: show size/height/weight
+		val preview
+			= listOf(size, form, etc)
+			.filter { it.trim() != "" }
 
 		return div(
-			div(b("Appearance") + " " + span(preview, "class='preview'"), "class='collapsible'")
+			div(
+				b("Appearance") + " "
+				+ span(preview.joinToString(", ", "(", ")"), "class='preview'"),
+				"class='collapsible'")
 			+ div(
 				attributes = "class='content'",
 				content = table(
