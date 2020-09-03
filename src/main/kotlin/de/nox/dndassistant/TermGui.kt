@@ -144,9 +144,9 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 		return (format.format(
 				char.armorClass,
 				char.initiative,
-				listOf(D8, D8, D8).joinToString(",", "[", "]", transform = {
-					"d${it.faces}"
-				}),
+				char.hitdice.keys.joinToString(", ", "[", "]") {
+					it.asFaceList().joinToString() { "d${it}" }
+				},
 				char.deathSaves.toList().joinToString("", "", "",
 					transform = {when (it) {
 						-1 -> "\u2620" // failed (death head)

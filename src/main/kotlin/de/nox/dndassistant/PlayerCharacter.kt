@@ -215,6 +215,9 @@ data class PlayerCharacter(
 		val newLevel = old.first + 1
 		val newSpecial = if (old.second == "") specialisation else old.second
 
+		/* Add hitdie to hitdice */
+		addHitdie(klass.hitdie.faces)
+
 		klasses += klass to Pair(newLevel, newSpecial)
 	}
 
@@ -332,11 +335,11 @@ data class PlayerCharacter(
 		if (dice.keys.size < 1) {
 			return 0
 		} else {
-			val count = dice.keys.sumBy { it.count }
+			val count = dice.keys.sumBy { it.factor }
 			var spent = dice.values.sumBy { it }
 
 			/* Accidently splitted to multiple hit die stacks. => Fix that. */
-			val newdice = SimpleDice(count, face)
+			val newdice = SimpleDice(face, count)
 			hitdice -= dice.keys
 
 			/* If enough hit dice available, spent another die. */
@@ -355,16 +358,20 @@ data class PlayerCharacter(
 	 * @return get the new maximum number of hitdice.
 	 */
 	fun addHitdie(face: Int) : Int {
+		logger.debug("Add new hitdie d${face}")
+
 		val curDice : Map<SimpleDice, Int>
 			= hitdice.filterKeys { it.faces == face }
 
 		val spentDice = curDice.values.sumBy { it }
-		val newCount = (curDice.keys.sumBy { it.count }) + 1
+		val newCount = (curDice.keys.sumBy { it.factor }) + 1
 
-		val newDice = SimpleDice(newCount, face)
+		val newDice = SimpleDice(face, newCount)
 
 		hitdice -= curDice.keys
 		hitdice += newDice to spentDice
+
+		logger.debug("New hitdice: ${hitdice}")
 
 		return newCount
 	}

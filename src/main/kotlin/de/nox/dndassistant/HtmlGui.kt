@@ -435,14 +435,16 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 							div("zzZ", styleShortRest + " title='Long Rest.'")
 
 							// sort rest: roll some or all hit dice, get some hp
-							+ DiceTerm(SimpleDice(8, 3)).split().dice.toList().joinToString("") {
-								div("d${it.faces}", styleShortRest + " title='Short Rest.'")
+							+ char.hitdice.keys.joinToString(""){
+								it.asFaceList().joinToString("") {
+									div("d${it}",
+									styleShortRest + " title='Short Rest.'")
+								}
 							},
 						"class='roller value flex-container' " +
 						"id='hitdice' " +
 						"style='justify-content: center;'")
 
-						+ "\${char.hitdice.split}"
 					)
 
 					// fail &#x2620; passed: &#x2661;

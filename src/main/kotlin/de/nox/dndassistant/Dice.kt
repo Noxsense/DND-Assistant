@@ -166,6 +166,12 @@ data class SimpleDice(val max: Int, val times: Int = 1) : Comparable<SimpleDice>
 	operator fun minus(other: SimpleDice) : DiceTerm
 		= this + other.flip()
 
+	fun asList() : List<SimpleDice>
+		= (0 until count).map { SimpleDice(sign * faces, 1) }
+
+	fun asFaceList() : List<Int>
+		= (0 until count).map { sign * faces }
+
 	/** Check equality to another simpleDice.*/
 	override fun equals(other: Any?) : Boolean
 		= when {
