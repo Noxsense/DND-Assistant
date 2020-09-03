@@ -450,10 +450,10 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 		/* Spell slots. */
 		content += "\n|# Spell slots"
 		content += "\n|| " + char.spellSlots.joinToString(" | ", "[ ", " ]", transform = {
-			if (it < 0) "\u221E" /* infinity */ else "$it"
+			if (it.second < 0) "\u221E" /* infinity */ else "$it"
 		})
 
-		preview += "${(0..9).filter{ char.spellSlots[it] > 0 }
+		preview += "${(0..9).filter{ char.spellSlots[it].second > 0 }
 			.joinToString(":", "left slots: [", "]") }"
 
 		content += "\n|# Learnt Spells"

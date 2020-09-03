@@ -81,6 +81,16 @@ fun playgroundWithOnyx() : PlayerCharacter {
 	val clothes = Clothes("Clothes, Common", 3.0, Money(sp = 5), BodyType.BODY)
 	val leather = Armor("Leather Armor", 10.0, Money(gp = 10), Armor.Weight.LIGHT, 11, 0, true)
 
+	val weapons : List<Weapon> = listOf(dagger, spear)
+
+	// TODO (2020-09-03) add proficiency for common/all SIMPLE MELEE WEAPON
+	weapons.filter { it.weaponType == Weapon.Type.SIMPLE_MELEE }.forEach {
+		pc.addProficiency(it)
+	}
+
+	pc.addProficiency(leather) // proficient
+	// TODO (2020-09-03) add proficiency for common/all LIGHT ARMOR
+
 	pc.wear(clothes)
 	pc.wear(leather)
 

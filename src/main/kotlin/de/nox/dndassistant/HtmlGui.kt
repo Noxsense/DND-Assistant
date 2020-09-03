@@ -801,8 +801,10 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 		var content: String = ""
 		var preview: String = ""
 
-		preview += "${(0..9).filter{ char.spellSlots[it] > 0 }
+		preview += "${(0..9).filter{ char.spellSlots[it].second > 0 }
 			.joinToString(":", "left slots: [", "]") }"
+
+		// TODO (2020-09-03) other magic sources, like the dark elf: once per long rest
 
 		/* Content. */
 		content += div(
@@ -816,7 +818,7 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 				})
 				+ "\n"
 				+ tr(char.spellSlots.toList().joinToString("") {
-					td(if (it < 0) "\u221E" /* infinity */ else "$it",
+					td(if (it.second < 0) "\u221E" /* infinity */ else "${it.second}",
 					"class='spellslot'")
 				})
 				+ "\n",

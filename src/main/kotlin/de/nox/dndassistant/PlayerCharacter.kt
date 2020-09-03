@@ -108,7 +108,7 @@ data class PlayerCharacter(
 	}
 
 	/* Add proficiency to a skill. If twice, add expertise.*/
-	fun addProficiency(skill: Skill) {
+	fun addProficiency(skill: Skillable) {
 		// increase the proficcient value.
 		proficiencies += Pair(skill, Proficiency.PROFICIENT + proficiencies[skill])
 	}
@@ -249,6 +249,11 @@ data class PlayerCharacter(
 	var knownLanguages: List<String>
 		= listOf("Common")
 
+	/** A list of Hitdice and the number of used dice.
+	 * Example: 6d12 (3 used / as barbarian) and 2d6 (1 used / as sorcered). */
+	var hitdice : Map<SimpleDice, Int> = mapOf()
+		private set
+
 	var maxHitPoints: Int = -1
 	var curHitPoints: Int = -1
 	var tmpHitPoints: Int = -1
@@ -297,16 +302,77 @@ data class PlayerCharacter(
 
 	/* Take a short rest. Recover hitpoints, maybe magic points, etc. */
 	fun rest(shortRest: Boolean = true) {
-		println("Rest " + (if (shortRest) "short" else "long"))
-		// TODO (2020-06-26)
 		if (shortRest) {
 			// use up to all hit dice and add rolled hit points up to full HP.
 			// do other reloadings.
+			// TODO (2020-09-03) add param with how many hitdice will be spent
+			logger.info("Short rest")
+		} else {
+			logger.info("Long rest")
+
+			/* Back to full hp. */
+			curHitPoints = maxHitPoints
+
+			/* Restore half of used hit dice. */
+			// hitdice.mapValues { it / 2 }
+
+			/* Restore spell slots and other features. */
+			// TODO (2020-09-03) implement magic points restoration [ RULES needed ]
 		}
 	}
 
-	var spellSlots : List<Int> = (0..9).map { if (it == 0) -1 else Math.max(D10.roll() - D20.roll(), 0) }
-		// private set
+	/** Use a hitdie, return how many are left.
+	 * @param face face of the hitdie, which will be used.
+	 * @return left hitdice for that face.
+	 */
+	fun useHitdie(face: Int) : Int {
+		var dice = hitdice.filterKeys { it.faces == face }
+
+		/* No such hit die available to spend. */
+		if (dice.keys.size < 1) {
+			return 0
+		} else {
+			val count = dice.keys.sumBy { it.count }
+			var spent = dice.values.sumBy { it }
+
+			/* Accidently splitted to multiple hit die stacks. => Fix that. */
+			val newdice = SimpleDice(count, face)
+			hitdice -= dice.keys
+
+			/* If enough hit dice available, spent another die. */
+			if (spent < count) {
+				spent += 1
+			}
+
+			hitdice += newdice to spent
+
+			return count - spent
+		}
+	}
+
+	/** Get a new hitdie (by leveling up a klass).
+	 * @param face new hitdie's face.
+	 * @return get the new maximum number of hitdice.
+	 */
+	fun addHitdie(face: Int) : Int {
+		val curDice : Map<SimpleDice, Int>
+			= hitdice.filterKeys { it.faces == face }
+
+		val spentDice = curDice.values.sumBy { it }
+		val newCount = (curDice.keys.sumBy { it.count }) + 1
+
+		val newDice = SimpleDice(newCount, face)
+
+		hitdice -= curDice.keys
+		hitdice += newDice to spentDice
+
+		return newCount
+	}
+
+	/** ordered list of max and available spellslots. */
+	var spellSlots : List<Pair<Int,Int>>
+		= (0..9).map { if (it == 0) (-1 to -1) else (0 to 0) }
+		private set
 
 	// spell, spellcasting source, prepared?
 	private var spellsLearnt : Map<Spell, String> = mapOf()
