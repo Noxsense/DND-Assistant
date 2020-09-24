@@ -1,4 +1,4 @@
-package de.nox.dndassistant
+package de.nox.dndassistant.core
 
 import kotlin.math.abs;
 import kotlin.math.max;

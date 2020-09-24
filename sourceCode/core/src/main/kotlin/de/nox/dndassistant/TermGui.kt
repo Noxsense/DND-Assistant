@@ -1,6 +1,11 @@
 package de.nox.dndassistant
 
+import de.nox.dndassistant.core.*
+
 private val logger = LoggerFactory.getLogger("TermGUI")
+
+// TODO own package.
+// w: Some JAR files in the classpath have the Kotlin Runtime library bundled into them. This may cause difficult to debug problems if there's a different version of the Kotlin Runtime library in the classpath. Consider removing these libraries from the classpath
 
 fun main(args: Array<String>) {
 	println(
@@ -458,7 +463,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 		content += "\n|# Learnt Spells"
 		content += char.spellsKnown.sortedWith(comparingSpells)
-			.joinToString("", "", "\n", transform = {
+			.joinToString("", "", "\n") {
 				val prepSlot = char.spellsPrepared.getOrDefault(it, -1)
 				val activeLeft = char.spellsActive.getOrDefault(it, -1)
 
@@ -481,7 +486,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 				("\n| * $leftSide %${width - leftSide.length - 5}s".format(
 					duration
 				))
-			})
+			}
 
 		return "# Spells (${preview})" + if (unfold) content else ""
 	}

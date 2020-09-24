@@ -1,8 +1,12 @@
 package de.nox.dndassistant
 
 import java.io.File
+import de.nox.dndassistant.core.*
 
 private val logger = LoggerFactory.getLogger("HtmlGui")
+
+// TODO own package.
+// w: Some JAR files in the classpath have the Kotlin Runtime library bundled into them. This may cause difficult to debug problems if there's a different version of the Kotlin Runtime library in the classpath. Consider removing these libraries from the classpath
 
 fun main(args: Array<String>) {
 	println(

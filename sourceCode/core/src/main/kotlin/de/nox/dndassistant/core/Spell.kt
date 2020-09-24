@@ -1,4 +1,4 @@
-package de.nox.dndassistant
+package de.nox.dndassistant.core
 
 private val logger = LoggerFactory.getLogger("Spell")
 

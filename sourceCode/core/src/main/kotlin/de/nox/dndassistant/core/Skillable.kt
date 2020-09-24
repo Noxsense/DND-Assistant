@@ -1,4 +1,4 @@
-package de.nox.dndassistant
+package de.nox.dndassistant.core
 
 /* Proficiency level.*/
 enum class Proficiency{

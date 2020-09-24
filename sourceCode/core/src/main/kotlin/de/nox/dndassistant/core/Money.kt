@@ -1,4 +1,4 @@
-package de.nox.dndassistant
+package de.nox.dndassistant.core
 
 data class Money(
 	val pp: Int = 0, /* platiunum. */

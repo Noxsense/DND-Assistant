@@ -1,0 +1,5 @@
+<resources>
+	<string name="app_name">DND Assistant</string>
+	<string name="text">Hello Yay!</string>
+	<string name="button">Button Me</string>
+</resources>

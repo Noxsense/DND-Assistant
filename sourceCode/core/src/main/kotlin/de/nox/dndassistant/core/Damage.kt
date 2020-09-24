@@ -1,4 +1,4 @@
-package de.nox.dndassistant
+package de.nox.dndassistant.core
 
 /** Attack.
  * Create an attack a Weapon or a Spell can make depending on the strength or

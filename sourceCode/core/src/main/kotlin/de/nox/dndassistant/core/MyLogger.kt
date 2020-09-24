@@ -1,4 +1,4 @@
-package de.nox.dndassistant
+package de.nox.dndassistant.core
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
