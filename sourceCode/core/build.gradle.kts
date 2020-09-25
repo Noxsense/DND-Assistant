@@ -5,12 +5,10 @@
  */
 
 plugins {
+  id("java-library")
+
   // Apply the Kotlin JVM plugin to add support for Kotlin.
   id("org.jetbrains.kotlin.jvm")
-}
-
-repositories {
-  jcenter()
 }
 
 dependencies {
@@ -18,7 +16,9 @@ dependencies {
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
   // Use the Kotlin JDK 8 standard library.
-  implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+  implementation(kotlin("stdlib-jdk7"))
+
+  // -- Tests ---
 
   // Use the Kotlin test library.
   testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -27,12 +27,7 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
 
-// https://discuss.gradle.org/t/kotlin-jvm-app-missing-main-manifest-attribute/31413/2
-tasks.withType<Jar>() {
-  manifest {
-    attributes["Main-Class"] = "de.nox.dndassistant.TermGuiKt"
-  }
-  configurations["compileClasspath"].forEach { file: File ->
-    from(zipTree(file.absoluteFile))
-  }
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }

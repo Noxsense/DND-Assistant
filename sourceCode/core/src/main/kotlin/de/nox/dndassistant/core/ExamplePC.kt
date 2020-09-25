@@ -1,6 +1,6 @@
 package de.nox.dndassistant.core
 
-private val logger = LoggerFactory.getLogger("ExamplePC")
+// private val logger = LoggerFactory.getLogger("ExamplePC")
 
 fun playgroundWithOnyx() : PlayerCharacter {
 	val pc : PlayerCharacter
@@ -28,7 +28,7 @@ fun playgroundWithOnyx() : PlayerCharacter {
 	pc.addProficiency(Skill.PERCEPTION) // proficient
 	pc.addProficiency(Skill.PERCEPTION) // expert
 
-	logger.debug("Proficent Skills: " + pc.proficiencies)
+	// logger.debug("Proficent Skills: " + pc.proficiencies)
 
 	val dagger =  Weapon("Dagger", 1.0, Money(gp=2),
 		weightClass = WeightClass.LIGHT,
@@ -107,7 +107,7 @@ fun playgroundWithOnyx() : PlayerCharacter {
 		measure = LooseItem.Measure.LITER,
 		filledDescription = "Vial (4 ounces): 0.5 lb"
 		)
-	
+
 	val vial = Container("Vial", 0.0, Money(gp = 1), 0.0, 1, "5 ounces liquid")
 
 	val vialHealing = vial.copy().apply { insert(healing) }

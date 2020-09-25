@@ -17,27 +17,38 @@ class MainActivity : AppCompatActivity() {
 
 	private val LOG_TAG = "D&D Main"
 
+	data class Replacement(val name: String) {
+		var bags: Map<String, String> = HashMap<String,String>()
+	}
+
+	/*
+	fun playgroundWithOnyx() : Replacement
+		= Replacement("Replacement") . apply {
+			bags += ("Bag1" to "Dagger Thing")
+			bags += ("Bag2" to "AArmor Thing")
+		}
+		*/
+	
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
 
 		Log.d(LOG_TAG, "Initiated Activity.")
 
-		// val pc = playgroundWithOnyx()
+		val pc = playgroundWithOnyx()
 
 		/* Show Player Character Name. */
-		text.text = "{pc.name}" // pc.name
+		text.text = "${pc.name}"
 
 		val xs = listOf("a", "b", "c")
 
 		val adapter = ArrayAdapter(
 			this@MainActivity,
 			android.R.layout.simple_list_item_1,
-			// pc.bags.toList())
-			xs)
+			pc.bags.toList())
 
 		list.setAdapter(adapter)
-		list.setOnItemClickListener { _ , view, position, id ->
+		list.setOnItemClickListener { _ , _, position, _ ->
 			Toast.makeText(this, "Show item ${xs[position]}", Toast.LENGTH_LONG).show()
 		}
 
