@@ -1,4 +1,4 @@
-package de.nox.dndassistant
+package de.nox.dndassistant.cui
 
 import java.io.File
 import de.nox.dndassistant.core.*
