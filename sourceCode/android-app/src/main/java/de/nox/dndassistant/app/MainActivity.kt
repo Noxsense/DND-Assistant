@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
 			bags += ("Bag2" to "AArmor Thing")
 		}
 		*/
-	
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)

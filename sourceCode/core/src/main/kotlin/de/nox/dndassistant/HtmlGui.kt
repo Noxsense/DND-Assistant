@@ -8,7 +8,7 @@ private val logger = LoggerFactory.getLogger("HtmlGui")
 // TODO own package.
 // w: Some JAR files in the classpath have the Kotlin Runtime library bundled into them. This may cause difficult to debug problems if there's a different version of the Kotlin Runtime library in the classpath. Consider removing these libraries from the classpath
 
-fun main(args: Array<String>) {
+fun main() {
 	println(
 		"""
 		DnD Application, display stats and roll your dice!
@@ -436,7 +436,7 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 						b("Hit Dice")
 						+ div(
 							// long rest: fill dice: ceil(dice / 2), full hp
-							div("zzZ", styleShortRest + " title='Long Rest.'")
+							div("zzZ", styleLongRest + " title='Long Rest.'")
 
 							// sort rest: roll some or all hit dice, get some hp
 							+ char.hitdice.keys.joinToString(""){
@@ -740,7 +740,7 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 
 		// Preview: Maximal Attack.
 		// it must be at least size:3, since they are put manually.
-		val maxAtk = attacks.maxBy { it.damageRoll.average }!!
+		val maxAtk = attacks.maxByOrNull { it.damageRoll.average }!!
 
 		val title = div(
 			attributes = "class='collapsible'",

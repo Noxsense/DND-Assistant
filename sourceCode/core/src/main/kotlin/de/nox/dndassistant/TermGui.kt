@@ -13,6 +13,7 @@ fun main(args: Array<String>) {
 		DnD Application, display stats and roll your dice!
 		Happy Gaming! :D
 		==================================================
+		${args}
 		""".trimIndent())
 
 	val pc = playgroundWithOnyx()
@@ -92,7 +93,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 			if (unfold) {
 				str += "\n" + thline1 // line ------
 				val low = groupSkills.filterKeys { it in curabs }
-				val maxRow = low.values.map { it.size }.max() ?: 0
+				val maxRow = low.values.map { it.size }.maxOrNull() ?: 0
 
 				val cellForm = "| %+2d %c %-18s "
 				// ability saving throws
@@ -197,7 +198,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 					char.proficiencies[it] == Proficiency.PROFICIENT
 				}
 
-			val maxRows = listOf(languages.size, proficient.size, expert.size).max()!!
+			val maxRows = listOf(languages.size, proficient.size, expert.size).maxOrNull()!!
 
 			val len = -width / 3 + 1 + 2
 			val trFormat = "|%${len}s |%${len}s |%${len}s"
@@ -393,7 +394,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 
 		// Preview: Maximal Attack.
 		// it must be at least size:3, since they are put manually.
-		val maxAtk = attacks.maxBy { it.damageRoll.average }!!
+		val maxAtk = attacks.maxByOrNull { it.damageRoll.average }!!
 
 		return ("# Attacks (max: ${maxAtk.name}:${maxAtk.damageRoll})"
 			+ if (unfold) content else "" )

@@ -23,7 +23,7 @@ data class Race(
 		= features + subrace.getOrDefault(forSubrace, listOf())
 
 	fun getLifeStage(ageInYears: Int) : String
-		= age.filterValues { it <= ageInYears }.maxBy { it.value }?.key ?: "adult"
+		= age.filterValues { it <= ageInYears }.maxByOrNull { it.value }?.key ?: "adult"
 
 	override fun equals(other: Any?) : Boolean
 		= other != null && other is Race && name == other.name

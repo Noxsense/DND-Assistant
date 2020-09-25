@@ -264,35 +264,25 @@ data class PlayerCharacter(
 	val hasTmpHitpoints: Boolean get()
 		= tmpHitPoints > 0 && tmpHitPoints != maxHitPoints
 
-	var deathSaves: Array<Int> = arrayOf(0, 0, 0, 0, 0) // maximal 5 chances.
+	var deathSaves: Pair<Int,Int> = 0 to 0 // successes and fails
 		private set
 
 	fun deathSavesSuccess() {
-		for (i in (0 until deathSaves.size)) {
-			if (deathSaves[i] == 0) {
-				deathSaves[i] = 1
-				break
-			}
-		}
+		deathSaves = deathSaves.first + 1 to deathSaves.second
 	}
 
 	fun deathSavesFail() {
-		for (i in (0 until deathSaves.size)) {
-			if (deathSaves[i] == 0) {
-				deathSaves[i] = -1
-				break
-			}
-		}
+		deathSaves = deathSaves.first to deathSaves.second + 1
 	}
 
 	fun resetDeathSaves() {
-		deathSaves.map { _ -> 0 }
+		deathSaves = 0 to 0
 	}
 
 	/* Count fails and successes and returns the more significcant value.*/
 	fun checkDeathFight() : Int {
-		val success = deathSaves.count { it > 0 }
-		val failed = deathSaves.count { it < 0 }
+		val success = deathSaves.first
+		val failed = deathSaves.second
 
 		return when {
 			success > 2 -> 3
@@ -484,6 +474,9 @@ data class PlayerCharacter(
 		}
 
 		// TODO (2020-07-27) SLOT power?
+		if (slot > spell.level) {
+			println("More power for this spell.")
+		}
 
 		/* Cast spell for at least 1 second (instantious). */
 		spellsActive += spell to Math.max(1, spell.duration)

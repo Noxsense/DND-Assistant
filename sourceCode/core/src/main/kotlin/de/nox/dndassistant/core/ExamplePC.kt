@@ -174,7 +174,7 @@ fun playgroundWithOnyx() : PlayerCharacter {
 
 	val rogue = Klass("Rogue",
 	hitdie = D8,
-	savingThrows = arrayOf(Ability.DEX, Ability.INT),
+	savingThrows = listOf(Ability.DEX, Ability.INT),
 	klassLevelTable = setOf( // "table" of level features. == Features per Level.
 		Klass.Feature(1, "Experties", "Double skill prof & (skill prof | thieves' tools)."),
 		Klass.Feature(1, "Sneak Attack", "1x/turn + advantage* on creature + finesse/ranged \u21d2 +2d6 dmg"),

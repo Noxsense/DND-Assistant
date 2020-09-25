@@ -10,7 +10,7 @@ private val logger = LoggerFactory.getLogger("Klass")
 data class Klass(
 	val name: String,
 	val hitdie: SimpleDice = SimpleDice(0),
-	val savingThrows: Array<Ability> = arrayOf(),
+	val savingThrows: List<Ability> = listOf(),
 	val klassLevelTable: Set<Feature> = setOf(),
 	val specialisations: Map<String, Set<Feature>> = mapOf(),
 	val description: String = "A ${name} is like that."
