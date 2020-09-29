@@ -2,4 +2,11 @@
 <resources>
     <dimen name="base_grid_size">8dp</dimen>
     <dimen name="doub_grid_size">16dp</dimen>
+
+    <dimen name="textSize">12sp</dimen>
+    <dimen name="textSizeNotes">5sp</dimen>
+    <dimen name="textSizeOverviewLabel">8sp</dimen>
+
+    <dimen name="vmargin">3sp</dimen>
+    <dimen name="hmargin">10sp</dimen>
 </resources>

@@ -26,17 +26,6 @@ class NextActivity : AppCompatActivity() {
 		/* Get the value. */
 		val value = bundle?.getString("key") ?: "value-alternative"
 
-		text.text = "Value: $value"
-
-		button.setOnClickListener {
-			if (true) {
-				// Success -> Return to Main.
-				Toast.makeText(this, "Ok", Toast.LENGTH_LONG).show()
-				onBackPressed()
-			} else {
-				// hint possible errors.
-				Toast.makeText(this, "Nope", Toast.LENGTH_LONG).show()
-			}
-		}
+		Log.d(LOG_TAG, "value: $value")
 	}
 }

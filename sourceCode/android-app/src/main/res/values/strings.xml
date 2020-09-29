@@ -1,5 +1,17 @@
 <resources>
-	<string name="app_name">DND Assistant</string>
-	<string name="text">Hello Yay!</string>
-	<string name="button">Button Me</string>
+	<string name="app_name">D&amp;D Assistant</string>
+
+  <!-- Name panel -->
+	<string name="character_name" formatted="false">%s</string>
+	<string name="level_xp" formatted="false">Level %d, %d XP</string>
+
+  <!-- health panel. -->
+  <string name="healthbarlabel" formatted="false">%d/%d</string>
+  <string name="longrest">zzZ</string>
+  <string name="deathfail">/</string>
+  <string name="deathsuccess">X</string>
+
+  <!-- combat panel -->
+	<string name="speed" formatted="false">%d ft</string>
+	<string name="armorclass" formatted="false">%d</string>
 </resources>

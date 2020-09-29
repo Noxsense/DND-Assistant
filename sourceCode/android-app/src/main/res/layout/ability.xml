@@ -1,0 +1,37 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_height="100sp"
+  android:layout_width="100sp"
+  android:orientation="vertical"
+  android:background="@drawable/framed"
+  >
+  <TextView
+    android:gravity="center"
+    android:id="@+id/ability_title"
+    android:layout_height="wrap_content"
+    android:layout_width="fill_parent"
+    android:padding="2sp"
+    android:textColor="#55000000"
+    android:textSize="5sp"
+    />
+  <TextView
+    android:background="@drawable/framed"
+    android:gravity="center"
+    android:id="@+id/ability_modifier"
+    android:layout_height="wrap_content"
+    android:layout_width="fill_parent"
+    android:padding="2sp"
+    android:text="MOD"
+    android:textSize="30sp"
+    />
+  <TextView
+    android:background="@drawable/framed"
+    android:gravity="center"
+    android:id="@+id/ability_value"
+    android:layout_height="wrap_content"
+    android:layout_width="fill_parent"
+    android:padding="2sp"
+    android:text="value"
+    android:textSize="10sp"
+    />
+</LinearLayout>
+

@@ -1,0 +1,13 @@
+<resources>
+  <declare-styleable name="DiceView">
+    <!-- displayed as [+3], but be actualy d20 +3. eg. ability throws -->
+    <attr name="baseDice" format="string" />
+
+    <!-- proficiency, add bonus on roll and also other displayed. -->
+    <attr name="proficiencyBonus" format="enum">
+      <enum name="none" value="0" />
+      <enum name="proficcient" value="1" />
+      <enum name="expert" value="2" />
+    </attr>
+  </declare-styleable>
+</resources>
