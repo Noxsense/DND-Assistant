@@ -440,10 +440,8 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 
 							// sort rest: roll some or all hit dice, get some hp
 							+ char.hitdice.keys.joinToString(""){
-								it.asFaceList().joinToString("") {
-									div("d${it}",
-									styleShortRest + " title='Short Rest.'")
-								}
+								div("d${it}",
+								styleShortRest + " title='Short Rest.'")
 							},
 						"class='roller value flex-container' " +
 						"id='hitdice' " +
@@ -986,7 +984,7 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 		}
 
 		// show background name and alignment.
-		val preview = "(${age} (${char.alignment.abbreviation}), ${char.background})"
+		val preview = "(${age} (${char.alignment.abbreviation}), ${char.background.first})"
 
 		return div(
 			div(b("Background") + " " + previewSpan(preview), "class='collapsible'")
@@ -996,7 +994,7 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 				content = table(
 					tr(td("Age:", "style='width:30%'") + td(age))
 					+ tr(td("Alignment:") + td(char.alignment.toString()))
-					+ tr(td("Background:") + td("${char.background}, ${char.speciality}"))
+					+ tr(td("Background:") + td("${char.background}, ${char.background.second}"))
 				)
 				+ "\n<br/>\n"
 				+ b("Motives:") + "\n"

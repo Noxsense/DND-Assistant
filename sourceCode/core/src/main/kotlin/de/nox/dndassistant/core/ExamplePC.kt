@@ -225,7 +225,7 @@ fun playgroundWithOnyx() : PlayerCharacter {
 	pc.height = 1.99
 	pc.weight = 13.0
 
-	pc.speciality = "Libarian"
+	// pc.background.speciality = "Libarian"
 	pc.trait = "Watch and Learn."
 	pc.ideal = "Knowledge."
 	pc.bonds = "Protect the weak."

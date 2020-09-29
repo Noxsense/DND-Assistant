@@ -151,7 +151,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 				char.armorClass,
 				char.initiative,
 				char.hitdice.keys.joinToString(", ", "[", "]") {
-					it.asFaceList().joinToString() { "d${it}" }
+					"d${it}"
 				},
 				char.deathSaves.toList().joinToString("", "", "",
 					transform = {when (it) {
@@ -580,11 +580,11 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 			val len = width / 4 - 2
 
 			content += "| * %${-len}s %s\n".format("Age:", age)
-			content += "| * %${-len}s %s\n".format("Background:", char.background)
+			content += "| * %${-len}s %s\n".format("Background:", char.background.first)
 			content += "| * %${-len}s %s\n".format("Alignment:", char.alignment)
 
 			content += "| * Motives:\n"
-			content += "| | %${-len}s %s\n".format("* Speciality:", char.speciality)
+			content += "| | %${-len}s %s\n".format("* Speciality:", char.background.second)
 			content += "| | %${-len}s %s\n".format("* Trait:", char.trait)
 			content += "| | %${-len}s %s\n".format("* Ideal:", char.ideal)
 			content += "| | %${-len}s %s\n".format("* Bonds:", char.bonds)

@@ -12,55 +12,185 @@ data class PlayerCharacter(
 	val player: String = ""
 	) {
 
+	/* ------------------------------------------------------------------------
+	 * Stats, Values and Scores defined by Klass, Race and Numbers.
+	 */
+
 	var expiriencePoints: Int
 		= 0
+		// plublic getter and setter
+		// changes => will influence level and proficiency bonus and depended values.
 
-	val level : Int get() = when {
-		expiriencePoints >= 355000 -> 20
-		expiriencePoints >= 305000 -> 19
-		expiriencePoints >= 265000 -> 18
-		expiriencePoints >= 225000 -> 17
-		expiriencePoints >= 195000 -> 16
-		expiriencePoints >= 165000 -> 15
-		expiriencePoints >= 140000 -> 14
-		expiriencePoints >= 120000 -> 13
-		expiriencePoints >= 100000 -> 12
-		expiriencePoints >= 85000 -> 11
-		expiriencePoints >= 64000 -> 10
-		expiriencePoints >= 48000 -> 9
-		expiriencePoints >= 34000 -> 8
-		expiriencePoints >= 23000 -> 7
-		expiriencePoints >= 14000 -> 6
-		expiriencePoints >= 6500 -> 5
-		expiriencePoints >= 2700 -> 4
-		expiriencePoints >= 900 -> 3
-		expiriencePoints >= 300 -> 2
-		else -> 1
-	}
+	/** Map of K/Classes (with Level and Specialities), the character has. */
+	var klasses : Map<Klass, Pair<Int, String>> = mapOf()
+		private set
+		// public getter.
 
-	val proficientValue: Int get() = when {
-		level >= 17 -> +6
-		level >= 13 -> +5
-		level >= 9 -> +4
-		level >= 5 -> +3
-		else -> +2
-	}
+	/** Map of traits, gained from reaching levels in a certain class. */
+	var klassTraits: Map<String, String> = mapOf()
+		private set
+		// public getter.
 
+	/** Race and subrace. */
+	private var raceSubrace: Pair<Race, String> = Race("Human") to "Normal"
+
+	val race: Race get() = raceSubrace.first
+	val subrace: String get() = raceSubrace.second
+
+	/** The history of the character. */
+	var background: Pair<Background, String>
+		= Background("Pure", listOf(), listOf(), Money()) to "Just Born"
+		private set
+		// private setter, with one time proof.
+
+	/** Map of speed on different terrains and specialities. */
+	private var speedMap : Map<String, Int> = mapOf("walking" to 30 /*feet*/)
+
+	/** Character level according to expirience points. */
+	val level : Int get() = xpToLevel(expiriencePoints)
+
+	/** Proficiency bonus according to character leve. */
+	val proficientValue: Int get() = levelToProficiencyBonus(level)
+
+	/** THE basic ability scores. */
 	var abilityScore: Map<Ability, Int>
 		= enumValues<Ability>().map { it }.associateWith { 10 }
 		private set
 
+	/** The modifier, according to the values for the certain scores. */
 	var abilityModifier: Map<Ability, Int>
 		= abilityScore.mapValues { getModifier(it.value) }
 		private set
 
+	/** The combat's initiative, mostly the DEX modifier. (in-combat) */
+	val initiative: Int get()
+		= this.abilityModifier.getOrDefault(Ability.DEX,
+			getModifier(this.abilityScore.getOrDefault(Ability.DEX, 0)))
+
+	/** The abilities, the character has proficiency for saving throws. */
 	var savingThrows: List<Ability>
 		= listOf()
 		private set
 
+	/** The list of skills, the charcter has proficiency bonus (and maybe expertise). */
 	var proficiencies: Map<Skillable, Proficiency>
 		= mapOf()
 		private set
+
+	/** The list of languages the character has learnt, can understand and uses. */
+	var knownLanguages: List<String>
+		= listOf("Common")
+		private set
+
+	/** Spell slots the character has available and used.
+	 * Ordered list of max and available spellslots. */
+	var spellSlots : List<Pair<Int,Int>>
+		= (0..9).map { if (it == 0) (-1 to -1) else (0 to 0) }
+		private set
+
+	/** List of spells, this character has learnt, and the source, where it was learnt.
+	 * The source may influence the spell casting ability and strength of a casted spell. */
+	private var spellsLearnt : Map<Spell, String> = mapOf()
+		private set
+
+	/** List the spells, the character has learnt. */
+	val spellsKnown: List<Spell> get() = spellsLearnt.keys.toList()
+
+	/* ------------------------------------------------------------------------
+	 * Equipment and inventory.
+	 */
+
+	/** The pure money the character carries. Probably in an extra bag. */
+	var purse: Money = Money()
+
+	/** The equipment, the character wears. */
+	var worn: Map<String, Item> = mapOf() // empty == naked
+		private set
+
+	// see armor class. (in-combat value).
+	// depended on currenlty worn equipment and classes. and proficiencies (armor)
+
+	// main hand; off hand; true, if both hands for one item are used.
+	var hands: Triple<Item?, Item?, Boolean> = Triple(null, null, false)
+		private set
+
+	/** List of extra storage containers.
+	 * Main bag, Bags hung on belt, skirt' pocket, a carried chest, etc. */
+	var bags: Map<String, Container> = mapOf()
+		private set
+
+	/* ------------------------------------------------------------------------
+	 * Status and momental conditions.
+	 */
+
+	/** A list of Hitdice and the number of used dice.
+	 * D8: 5 at all / 4 availbale (received as rogue).
+	 * D6: 1 at all / 1 availbale (received as sorcered).
+	 . */
+	var hitdice : Map<Int, Pair<Int, Int>> = mapOf()
+		private set
+
+	var maxHitPoints: Int = -1
+	var curHitPoints: Int = -1
+	var tmpHitPoints: Int = -1
+
+	/** A subset of the known spells. Some classes need to prepare a spell to cast it. */
+	var spellsPrepared: Map<Spell, Int> = mapOf()
+		private set // changes in prepareSpell(Spell,Int)
+
+	/** A map of activated spells with their left duration (seconds). */
+	var spellsActive: Map<Spell, Int> = mapOf()
+		private set // changes on spellCast(Spell,Int) and spellEnd(Spell)
+
+	/** Get the (first) active spell, which needs concentration. */
+	val spellConcentration: Spell? get()
+		= spellsActive.keys.find { it.concentration }
+
+	/* ------------------------------------------------------------------------
+	 * Personality and character, role playing.
+	 * Getter and Setter are all public and modifyable. Won't change other attributes.
+	 */
+	
+	/** Age of the character, in years. (If younger than a year, use negative as days.) */
+	var age : Int = 0
+
+	/** Alignment of the charcter (role play). */
+	val alignment : Alignment = Alignment.NEUTRAL_NEUTRAL;
+
+	/** Visible appearance of the character. (roleplay, also positioning). */
+	var size : Size = Size.MEDIUM // the space this character uses.
+
+	/** Visible appearance of the character. (roleplay). */
+	var height : Double = 5.5 /*feet*/
+
+	/** Visible appearance of the character. (roleplay, suggested by race). */
+	var weight : Double = 40.0 /*lb*/
+
+	/** Visible appearance of the character. (roleplay, suggested by race). */
+	var form: String = "" // short body fitness, description, headliner.
+
+	/** Visible appearance of the character. (roleplay). */
+	var appearance: String = "" // more description.
+
+	/** Background and story information. (role play) */
+	var trait : String = ""
+
+	/** Background and story information. (role play) */
+	var ideal : String = ""
+
+	/** Background and story information. (role play) */
+	var bonds : String = ""
+
+	/** Background and story information. (role play) */
+	var flaws : String = ""
+
+	/* The history of the character. (role play) */
+	var history : List<String>
+		= listOf()
+
+	/* ------------------------------------------------------------------------
+	 * (Simple) Getter and Setters..
+	 */
 
 	fun setAbilityScores(xs: Map<Ability,Int>) {
 		abilityScore = xs
@@ -113,13 +243,7 @@ data class PlayerCharacter(
 		proficiencies += Pair(skill, Proficiency.PROFICIENT + proficiencies[skill])
 	}
 
-	val initiative: Int get()
-		= this.abilityModifier.getOrDefault(Ability.DEX,
-			getModifier(this.abilityScore.getOrDefault(Ability.DEX, 0)))
-
 	var conditions : Set<Condition> = setOf()
-
-	private var speedMap : Map<String, Int> = mapOf("walking" to 30 /*feet*/)
 
 	val speed : Map<String, Int> get()
 		= if (conditions.any{ when (it) {
@@ -133,26 +257,8 @@ data class PlayerCharacter(
 			speedMap
 		}
 
-	/* Age of the character, in years. (If younger than a year, use negative as days.) */
-	var age : Int = 0
-
-	val alignment : Alignment = Alignment.NEUTRAL_NEUTRAL;
-
-	/* The history of the character. */
-	var background: Background = Background("Just Born", listOf(), listOf(), Money())
-		private set
-
-	var speciality : String = ""
-	var trait : String = ""
-	var ideal : String = ""
-	var bonds : String = ""
-	var flaws : String = ""
-
-	/* The history of the character. */
-	var history : List<String>
-		= listOf()
-
-	private var backgroundSet = false
+	/* Suppporting variable, if the background is already set. */
+	private var backgroundAlreadyDefined = false
 
 	/** Set background, but only once! */
 	fun setBackground(
@@ -165,10 +271,10 @@ data class PlayerCharacter(
 		chooseBonds: Int = -1,
 		chooseFlaws: Int = -1
 	) {
-		if (backgroundSet) return // only set once!
+		if (backgroundAlreadyDefined) return // only set once!
 
-		background = bg
-		backgroundSet = true
+		background = bg to (bg.suggestedSpeciality[chooseSpecial] ?: "")
+		backgroundAlreadyDefined = true
 
 		if (addProf) {
 			// add only as proficient.
@@ -180,7 +286,7 @@ data class PlayerCharacter(
 		}
 
 		if (chooseSpecial in (1 until bg.suggestedSpeciality.size))
-			speciality = bg.suggestedSpeciality[chooseSpecial]
+			background = (background.first to bg.suggestedSpeciality[chooseSpecial])
 
 		if (chooseTrait in (1 until bg.suggestedTraits.size))
 			trait = bg.suggestedTraits[chooseTrait]
@@ -194,12 +300,6 @@ data class PlayerCharacter(
 		if (chooseFlaws in (1 until bg.suggestedFlaws.size))
 			flaws = bg.suggestedFlaws[chooseFlaws]
 	}
-
-	var klasses : Map<Klass, Pair<Int, String>> = mapOf()
-		private set
-
-	var klassTraits: Map<String, String> = mapOf()
-		private set
 
 	fun addKlassLevel(klass: Klass, specialisation: String = "") {
 		/* Check, if conditions are met, to gain a level for that class.*/
@@ -221,45 +321,21 @@ data class PlayerCharacter(
 		klasses += klass to Pair(newLevel, newSpecial)
 	}
 
-	var race: Race = Race("Human")
-		private set
-
-	var subrace: String = ""
-		private set
-
-	var size : Size = Size.MEDIUM // the space this character uses.
-	var height : Double = 5.5 /*feet*/
-	var weight : Double = 40.0 /*lb*/
-	var form: String = "" // short body fitness, description, headliner.
-	var appearance: String = "" // more description.
-
-	private var raceSet = false
+	/* supporting variable to check, if the race is already set. */
+	private var raceAlreadyDefined = false
 
 	/** Set the race. */
 	fun setRace(newRace: Race, newSubrace: String) {
-		if (raceSet) return
+		if (raceAlreadyDefined) return
 
-		raceSet = true
-		race = newRace
-		subrace = newSubrace
+		raceAlreadyDefined = true
+		raceSubrace = newRace to newSubrace
 		size = newRace.size
 
 		/* Add speed and languages. */
 		speedMap += newRace.speed
 		println(newRace.languages)
 	}
-
-	var knownLanguages: List<String>
-		= listOf("Common")
-
-	/** A list of Hitdice and the number of used dice.
-	 * Example: 6d12 (3 used / as barbarian) and 2d6 (1 used / as sorcered). */
-	var hitdice : Map<SimpleDice, Int> = mapOf()
-		private set
-
-	var maxHitPoints: Int = -1
-	var curHitPoints: Int = -1
-	var tmpHitPoints: Int = -1
 
 	val hasTmpHitpoints: Boolean get()
 		= tmpHitPoints > 0 && tmpHitPoints != maxHitPoints
@@ -314,35 +390,6 @@ data class PlayerCharacter(
 		}
 	}
 
-	/** Use a hitdie, return how many are left.
-	 * @param face face of the hitdie, which will be used.
-	 * @return left hitdice for that face.
-	 */
-	fun useHitdie(face: Int) : Int {
-		var dice = hitdice.filterKeys { it.faces == face }
-
-		/* No such hit die available to spend. */
-		if (dice.keys.size < 1) {
-			return 0
-		} else {
-			val count = dice.keys.sumBy { it.factor }
-			var spent = dice.values.sumBy { it }
-
-			/* Accidently splitted to multiple hit die stacks. => Fix that. */
-			val newdice = SimpleDice(face, count)
-			hitdice -= dice.keys
-
-			/* If enough hit dice available, spent another die. */
-			if (spent < count) {
-				spent += 1
-			}
-
-			hitdice += newdice to spent
-
-			return count - spent
-		}
-	}
-
 	/** Get a new hitdie (by leveling up a klass).
 	 * @param face new hitdie's face.
 	 * @return get the new maximum number of hitdice.
@@ -350,44 +397,18 @@ data class PlayerCharacter(
 	fun addHitdie(face: Int) : Int {
 		logger.debug("Add new hitdie d${face}")
 
-		val curDice : Map<SimpleDice, Int>
-			= hitdice.filterKeys { it.faces == face }
+		val current = hitdice[face] ?: Pair(0, 0)
+		val newCount = current.first + 1
 
-		val spentDice = curDice.values.sumBy { it }
-		val newCount = (curDice.keys.sumBy { it.factor }) + 1
-
-		val newDice = SimpleDice(face, newCount)
-
-		hitdice -= curDice.keys
-		hitdice += newDice to spentDice
-
-		logger.debug("New hitdice: ${hitdice}")
+		// add as new and available.
+		hitdice += face to (newCount to Math.max(newCount, current.second + 1))
 
 		return newCount
 	}
 
-	/** ordered list of max and available spellslots. */
-	var spellSlots : List<Pair<Int,Int>>
-		= (0..9).map { if (it == 0) (-1 to -1) else (0 to 0) }
-		private set
-
-	// spell, spellcasting source, prepared?
-	private var spellsLearnt : Map<Spell, String> = mapOf()
-		private set
-
-	/** List the spells, the character has learnt. */
-	val spellsKnown: List<Spell> get() = spellsLearnt.keys.toList()
-
-	var spellsPrepared: Map<Spell, Int> = mapOf()
-		private set // changes in prepareSpell(Spell,Int)
-
-	/** A map of activated spells with their left duration (seconds). */
-	var spellsActive: Map<Spell, Int> = mapOf()
-		private set // changes on spellCast(Spell,Int) and spellEnd(Spell)
-
-	/** Get the (first) active spell, which needs concentration. */
-	val spellConcentration: Spell? get()
-		= spellsActive.keys.find { it.concentration }
+	/** Get the number of all hitdie (every face). */
+	fun countHitdice() : Int
+		= hitdice.values.sumBy { it.first }
 
 	/** Learn a new spell with the given source, this character has.
 	 * If the spell is already learnt, do no update.
@@ -494,23 +515,9 @@ data class PlayerCharacter(
 			.filterValues { it > 0 }
 	}
 
-	var purse: Money = Money()
-
-	var worn: Map<String, Item> = mapOf() // empty == naked
-		private set
-
-	// main hand; off hand; true, if both hands for one item are used.
-	var hands: Triple<Item?, Item?, Boolean> = Triple(null, null, false)
-		private set
-
 	/** The number of free hands. */
 	val countFreeHands: Int get()
 		= hands.toList().filter { it == null }.size
-
-	/** List of extra storage containers.
-	 * Main bag, Bags hung on belt, skirt' pocket, a carried chest, etc. */
-	var bags: Map<String, Container> = mapOf()
-		private set
 
 	/** Maximum of the weight, this character could carry.
 	 * @see url(https://dnd.wizards.com/products/tabletop/players-basic-rules#lifting-and-carrying) */
@@ -856,6 +863,44 @@ data class PlayerCharacter(
 		
 		return ac + shieldAC
 	}
+}
+
+/** A simple mapping from expirience points to level.
+ * @param xp expirience points to translate.
+ * @return level as int, from 1 to 20.
+ */
+fun xpToLevel(xp: Int) = when {
+	xp >= 355000 -> 20
+	xp >= 305000 -> 19
+	xp >= 265000 -> 18
+	xp >= 225000 -> 17
+	xp >= 195000 -> 16
+	xp >= 165000 -> 15
+	xp >= 140000 -> 14
+	xp >= 120000 -> 13
+	xp >= 100000 -> 12
+	xp >= 85000 -> 11
+	xp >= 64000 -> 10
+	xp >= 48000 -> 9
+	xp >= 34000 -> 8
+	xp >= 23000 -> 7
+	xp >= 14000 -> 6
+	xp >= 6500 -> 5
+	xp >= 2700 -> 4
+	xp >= 900 -> 3
+	xp >= 300 -> 2
+	else -> 1
+}
+
+/** A simple mapping from level to proficiency bonus.
+ * @param level to translate.
+ * @return proficiency bonus, which is reached on a certain level. */
+fun levelToProficiencyBonus(lvl: Int) = when {
+	lvl >= 17 -> +6
+	lvl >= 13 -> +5
+	lvl >= 9 -> +4
+	lvl >= 5 -> +3
+	else -> +2
 }
 
 /* The base ability score.*/
