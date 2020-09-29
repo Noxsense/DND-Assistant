@@ -3,13 +3,146 @@ package de.nox.dndassistant.core
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.math.abs
 
 class DiceTest {
 
 	private val logger = LoggerFactory.getLogger("DiceTest")
 
+	private val repeatRolls = 10000
+
+	private fun Double.shouldBe(other: Double)
+		= abs(this - other).run {
+			println("Difference: $this")
+			this < 0.5
+		}
+
+	@Test
+	fun testRoll() {
+		var dice: SimpleDice
+		var expected: IntRange
+		var rolled: List<Int>
+		var avg: Double
+
+		println("\n>>> Test: testRoll()")
+
+		// d20
+
+		dice = D20 // d20
+		expected = (1..20)
+		rolled = (1..repeatRolls).map { dice.roll() }.sorted()
+		avg = rolled.sum() / repeatRolls.toDouble()
+		println("Roll: $dice: (${expected.average()}) $expected (Expected)")
+		println("Roll: $dice: ($avg) $rolled")
+
+		// test if every expected number is thrown.
+		rolled.forEach { assertTrue(it in expected, "Dice ($dice): $it in $expected") }
+
+		// test if expected average is close to the thrown results.
+		assertEquals(expected.average(), dice.average)
+		assertTrue(dice.average.shouldBe(avg))
+
+		// 9d5
+		// 9 or 45 with possibility of 0.000001 => check if roll is in range instead.
+
+		dice = SimpleDice(5, 9) // 9d5 => (all 1: 9) upto (all 5: 45)
+		expected = (9 .. (5*9))
+		rolled = (1..repeatRolls).map { dice.roll() }.sorted()
+		avg = rolled.sum() / repeatRolls.toDouble()
+		println("Roll: $dice: (${expected.average()}) $expected (Expected)")
+		println("Roll: $dice: ($avg) $rolled")
+
+		// test if every expected number is thrown.
+		rolled.forEach { assertTrue(it in expected, "Dice ($dice): $it in $expected") }
+
+		// test if expected average is close to the thrown results.
+		assertEquals(expected.average(), dice.average)
+		assertTrue(dice.average.shouldBe(avg))
+
+		// -2d3
+
+		dice = SimpleDice(3, -2) // -2d3 = -d3 -d3 = {-3..-1}x2
+		expected = (-6) .. (-2)
+		rolled = (1..repeatRolls).map { dice.roll() }.sorted()
+		avg = rolled.sum() / repeatRolls.toDouble()
+		println("Roll: $dice: (${expected.average()}) $expected (Expected)")
+		println("Roll: $dice: ($avg) $rolled")
+
+		// test if every expected value occurred.
+		rolled.forEach { assertTrue(it in expected, "Dice ($dice): $it in $expected") }
+
+		// test if expected average is close to the thrown results.
+		assertEquals(expected.average(), dice.average)
+		assertTrue(dice.average.shouldBe(avg))
+	}
+
+	@Test
+	fun testRollList() {
+		var dice: SimpleDice
+		var expectedNum: Int
+		var expectedRange: IntRange
+		var expectedSumRange: IntRange
+		var rolls: List<Int>
+		var sum: Int
+
+		println("\n>>> Test: testRollList()")
+
+		// d20
+
+		dice = SimpleDice(20, 1)
+		expectedNum = 1
+		expectedRange = (1..20)
+		expectedSumRange = 1 .. 20
+
+		for (i in (1 .. repeatRolls)) {
+			rolls = dice.rollList()
+			sum = rolls.sum()
+			println("Rolled $dice: ($sum) $rolls")
+
+			assertEquals(expectedNum, rolls.size, "Expected Number of rolls.")
+			assertTrue(rolls.all { it in expectedRange }, "All rolls in expected range.")
+			assertTrue(rolls.sum() in expectedSumRange, "All rolls in expected range.")
+		}
+
+		// 5d9
+
+		dice = SimpleDice(5, 9)
+		expectedNum = 9
+		expectedRange = (1..5)
+		expectedSumRange = (9) .. (45)
+
+		for (i in (1..repeatRolls)) {
+			rolls = dice.rollList()
+			sum = rolls.sum()
+			println("Rolled $dice: ($sum) $rolls")
+
+			assertEquals(expectedNum, rolls.size, "Expected Number of rolls.")
+			assertTrue(rolls.all { it in expectedRange }, "All rolls in expected range.")
+			assertTrue(rolls.sum() in expectedSumRange, "All rolls in expected range.")
+		}
+
+		// -2d3
+
+		dice = SimpleDice(3, -2)
+		expectedNum = 2
+		expectedRange = (-3) .. (-1)
+		expectedSumRange = (-6) .. (-2)
+
+		for (i in (1 .. repeatRolls)) {
+			rolls = dice.rollList()
+			sum = rolls.sum()
+			println("Rolled $dice: ($sum) $rolls")
+
+			assertEquals(expectedNum, rolls.size, "Expected Number of rolls.")
+			assertTrue(rolls.all { it in expectedRange }, "All rolls in expected range.")
+			assertTrue(rolls.sum() in expectedSumRange, "All rolls in expected range.")
+		}
+	}
+
 	@Test
 	fun testToString() {
+		println("\n>>> Test testToString()")
+
 		var str = "Just null, 0d20"
 		assertEquals("+0", SimpleDice(20, 0).toString(), str)
 		assertEquals("+0", SimpleDice(0, 20).toString(), str)
@@ -39,6 +172,8 @@ class DiceTest {
 
 	@Test
 	fun testAverage() {
+		println("\n>>> Test testAverage()")
+
 		assertEquals(  1.0, SimpleDice(1).average)
 		assertEquals(  1.5, SimpleDice(2).average)
 		assertEquals(  3.5, SimpleDice(6).average)
@@ -51,26 +186,11 @@ class DiceTest {
 	}
 
 	@Test
-	fun testRoll() {
-		var dice = D20 // d20
-		var rolled = (1..1000).map { dice.roll() }.sorted()
-		println("Roll: $dice: $rolled")
-		for (i in 1..20) {
-			assertTrue(i in rolled, "Thrown $i with $dice")
-		}
-
-		dice = SimpleDice(5, 9) // 9d5 => (all 1: 9) upto (all 5: 45)
-		rolled = (1..1000).map { dice.roll() }.sorted()
-		println("Roll: $dice: $rolled")
-		for (i in 9..(5*9)) {
-			assertTrue(i in rolled, "Thrown $i with $dice")
-		}
-	}
-
-	@Test
 	fun testCustomDice() {
+		println("\n>>> Test testCustomDice()")
+
 		val dice = SimpleDice(-3, 1)
-		val rolled = (1..1000).map { dice.roll() }
+		val rolled = (1..repeatRolls).map { dice.roll() }
 		println("Roll: $dice: $rolled")
 		for (i in 1..3) {
 			assertTrue((-i) in rolled, "Thrown ${-i} with $dice")
@@ -79,15 +199,19 @@ class DiceTest {
 
 	@Test
 	fun testRollBonus() {
+		println("\n>>> Test testRollBonus()")
+
 		/// only fixied values.
 		val dice = SimpleDice(1, -3)
-		val rolled = (1..1000).map { dice.roll() }
+		val rolled = (1..repeatRolls).map { dice.roll() }
 		println("Roll: $dice: $rolled")
 		assertTrue(rolled.all { it == (-3) }, "Thrown only (-3) with $dice")
 	}
 
 	@Test
 	fun testTermInitiators() {
+		println("\n>>> Test testTermInitiators()")
+
 		// 2d6
 		var a = DiceTerm(SimpleDice(6, 2))
 		var b = SimpleDice(6) + SimpleDice(6)
@@ -115,6 +239,8 @@ class DiceTest {
 
 	@Test
 	fun testSimplifyTerm() {
+		println("\n>>> Test testSimplifyTerm()")
+
 		val dice = DiceTerm(
 			// + 3 + 3 - 3 + 3d8 - d8 + 5d12 + d12 + 2d21 - d21
 			// (+ 3 + 3 - 3) (+ 3d8 - d8) (+ 5d12 + d12) (+ 2d21 - d21)
@@ -166,9 +292,11 @@ class DiceTest {
 
 	@Test
 	fun testDiceParsing() {
+		println("\n>>> Test testDiceParsing()")
+
 		val string = "3d8 + d12 - D21 + 3 + 3 - 3"
 		val dice = DiceTerm.parse(string)
-		val rolled = (1..1000).map { dice.roll() }
+		val rolled = (1..repeatRolls).map { dice.roll() }
 		println("Roll: $dice: $rolled")
 		assertTrue(SimpleDice(8, 3) in dice, "3d8 in $dice")
 		assertTrue(SimpleDice(12) in dice, "3d8 in $dice")
@@ -186,6 +314,8 @@ class DiceTest {
 
 	@Test
 	fun testTake3of4() {
+		println("\n>>> Test testTake3of4()")
+
 		// TODO (2020-07-14)
 		D6.rollTake(3, 4, true)
 	}

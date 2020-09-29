@@ -25,16 +25,17 @@ class OnClickRoller(
 	override fun onClick(view: View) {
 		/* Roll the result. */
 
-		val roll = diceTerm.roll()
+		val rolls = diceTerm.rollList()
+		roll = rolls.sum()
 
-		Log.d("D&D Roller", "Rolled $roll => $roll ($reason)")
+		Log.d("D&D Roller", "Rolled $rolls => $roll ($reason)")
 
 		/* Add to roll history: <Timestamp, <Result, Reason>>. */
 		val ts: Long = System.currentTimeMillis()
-		rollHistory?.plus(ts to (roll to "$roll <== $reason"))
+		rollHistory?.plus(ts to (roll to "$rolls <== $reason"))
 
 		/* Show the result. */
-		toastRoll(view.getContext(), roll, "$roll \u21d0 $reason")
+		toastRoll(view.getContext(), roll, "$rolls \u21d0 $reason")
 	}
 }
 
@@ -61,16 +62,17 @@ class OnKeyEventRoller(
 		val diceTerm = DiceTerm.parse(term)
 
 		/* Roll the result. */
-		val roll = diceTerm.roll()
+		val rolls = diceTerm.rollList()
+		val roll = rolls.sum()
 
-		Log.d("D&D Roller", "Rolled $roll => $roll ($term)")
+		Log.d("D&D Roller", "Rolled $rolls => $roll ($term)")
 
 		/* Add to roll history: <Timestamp, <Result, Reason>>. */
 		val ts: Long = System.currentTimeMillis()
 		rollHistory?.plus(ts to (roll to (
-			"$roll" + if (term.length > 0) " <== $term" else "")))
+			"$rolls" + if (term.length > 0) " <== $term" else "")))
 
-		toastRoll(view.getContext(), roll, "$roll \u21d0 $term")
+		toastRoll(view.getContext(), roll, "$rolls \u21d0 $term")
 		return true
 	}
 

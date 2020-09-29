@@ -1,8 +1,8 @@
 package de.nox.dndassistant.core
 
-import kotlin.math.abs;
-import kotlin.math.max;
-import kotlin.math.min;
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 private val logger = LoggerFactory.getLogger("Dice")
 
@@ -117,11 +117,15 @@ class DiceTerm(vararg ds: SimpleDice) {
 	val average : Double get()
 		= dice.map { it.average }.sum()
 
-	/** Get the sum of all dice and and constants in this term.
-	  *@return sum:Int
-	  */
+	/** Get the sum of all dice and constants in this term.
+	  *@return sum:Int */
 	fun roll() : Int
-		= dice.map { it.roll() }.sum();
+		= rollList().sum()
+
+	/** Roll every SimpleDice and constants in this term.
+	  *@return List of Ints */
+	fun rollList() : List<Int>
+		= dice.flatMap { it.rollList() }
 
 	/** String representation of simpleDice.*/
 	override fun toString() : String
@@ -203,11 +207,12 @@ data class SimpleDice(val max: Int, val times: Int = 1) : Comparable<SimpleDice>
 	  * @return random int between one and max/faces.
 	  */
 	fun roll() : Int
-		= when {
-			faces == 0 -> 0
-			faces == 1 -> factor
-			else -> (count..(count * faces)).random() * sign
-		}
+		= rollList().sum()
+
+	/** Roll these dice.
+	 * @return a list of rolled faces. */
+	fun rollList(): List<Int>
+		= (0 until count).map { (1 .. faces).random() * sign }
 
 	/* Roll the SimpleDice {num} times, take {take} best/worst values. */
 	fun rollTake(take: Int = 3, num: Int = 4, best: Boolean = true) : List<Int> {
