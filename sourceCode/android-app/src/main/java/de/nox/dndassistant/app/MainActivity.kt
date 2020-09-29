@@ -49,9 +49,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		/* Update the character specific panels:
 		 * Fill them with current character's data. */
-		updateViews(true) // initation.
+		updateViews(true) // initiation.
 
-		/* Initate extra rolls (from extra_dice panel). */
+		/* Initiate extra rolls (from extra_dice panel). */
 		initiateExtraRolls()
 
 		/* Show rolls. */
@@ -70,8 +70,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		label_species_background.setOnClickListener(this)
 	}
 
-	/** Intiate the panel with extra dice.
-	 * There are extra dice and an additonal custom field,
+	/** Initiate the panel with extra dice.
+	 * There are extra dice and an additional custom field,
 	 * to roll outside of possible ability or attack rolls. */
 	private fun initiateExtraRolls() {
 		/* Assign this listener to each custom dice term. */
@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		character_name.text = getString(R.string.character_name, character.name)
 
 		/* Show Level and XP, formatted. */
-		expirience.text = getString(R.string.level_xp)
+		experience.text = getString(R.string.level_xp)
 			.format(character.level, character.expiriencePoints)
 
 		Log.d(LOG_TAG, "Lvl (XP) displayed.")
@@ -114,8 +114,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		Log.d(LOG_TAG, "Abilities displayed.")
 
-		/* Update the healthbar, condtions, death saves and also speed and AC. */
-		showHealthPanel(initiation) // if initation: set OnClickListener
+		/* Update the healthbar, conditions, death saves and also speed and AC. */
+		showHealthPanel(initiation) // if initiation: set OnClickListener
 
 		showRestingPanel(initiation)
 
@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		}
 	}
 
-	/** Update the healthbar, condtions, death saves
+	/** Update the healthbar, conditions, death saves
 	 * and also speed and AC.
 	 * @param setListener if true, also initiate the listener.
 	 */
@@ -202,7 +202,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	}
 
 	// replacement and tests. // FIXME (2020-09-28) implement me right and remove me.
-	private var hitdice: Map<Int, Pair<Int, Int>> = mapOf() // [face: available, useable]
+	private var hitdice: Map<Int, Pair<Int, Int>> = mapOf() // [face: available, usable]
 	private var hitdiceViews: Set<TextView> = setOf() // [hit die: available/used ]
 
 	/** Update the resting panel.

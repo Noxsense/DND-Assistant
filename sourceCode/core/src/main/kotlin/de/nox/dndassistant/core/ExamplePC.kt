@@ -28,7 +28,7 @@ fun playgroundWithOnyx() : PlayerCharacter {
 	pc.addProficiency(Skill.PERCEPTION) // proficient
 	pc.addProficiency(Skill.PERCEPTION) // expert
 
-	// logger.debug("Proficent Skills: " + pc.proficiencies)
+	// logger.debug("Proficient Skills: " + pc.proficiencies)
 
 	val dagger =  Weapon("Dagger", 1.0, Money(gp=2),
 		weightClass = WeightClass.LIGHT,
@@ -199,7 +199,7 @@ fun playgroundWithOnyx() : PlayerCharacter {
 	""".trimIndent())
 
 	pc.addKlassLevel(rogue)
-	pc.expiriencePoints = 3000 // at leat level 4
+	pc.expiriencePoints = 3000 // at least level 4
 	pc.addKlassLevel(rogue, "Assassin")
 	pc.addKlassLevel(rogue, "Assassin")
 	pc.addKlassLevel(Klass("Multithing"))
@@ -225,7 +225,7 @@ fun playgroundWithOnyx() : PlayerCharacter {
 	pc.height = 1.99
 	pc.weight = 13.0
 
-	// pc.background.speciality = "Libarian"
+	// pc.background.speciality = "Liberian"
 	pc.trait = "Watch and Learn."
 	pc.ideal = "Knowledge."
 	pc.bonds = "Protect the weak."

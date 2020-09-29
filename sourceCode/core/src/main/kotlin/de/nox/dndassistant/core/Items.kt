@@ -186,7 +186,7 @@ data class LooseItem(
 
 /** Weapon <- Skillable.
  * "Your class grants proficiency in certain Weapons, reflecting both the
- * class’s focus and the tools you are most likely to use. Whether you favor a
+ * class’s focus and the tools you are most likely to use. Whether you favour a
  * Longsword or a Longbow, your weapon and your ability to wield it effectively
  * can mean the difference between life and death while Adventuring.
  *
@@ -320,7 +320,7 @@ data class Weapon(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/** Something a player can wear, like shoes, acccessoires or also armor. */
+/** Something a player can wear, like shoes, accessoires or also armor. */
 interface Wearable : Item {
 	override val name: String
 	override val weight: Double
@@ -328,7 +328,7 @@ interface Wearable : Item {
 	val position: BodyType
 }
 
-/** A basic class for wearable stuff, capes and neclaces included. */
+/** A basic class for wearable stuff, capes and necklaces included. */
 data class Clothes(
 	/* Inherit from item.*/
 	override val name: String, // inherit from Item

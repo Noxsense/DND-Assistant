@@ -19,7 +19,7 @@ data class Klass(
 	/** Get all the received traits for a certain level and maybe specialisation.
 	 * If the level is out of range, return all traits of levels and all classes.
 	 * @param level the level, traits should be collected for.
-	 * @param specialisation additional attribute to maybe add filtlered traits by specialiaation.
+	 * @param specialisation additional attribute to maybe add filtered traits by specialisation.
 	 * @return map of trait title and brief description.
 	 */
 	fun getFeaturesAtLevel(level: Int, specialisation: String = "") : List<Feature> {

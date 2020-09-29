@@ -33,7 +33,7 @@ data class Spell(
 }
 
 /** A school of magic, which categories a certain spell and may apply own rules
- * and believings.
+ * and believes.
  * There are eight schools (5e SRD):
  * - Abjuration:    Protect.
  * - Conjuration:   Transport.

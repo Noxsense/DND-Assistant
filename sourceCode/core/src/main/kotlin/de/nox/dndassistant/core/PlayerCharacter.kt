@@ -18,7 +18,7 @@ data class PlayerCharacter(
 
 	var expiriencePoints: Int
 		= 0
-		// plublic getter and setter
+		// public getter and setter
 		// changes => will influence level and proficiency bonus and depended values.
 
 	/** Map of K/Classes (with Level and Specialities), the character has. */
@@ -46,10 +46,10 @@ data class PlayerCharacter(
 	/** Map of speed on different terrains and specialities. */
 	private var speedMap : Map<String, Int> = mapOf("walking" to 30 /*feet*/)
 
-	/** Character level according to expirience points. */
+	/** Character level according to experience points. */
 	val level : Int get() = xpToLevel(expiriencePoints)
 
-	/** Proficiency bonus according to character leve. */
+	/** Proficiency bonus according to character level. */
 	val proficientValue: Int get() = levelToProficiencyBonus(level)
 
 	/** THE basic ability scores. */
@@ -72,7 +72,7 @@ data class PlayerCharacter(
 		= listOf()
 		private set
 
-	/** The list of skills, the charcter has proficiency bonus (and maybe expertise). */
+	/** The list of skills, the character has proficiency bonus (and maybe expertise). */
 	var proficiencies: Map<Skillable, Proficiency>
 		= mapOf()
 		private set
@@ -83,13 +83,13 @@ data class PlayerCharacter(
 		private set
 
 	/** Spell slots the character has available and used.
-	 * Ordered list of max and available spellslots. */
+	 * Ordered list of max and available spell slots. */
 	var spellSlots : List<Pair<Int,Int>>
 		= (0..9).map { if (it == 0) (-1 to -1) else (0 to 0) }
 		private set
 
 	/** List of spells, this character has learnt, and the source, where it was learnt.
-	 * The source may influence the spell casting ability and strength of a casted spell. */
+	 * The source may influence the spell casting ability and strength of a cast spell. */
 	private var spellsLearnt : Map<Spell, String> = mapOf()
 		private set
 
@@ -108,7 +108,7 @@ data class PlayerCharacter(
 		private set
 
 	// see armor class. (in-combat value).
-	// depended on currenlty worn equipment and classes. and proficiencies (armor)
+	// depended on currently worn equipment and classes. and proficiencies (armor)
 
 	// main hand; off hand; true, if both hands for one item are used.
 	var hands: Triple<Item?, Item?, Boolean> = Triple(null, null, false)
@@ -120,19 +120,21 @@ data class PlayerCharacter(
 		private set
 
 	/* ------------------------------------------------------------------------
-	 * Status and momental conditions.
+	 * Status and temporarily conditions.
 	 */
 
 	/** A list of Hitdice and the number of used dice.
-	 * D8: 5 at all / 4 availbale (received as rogue).
-	 * D6: 1 at all / 1 availbale (received as sorcered).
+	 * D8: 5 at all / 4 available (received as rogue).
+	 * D6: 1 at all / 1 available (received as sorcerer).
 	 . */
 	var hitdice : Map<Int, Pair<Int, Int>> = mapOf()
 		private set
 
-	var maxHitPoints: Int = -1
-	var curHitPoints: Int = -1
-	var tmpHitPoints: Int = -1
+	/** Maximal hit points of the character. If dropped to 0, the character becomes unconscious.
+	 * If dropped to -maxHitPoints in one hit, the character dies immediately. */
+	var maxHitPoints: Int = 1
+	var curHitPoints: Int = 1
+	var tmpHitPoints: Int = 0
 
 	/** A subset of the known spells. Some classes need to prepare a spell to cast it. */
 	var spellsPrepared: Map<Spell, Int> = mapOf()
@@ -147,14 +149,14 @@ data class PlayerCharacter(
 		= spellsActive.keys.find { it.concentration }
 
 	/* ------------------------------------------------------------------------
-	 * Personality and character, role playing.
-	 * Getter and Setter are all public and modifyable. Won't change other attributes.
+	 * Personality and character, roleplaying.
+	 * Getter and Setter are all public and modifiable. Won't change other attributes.
 	 */
 	
 	/** Age of the character, in years. (If younger than a year, use negative as days.) */
 	var age : Int = 0
 
-	/** Alignment of the charcter (role play). */
+	/** Alignment of the character (roleplay). */
 	val alignment : Alignment = Alignment.NEUTRAL_NEUTRAL;
 
 	/** Visible appearance of the character. (roleplay, also positioning). */
@@ -167,24 +169,24 @@ data class PlayerCharacter(
 	var weight : Double = 40.0 /*lb*/
 
 	/** Visible appearance of the character. (roleplay, suggested by race). */
-	var form: String = "" // short body fitness, description, headliner.
+	var form: String = "" // short body fitness, description, head liner.
 
 	/** Visible appearance of the character. (roleplay). */
 	var appearance: String = "" // more description.
 
-	/** Background and story information. (role play) */
+	/** Background and story information. (roleplay) */
 	var trait : String = ""
 
-	/** Background and story information. (role play) */
+	/** Background and story information. (roleplay) */
 	var ideal : String = ""
 
-	/** Background and story information. (role play) */
+	/** Background and story information. (roleplay) */
 	var bonds : String = ""
 
-	/** Background and story information. (role play) */
+	/** Background and story information. (roleplay) */
 	var flaws : String = ""
 
-	/* The history of the character. (role play) */
+	/* The history of the character. (roleplay) */
 	var history : List<String>
 		= listOf()
 
@@ -232,14 +234,14 @@ data class PlayerCharacter(
 			else -> Proficiency.NONE
 		}
 
-	/* Add proficiency to saving trhow.*/
+	/* Add proficiency to saving throw.*/
 	fun addProficiency(saving: Ability) {
 		if (!(saving in savingThrows)) savingThrows += saving
 	}
 
 	/* Add proficiency to a skill. If twice, add expertise.*/
 	fun addProficiency(skill: Skillable) {
-		// increase the proficcient value.
+		// increase the proficient value.
 		proficiencies += Pair(skill, Proficiency.PROFICIENT + proficiencies[skill])
 	}
 
@@ -257,7 +259,7 @@ data class PlayerCharacter(
 			speedMap
 		}
 
-	/* Suppporting variable, if the background is already set. */
+	/* Supporting variable, if the background is already set. */
 	private var backgroundAlreadyDefined = false
 
 	/** Set background, but only once! */
@@ -355,7 +357,7 @@ data class PlayerCharacter(
 		deathSaves = 0 to 0
 	}
 
-	/* Count fails and successes and returns the more significcant value.*/
+	/* Count fails and successes and returns the more significant value.*/
 	fun checkDeathFight() : Int {
 		val success = deathSaves.first
 		val failed = deathSaves.second
@@ -373,7 +375,7 @@ data class PlayerCharacter(
 	fun rest(shortRest: Boolean = true) {
 		if (shortRest) {
 			// use up to all hit dice and add rolled hit points up to full HP.
-			// do other reloadings.
+			// do other reloading(s).
 			// TODO (2020-09-03) add param with how many hitdice will be spent
 			logger.info("Short rest")
 		} else {
@@ -440,8 +442,8 @@ data class PlayerCharacter(
 	 * Prepare a spell for a spell slot.
 	 * @param spell the spell to prepare
 	 * @param slot the spell level, to prepare the spell for,
-	 *     if not given or zero, the prepartion level is set to the spell level,
-	 *     if lesse than zero, a prepared spell will be unprepared.
+	 *     if not given or zero, the preparation level is set to the spell level,
+	 *     if less than zero, a prepared spell will be unprepared.
 	 * @see prepareSpell(Int, Int).
 	 */
 	fun prepareSpell(spell: Spell, slot: Int = 0) {
@@ -462,7 +464,7 @@ data class PlayerCharacter(
 	}
 
 	/** Cast a learnt spell.
-	 * If neccessary, the spell must also be prepared to be casted.
+	 * If necessary, the spell must also be prepared to be cast.
 	 * If the new spell holds concentration, and another spell is already
 	 * holding concentration, replace/deactivate that old spell.
 	 * Also use up the used spell slot.
@@ -473,7 +475,7 @@ data class PlayerCharacter(
 	 * @param slot intended spell slot to use, minimum spell.level.
 	 */
 	fun castSpell(spell: Spell, slot: Int = 0) {
-		/* If the spell is unknown, it cannot be casted (abort). */
+		/* If the spell is unknown, it cannot be cast (abort). */
 		if (!spellsLearnt.containsKey(spell)) {
 			return
 		}
@@ -499,7 +501,7 @@ data class PlayerCharacter(
 			println("More power for this spell.")
 		}
 
-		/* Cast spell for at least 1 second (instantious). */
+		/* Cast spell for at least 1 second (instantaneous). */
 		spellsActive += spell to Math.max(1, spell.duration)
 
 		logger.info("Casts ${spell.name}, left duration ${spell.duration} seconds")
@@ -524,7 +526,7 @@ data class PlayerCharacter(
 	val carryingCapacity: Double get ()
 		= abilityScore(Ability.STR) * 15.0
 
-	/** Get the weight, the character is currenlty carrying. */
+	/** Get the weight, the character is currently carrying. */
 	val carriedWeight: Double get()
 		= (carriedWeightWorn // worn weight
 		+ carriedWeightHands // currently hold
@@ -551,7 +553,7 @@ data class PlayerCharacter(
 	 *
 	 * 00x - 05x STR: OK!
 	 * 05x - 10x STR: SPEED - 10ft
-	 * 10x - 15x STR: SPEED - 20ft, disadventage on DEX/STR/CON (ability, attack rolls, saving throws)
+	 * 10x - 15x STR: SPEED - 20ft, disadvantage on DEX/STR/CON (ability, attack rolls, saving throws)
 	 */
 	fun carryEncumbranceLevel() : Double
 		= (carriedWeight / abilityScore(Ability.STR))
@@ -560,7 +562,7 @@ data class PlayerCharacter(
 	 * no hand is free and no valid storage is listed, the item is not picked up.
 	 * If the item is a container and the {intoBag} is a not yet assigned bag and not empty name,
 	 * equip the item as new bag.
-	 * If it's a bag and no bag is equpped, equip the bag.
+	 * If it's a bag and no bag is equipped, equip the bag.
 	 * If ${param:storeToBag} is false or no bag is not available,
 	 * hold it, maybe swap (if no storing was intended) it with currently hold items.
 	 * @return true on success (the item is actually picked up), else false.
@@ -615,7 +617,7 @@ data class PlayerCharacter(
 	 * @param usedHands
 	 *   If 0, use the suggested count of hands of the item,
 	 *   if 1 enforce to hold the item with one hand,
-	 *   if 2 enforst to hold the item with both hands.
+	 *   if 2 enforce to hold the item with both hands.
 	 * @return true on success (the item is now held), else false. */
 	fun holdItem(item: Item, preferOff: Boolean = false, usedHands: Int = 0) : Boolean {
 		/* Do we need both hands? */
@@ -669,8 +671,8 @@ data class PlayerCharacter(
 	fun storeItem(item: Item, bag: String) : Boolean {
 		val bagContainer = bags.getOrElse(bag, { null })
 		if (bagContainer != null) {
-			val s0 = bagContainer.size // count items insied
-			bagContainer.insert(item) // try to store, only reference differenciable objects.
+			val s0 = bagContainer.size // count items inside
+			bagContainer.insert(item) // try to store, only reference differentiable objects.
 			val success = bagContainer.size != s0 // success, if one more.
 			return success
 		}
@@ -678,7 +680,7 @@ data class PlayerCharacter(
 	}
 
 	/** Put on clothes or armor.
-	 * If no neccessary position is free, don't wear the wearable item.
+	 * If no necessary position is free, don't wear the wearable item.
 	 * @param wearable the item to be worn.
 	 * @return true, if the wearable is successfully equipped, else false.
 	 */
@@ -840,8 +842,8 @@ data class PlayerCharacter(
 		val wAC = wornArmor?.armorClass ?: 0 // armored AC
 		val uAC = 10 + dex + unarmedeBoni // unarmored AC
 
-		// TODO (2020-08-13) unarmered defense
-		// - races and classes benefitting from unarmed defense / natural armor ...
+		// TODO (2020-08-13) unarmored defense
+		// - races and classes benefiting from unarmed defense / natural armor ...
 		// - no armor or few => alternative modifiers.
 		
 		// TODO (2020-08-13) additional spells, changed AC
@@ -865,8 +867,8 @@ data class PlayerCharacter(
 	}
 }
 
-/** A simple mapping from expirience points to level.
- * @param xp expirience points to translate.
+/** A simple mapping from experience points to level.
+ * @param xp experience points to translate.
  * @return level as int, from 1 to 20.
  */
 fun xpToLevel(xp: Int) = when {

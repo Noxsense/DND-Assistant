@@ -1,7 +1,7 @@
 package de.nox.dndassistant.core
 
 data class Money(
-	val pp: Int = 0, /* platiunum. */
+	val pp: Int = 0, /* platinum. */
 	val gp: Int = 0, /* gold. */
 	val ep: Int = 0, /* electrum. */
 	val sp: Int = 0, /* silver. */

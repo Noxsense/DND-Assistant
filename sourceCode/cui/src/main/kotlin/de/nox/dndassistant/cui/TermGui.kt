@@ -4,9 +4,6 @@ import de.nox.dndassistant.core.*
 
 private val logger = LoggerFactory.getLogger("TermGUI")
 
-// TODO own package.
-// w: Some JAR files in the classpath have the Kotlin Runtime library bundled into them. This may cause difficult to debug problems if there's a different version of the Kotlin Runtime library in the classpath. Consider removing these libraries from the classpath
-
 fun main(args: Array<String>) {
 	println(
 		"""
@@ -568,7 +565,7 @@ class PCDisplay(val char: PlayerCharacter, val player: String) {
 	fun showBackground(unfold: Boolean = false) : String {
 		var content = ""
 
-		// TODO (2020-07-18) Implement PlayerCharacter's Background and Aligmnent.
+		// TODO (2020-07-18) Implement PlayerCharacter's Background and Alignment.
 		val age = when {
 			char.age < 0 -> "${-char.age} days"
 			else -> "${char.age} yrs"

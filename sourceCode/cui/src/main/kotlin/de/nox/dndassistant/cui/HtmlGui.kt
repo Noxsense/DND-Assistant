@@ -5,9 +5,6 @@ import de.nox.dndassistant.core.*
 
 private val logger = LoggerFactory.getLogger("HtmlGui")
 
-// TODO own package.
-// w: Some JAR files in the classpath have the Kotlin Runtime library bundled into them. This may cause difficult to debug problems if there's a different version of the Kotlin Runtime library in the classpath. Consider removing these libraries from the classpath
-
 fun main() {
 	println(
 		"""
@@ -146,7 +143,7 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 		.bold {
 		font-weight:bold;
 		}
-		/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+		/* Add a background colour to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
 		.active, .collapsible:hover {
 		background-color: #aaaaaa55;
 		}
@@ -784,7 +781,7 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 				val preparedA = char.spellsPrepared.getOrDefault(a, -1)
 				val preparedB = char.spellsPrepared.getOrDefault(b, -1)
 
-				/* If a or b are prepared, return their comparisson. */
+				/* If a or b are prepared, return their comparison. */
 				when {
 					preparedA > -1 && preparedB > -1 -> {
 						return preparedA.compareTo(preparedB)
@@ -794,7 +791,7 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 				}
 			}
 
-			return a.compareTo(b) // default comparisson
+			return a.compareTo(b) // default comparison
 		}
 	}
 
@@ -918,7 +915,7 @@ class HtmlPlayerDisplay(val char: PlayerCharacter, val player: String) {
 
 					val features = it.first.getFeaturesAtLevel(l, s)
 
-					// occupation, (level, specialisiation)
+					// occupation, (level, specialisation)
 					// add features from the occupation.
 
 					var featuresStr = ""

@@ -33,7 +33,7 @@ data class Background(
 	override fun toString() : String = name
 
 	var description: String = ""
-	var extraLanguages: Int = 0 // addionally learnt languages.
+	var extraLanguages: Int = 0 // additionally learnt languages.
 
 	var suggestedSpeciality: List<String> = listOf()
 

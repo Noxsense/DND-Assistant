@@ -19,7 +19,7 @@
     android:textSize="30sp"
     />
   <TextView
-    android:id="@+id/expirience"
+    android:id="@+id/experience"
     android:layout_height="wrap_content"
     android:layout_marginVertical="@dimen/vmargin"
     android:layout_width="match_parent"
@@ -78,7 +78,7 @@
         android:layout_width="match_parent"
         android:orientation="vertical"
         >
-        <!-- TODO: Skills (like stealth, persuation, athletics) -->
+        <!-- TODO: Skills (like stealth, persuasion, athletics) -->
         <TextView
           android:background="@drawable/framed"
           android:id="@+id/label_skills"
@@ -160,7 +160,7 @@
           android:layout_marginVertical="@dimen/vmargin"
           android:layout_width="match_parent"
           android:padding="6sp"
-          android:text="{Species}, {Background}, {weighg}"
+          android:text="{Species}, {Background}, {weight}"
           android:textSize="@dimen/textSizeOverviewLabel"
           />
           <!-- TODO
