@@ -2,9 +2,6 @@ package de.nox.dndassistant.core
 
 import kotlin.math.floor
 
-private val logger = LoggerFactory.getLogger("Background")
-
-
 /** An Alignment is a direction of good or evil, and lawful or chaotic
  * the character can take.
  */

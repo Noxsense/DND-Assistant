@@ -7,7 +7,7 @@ import kotlin.math.abs
 
 class DiceTest {
 
-	private val logger = LoggerFactory.getLogger("DiceTest")
+	private val log = LoggerFactory.getLogger("DiceTest")
 
 	private val repeatRolls = 10000
 

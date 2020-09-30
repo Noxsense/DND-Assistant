@@ -4,12 +4,13 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-private val logger = LoggerFactory.getLogger("Dice")
-
 /* A complexer dice term with different dice and constants.*/
 class DiceTerm(vararg ds: SimpleDice) {
 	val dice : Array<SimpleDice> = arrayOf(*ds)
+
 	companion object {
+		val log: Logger = LoggerFactory.getLogger("D&D Dice")
+
 		/** Parse string to DiceTerm.
 		 * @param str the string to parse.
 		 * @throws Error If the string term was invalid (doesn't contain a dice term)
@@ -26,11 +27,11 @@ class DiceTerm(vararg ds: SimpleDice) {
 
 			/* Check, if all terms are valid on the first view. */
 			if (! terms.all { valid.matches(it) } ) {
-				logger.error("Throw Error: Not a valid Dice Term!")
+				log.error("Throw Error: Not a valid Dice Term!")
 				throw Exception("Not a valid Dice Term")
 			}
 
-			logger.debug("Parse dice term from '${str}'")
+			log.debug("Parse dice term from '${str}'")
 
 			/* Map terms to parsed simple dice terms.*/
 			return DiceTerm(*terms.map {
@@ -95,7 +96,6 @@ class DiceTerm(vararg ds: SimpleDice) {
 			1 -> xs + x
 			else -> xs + ((1..x.count).map { SimpleDice(x.faces, x.sign) })
 		}}).toTypedArray())
-
 
 	/** Create new dice term with added dice.*/
 	operator fun plus(d: SimpleDice) : DiceTerm

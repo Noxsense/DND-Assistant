@@ -2,8 +2,6 @@ package de.nox.dndassistant.core
 
 import kotlin.math.floor
 
-private val logger = LoggerFactory.getLogger("Klass")
-
 // TODO (2020-07-31) connect spellcasting with klass.
 
 /** A class of the characters. */

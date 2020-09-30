@@ -3,7 +3,8 @@ package de.nox.dndassistant.cui
 import java.io.File
 import de.nox.dndassistant.core.*
 
-private val logger = LoggerFactory.getLogger("HtmlGui")
+// TODO (2020-09-30) Refactor and stuff.
+// TODO (2020-09-30) Own Module.
 
 fun main() {
 	println(
@@ -19,6 +20,25 @@ fun main() {
 	val display = HtmlPlayerDisplay(pc, "Nox")
 	display.display()
 }
+
+/*
+
+object LoggerFactory {
+	fun getLogger(tag: String) : Logger
+		= object : Logger {
+			private val formatter
+				= DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss")
+
+			private fun now(): String
+				= LocalDateTime.now().format(formatter)
+
+			// TODO (2020-09-30)
+			override fun log(t: LoggingLevel, msg: Any?) {
+				println("Console.log(\"${now()} ${t.name.first()} ${tag}  -  $msg\")")
+			}
+		}
+}
+*/
 
 fun feetToMeter(feet: Double) : Double
 	= feet * 0.3048

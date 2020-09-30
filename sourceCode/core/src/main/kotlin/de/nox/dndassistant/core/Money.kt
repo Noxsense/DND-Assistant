@@ -9,14 +9,14 @@ data class Money(
 	val ignoreElectrum : Boolean = true
 ) : Comparable<Money> {
 
-	private val logger = LoggerFactory.getLogger("Money")
-
 	/* Return the whole value as smallest currency,*/
 	val asCopper: Int
 		= cp + (SP_CP * (sp + (EP_SP * ep + (GP_SP * (gp + (PP_GP * pp))))))
 
 	/** Weight of that money pile, where 50 coins have 50 lb.*/
 	val weight: Double = (cp + sp + ep + gp + pp) / 50.0
+
+	private val log: Logger = LoggerFactory.getLogger("D&D Money")
 
 	/* Constants.*/
 	companion object {
@@ -51,7 +51,7 @@ data class Money(
 
 		/* Abort: Too small to be reduced by "other".*/
 		if (this < other) {
-			logger.verbose("Cannot abstract the other amount, it is too big.")
+			log.verbose("Cannot abstract the other amount, it is too big.")
 			return this;
 		}
 
@@ -64,11 +64,11 @@ data class Money(
 		var cP = cp - other.cp; negative = negative || cP < 0
 
 		if (!negative) {
-			logger.debug("Easily reduced.")
+			log.debug("Easily reduced.")
 			return Money(pP, gP, eP, sP, cP, ignoreElectrum)
 		}
 
-		logger.debug("Needs some fixes, can be done!")
+		log.debug("Needs some fixes, can be done!")
 
 		// figure out, which values are negative, borrow up and down!
 		// it must be possible, otherwise, it would have said no before.

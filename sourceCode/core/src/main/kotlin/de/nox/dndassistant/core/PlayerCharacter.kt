@@ -2,8 +2,6 @@ package de.nox.dndassistant.core
 
 import kotlin.math.floor
 
-private val logger = LoggerFactory.getLogger("PlayerCharacter")
-
 // TODO (2020-09-30) renaming, genderfluid, ...
 
 data class PlayerCharacter(
@@ -11,6 +9,8 @@ data class PlayerCharacter(
 	val name: String,
 	val gender: String = "divers"
 	) {
+
+	private val log: Logger = LoggerFactory.getLogger("D&D PC")
 
 	/* ------------------------------------------------------------------------
 	 * Stats, Values and Scores defined by Klass, Race and Numbers.
@@ -268,7 +268,7 @@ data class PlayerCharacter(
 	 * @param race the race the character has.
 	 * @param subrace the subrace the character has.
 	 */
-	fun setRace(newRace: Race, newSubrace: String) {
+	private fun setRace(newRace: Race, newSubrace: String) {
 		if (raceAlreadyDefined) return
 
 		raceAlreadyDefined = true
@@ -284,9 +284,9 @@ data class PlayerCharacter(
 	 * @param background the actual background added.
 	 * @param bgSpeciality the speciality flavour of the background.
 	 */
-	fun setBackground(background: Background, bgSpeciality: String) {
+	private fun setBackground(background: Background, bgSpeciality: String) {
 		if (backgroundAlreadyDefined) {
-			logger.log("WARM", "You already set the background.")
+			log.warn("You already set the background.")
 			return // only set once!
 		}
 
@@ -309,7 +309,7 @@ data class PlayerCharacter(
 		val curKlassLevels = klasses.values.sumBy { it.first }
 
 		if (curKlassLevels >= level) {
-			logger.log("WARN", "Cannot add another level, character level is already reached.")
+			log.warn("Cannot add another level, character level is already reached.")
 			return
 		}
 
@@ -363,9 +363,9 @@ data class PlayerCharacter(
 			// use up to all hit dice and add rolled hit points up to full HP.
 			// do other reloading(s).
 			// TODO (2020-09-03) add param with how many hitdice will be spent
-			logger.info("Short rest")
+			log.info("Short rest")
 		} else {
-			logger.info("Long rest")
+			log.info("Long rest")
 
 			/* Back to full hp. */
 			curHitPoints = maxHitPoints
@@ -383,7 +383,7 @@ data class PlayerCharacter(
 	 * @return get the new maximum number of hitdice.
 	 */
 	fun addHitdie(face: Int) : Int {
-		logger.debug("Add new hitdie d${face}")
+		log.debug("Add new hitdie d${face}")
 
 		val current = hitdice[face] ?: Pair(0, 0)
 		val newCount = current.first + 1
@@ -416,7 +416,7 @@ data class PlayerCharacter(
 
 		/* If all checked, add new spell to learnt spells. */
 		spellsLearnt += spell to spellSource
-		logger.info("Learnt spell ${spell}  (as ${spellSource})")
+		log.info("Learnt spell ${spell}  (as ${spellSource})")
 
 		/* Always prepared cantrip.*/
 		if (spell.level < 1) {
@@ -441,11 +441,11 @@ data class PlayerCharacter(
 		if (slot < 0 && spell.level > 0) {
 			/* Unprepare (except of cantrips, which cannot be unprepared). */
 			spellsPrepared -= spell
-			logger.info("Not prepared anymore: ${spell.name}")
+			log.info("Not prepared anymore: ${spell.name}")
 		} else {
 			/* Prepare spell, at least spell level. */
 			spellsPrepared += spell to Math.max(slot, spell.level)
-			logger.info("Prepared: ${spell.name}")
+			log.info("Prepared: ${spell.name}")
 		}
 	}
 
@@ -490,7 +490,7 @@ data class PlayerCharacter(
 		/* Cast spell for at least 1 second (instantaneous). */
 		spellsActive += spell to Math.max(1, spell.duration)
 
-		logger.info("Casts ${spell.name}, left duration ${spell.duration} seconds")
+		log.info("Casts ${spell.name}, left duration ${spell.duration} seconds")
 	}
 
 	/** Decrease left duration of all activated spells.
@@ -564,7 +564,7 @@ data class PlayerCharacter(
 		return when {
 			!validBag && newBag -> {
 				bags += intoBag to (item as Container)
-				logger.info("Got a new bag ($item as $intoBag): SUCCESS")
+				log.info("Got a new bag ($item as $intoBag): SUCCESS")
 				return true
 			}
 			validBag && newBag -> {
@@ -579,17 +579,17 @@ data class PlayerCharacter(
 
 					// add new bag as "sub bag" with index.
 					bags += bagKey to (item as Container)
-					logger.info("Got a new bag ($item as $intoBag) inside another bag: SUCCESS")
+					log.info("Got a new bag ($item as $intoBag) inside another bag: SUCCESS")
 					return true
 				} else {
 					return false
 				}
 			}
 			!validBag -> holdItem(item).also {
-				logger.info("Try to hold item ($item): ${if (it) "SUCCESS" else "FAILED"}")
+				log.info("Try to hold item ($item): ${if (it) "SUCCESS" else "FAILED"}")
 			}
 			else -> storeItem(item = item, bag = intoBag).also {
-				logger.info("Try to store item ($item): ${if (it) "SUCCESS" else "FAILED"}")
+				log.info("Try to store item ($item): ${if (it) "SUCCESS" else "FAILED"}")
 			}
 		}
 	}
@@ -613,19 +613,19 @@ data class PlayerCharacter(
 		if (bothHands && hands.first == null && hands.second == null) {
 			// hold one item with both hands.
 			hands = Triple(item, null, true)
-			logger.info("Hold item ($item) with both hands ($hands)")
+			log.info("Hold item ($item) with both hands ($hands)")
 			return true
 		} else if ((preferOff || hands.first != null) && hands.second == null) {
 			// hold item in off hand, if it is free
 			// if a two-hand wielded item was just hold, it's now single hand wielded.
 			hands = Triple(hands.first, item, false)
-			logger.info("Hold item ($item) with off hand ($hands)")
+			log.info("Hold item ($item) with off hand ($hands)")
 			return true
 		} else if (hands.first == null) {
 			// hold item in main hand, if it is free
 			// if a two-hand wielded item was just hold, it's now single hand wielded.
 			hands = Triple(item, hands.second, false)
-			logger.info("Hold item ($item) with main hand ($hands)")
+			log.info("Hold item ($item) with main hand ($hands)")
 			return true
 		}
 		return false
@@ -693,11 +693,11 @@ data class PlayerCharacter(
 		}
 
 		if (full) {
-			logger.info("Does not wear ${wearable}, already full at $bodyPosition")
+			log.info("Does not wear ${wearable}, already full at $bodyPosition")
 			return false
 		} else {
 			worn += bodyPosition.name to wearable
-			logger.info("Wears now ${wearable}")
+			log.info("Wears now ${wearable}")
 			return true
 		}
 	}
@@ -711,7 +711,7 @@ data class PlayerCharacter(
 	fun dropFromHands(handFirst: Boolean = true, handSecond: Boolean = false) : List<Item> {
 		var dropped: List<Item> = listOf()
 
-		logger.debug("Drop items: main hand: ${handFirst}, off hand: ${handSecond}")
+		log.debug("Drop items: main hand: ${handFirst}, off hand: ${handSecond}")
 
 		/* Remove from hands first. */
 		if (handFirst || handSecond) {
@@ -733,7 +733,7 @@ data class PlayerCharacter(
 			}
 		}
 
-		logger.info("Dropped ${dropped}")
+		log.info("Dropped ${dropped}")
 
 		return dropped
 	}
@@ -747,16 +747,16 @@ data class PlayerCharacter(
 		}
 
 		var dropped: List<Item> = listOf()
-		logger.info("Drop fron ${bagKeys.associateWith { validStorage(it) } }")
+		log.info("Drop fron ${bagKeys.associateWith { validStorage(it) } }")
 		bagKeys.forEach { key ->
 			if (validStorage(key)) {
 				// bag exists.
 				val d0 = bags[key]!!.removeAll(predicate)
-				logger.info("From $key, dropped ${d0.size} items ${d0}")
+				log.info("From $key, dropped ${d0.size} items ${d0}")
 				dropped += d0
 			}
 		}
-		logger.info("Totally dropped ${dropped.size} items:  ${dropped}")
+		log.info("Totally dropped ${dropped.size} items:  ${dropped}")
 		return dropped
 	}
 
@@ -785,7 +785,7 @@ data class PlayerCharacter(
 		dropped += bags.filterKeys { it in positions }.values
 		bags -= positions
 
-		logger.info("Dropped ${dropped}")
+		log.info("Dropped ${dropped}")
 		return dropped
 	}
 

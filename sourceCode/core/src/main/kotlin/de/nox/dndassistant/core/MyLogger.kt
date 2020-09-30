@@ -1,54 +1,27 @@
 package de.nox.dndassistant.core
 
-// import java.time.LocalDateTime
-// import java.time.format.DateTimeFormatter
+enum class LoggingLevel {
+	ERROR, INFO, WARN, VERBOSE, DEBUG
+}
 
 object LoggerFactory {
-	fun getLogger(name: String) : Logger = Logger(name)
+	fun getLogger(tag: String) : Logger
+		= object : Logger {
+			private fun now(): String
+				= "%-19s".format(System.currentTimeMillis()) // yyyy-mm-dd HH:MM:SS
+
+			override fun log(t: LoggingLevel, msg: Any?) {
+				println("${now()} ${t.name.first()} ${tag}  -  $msg")
+			}
+		}
 }
 
-enum class LoggingLevel {
-	INFO, ERROR, WARN, VERBOSE, DEBUG
-}
+interface Logger {
+	abstract fun log(t: LoggingLevel, msg: Any?)
 
-data class Logger(
-	val name: String,
-	val level: LoggingLevel = LoggingLevel.ERROR
-) {
-
-	// private val formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss")
-
-	fun log(t: LoggingLevel, s: Any?) {
-		println("%s %-16s %-8s - ".format(
-			"Time",
-			name + ":", t.toString()) +
-			s) // avoid formatting.
-	}
-
-	fun log(t: String, s: Any?) {
-		println("%s %-16s %-8s - ".format(
-			"Time",
-			name + ":", t) +
-			s) // avoid formatting.
-	}
-
-	fun info(s: Any?) {
-		log(LoggingLevel.INFO, s)
-	}
-
-	fun warn(s: Any?) {
-		log(LoggingLevel.WARN, s)
-	}
-
-	fun error(s: Any?) {
-		log(LoggingLevel.ERROR, s)
-	}
-
-	fun verbose(s: Any?) {
-		log(LoggingLevel.VERBOSE, s)
-	}
-
-	fun debug(s: Any?) {
-		log(LoggingLevel.DEBUG, s)
-	}
+	fun error(msg: Any?) = log(LoggingLevel.ERROR, msg)
+	fun info(msg: Any?) = log(LoggingLevel.INFO, msg)
+	fun warn(msg: Any?) = log(LoggingLevel.WARN, msg)
+	fun verbose(msg: Any?) = log(LoggingLevel.VERBOSE, msg)
+	fun debug(msg: Any?) = log(LoggingLevel.DEBUG, msg)
 }

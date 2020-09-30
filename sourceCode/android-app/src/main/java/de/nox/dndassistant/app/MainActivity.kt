@@ -24,7 +24,7 @@ import de.nox.dndassistant.core.*
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
-	private val LOG_TAG = "D&D Main"
+	private val logger = LoggerFactory.getLogger("D&D Main")
 
 	/* The player character. */
 	private lateinit var character : PlayerCharacter
@@ -40,12 +40,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		/* default loading. */
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
-		Log.d(LOG_TAG, "Initiated Activity.")
+		logger.debug("Initiated Activity.")
 
 		// TODO (2020-09-27) load character, create character.
 		character = playgroundWithOnyx()
 
-		Log.d(LOG_TAG, "Player Character is loaded.")
+		logger.debug("Player Character is loaded.")
 
 		/* Update the character specific panels:
 		 * Fill them with current character's data. */
@@ -95,7 +95,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			}
 		}
 
-		Log.d(LOG_TAG, "Extra Rolls are initiated.")
+		logger.debug("Extra Rolls are initiated.")
 	}
 
 	/** Update the character specific panels: fill them with character's data. */
@@ -107,12 +107,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		experience.text = getString(R.string.level_xp)
 			.format(character.level, character.expiriencePoints)
 
-		Log.d(LOG_TAG, "Lvl (XP) displayed.")
+		logger.debug("Lvl (XP) displayed.")
 
 		/* Fill ability panel. */
 		showabilities(initiation) // if initiation.: set OnClickListener
 
-		Log.d(LOG_TAG, "Abilities displayed.")
+		logger.debug("Abilities displayed.")
 
 		/* Update the healthbar, conditions, death saves and also speed and AC. */
 		showHealthPanel(initiation) // if initiation: set OnClickListener
@@ -139,7 +139,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			v = (abilities_grid as LinearLayout).getChildAt(i)
 			i += 1 // next
 
-			Log.d(LOG_TAG, "Write ability '$it' into $v, next index $i.")
+			logger.debug("Write ability '$it' into $v, next index $i.")
 
 			/* Set label. */
 			(v.findViewById(R.id.ability_title) as TextView).apply {
@@ -236,7 +236,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 					.groupingBy { it.substring(1).toInt() }
 					.eachCount()
 
-			Log.d(LOG_TAG, "Displayed hitdie: {$displayed} => $hitdieDisplayed")
+			logger.debug("Displayed hitdie: {$displayed} => $hitdieDisplayed")
 
 			// add missing hitdice.
 
@@ -249,7 +249,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 						restored += 1 // restore one more hitdie.
 						it.setTextColor(android.graphics.Color.BLACK)
 						it.setClickable(true)
-						Log.d(LOG_TAG, "Restored $it, ${it.text}")
+						logger.debug("Restored $it, ${it.text}")
 					}
 				}
 			}
@@ -286,7 +286,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 					resting.addView(view)
 					hitdiceViews += (view)
 
-					Log.d(LOG_TAG, "Display a new hitdie [d$face[: $view")
+					logger.debug("Display a new hitdie [d$face[: $view")
 					missing -= 1
 				}
 			}
@@ -299,7 +299,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	// TODO
 	override fun onClick(view: View) {
 
-		Log.d(LOG_TAG, "Clicked on $view")
+		logger.debug("Clicked on $view")
 
 		var context = this@MainActivity
 		var (long, short) = Toast.LENGTH_LONG to Toast.LENGTH_SHORT
@@ -376,11 +376,27 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		= when (visibility) {
 			View.GONE -> true.also {
 				visibility = View.VISIBLE
-				Log.d(LOG_TAG, "VISIBLE    $this")
+				logger.debug("VISIBLE    $this")
 			}
 			else -> false.also {
 				visibility = View.GONE
-				Log.d(LOG_TAG, "GONE       $this")
+				logger.debug("GONE       $this")
+			}
+		}
+}
+
+/** Android specific logger. */
+object LoggerFactory {
+	fun getLogger(tag: String) : Logger
+		= object : Logger {
+			override fun log(t: LoggingLevel, msg: Any?) {
+				when (t) {
+					LoggingLevel.ERROR -> Log.e(tag, "${msg}")
+					LoggingLevel.INFO -> Log.i(tag, "${msg}")
+					LoggingLevel.WARN -> Log.w(tag, "${msg}")
+					LoggingLevel.VERBOSE -> Log.v(tag, "${msg}")
+					LoggingLevel.DEBUG -> Log.d(tag, "${msg}")
+				}
 			}
 		}
 }

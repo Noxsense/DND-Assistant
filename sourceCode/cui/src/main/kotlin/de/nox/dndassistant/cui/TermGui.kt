@@ -2,7 +2,8 @@ package de.nox.dndassistant.cui
 
 import de.nox.dndassistant.core.*
 
-private val logger = LoggerFactory.getLogger("TermGUI")
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 fun main(args: Array<String>) {
 	println(
@@ -18,6 +19,26 @@ fun main(args: Array<String>) {
 	val display = PCDisplay(pc, "Nox")
 	display.display(true, true, true, true, true, true, true, true, true, true)
 }
+
+object LoggerFactory {
+	fun getLogger(tag: String) : Logger
+		= object : Logger {
+			private val formatter
+				= DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss")
+
+			private fun now(): String
+				= LocalDateTime.now().format(formatter)
+
+			override fun log(t: LoggingLevel, msg: Any?) {
+				println("${now()} ${t.name.first()} ${tag}  -  $msg")
+			}
+		}
+}
+
+
+// actual log(tag: String, t: LoggingLevel, msg: Any?) {
+// 	println("YYYY-mm-dd HH:MM:SS ${t.name.first()} ${tag} ${msg}")
+// }
 
 class PCDisplay(val char: PlayerCharacter, val player: String) {
 	val width = 79

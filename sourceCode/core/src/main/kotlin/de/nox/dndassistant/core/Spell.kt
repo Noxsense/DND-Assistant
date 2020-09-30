@@ -1,7 +1,5 @@
 package de.nox.dndassistant.core
 
-private val logger = LoggerFactory.getLogger("Spell")
-
 data class Spell(
 	val name: String,
 	val school: String,
@@ -18,6 +16,8 @@ data class Spell(
 	val note: String = ""
 	)
 	: Comparable<Spell> {
+
+	private val LOG_TAG = "D&D Spell"
 
 	override fun compareTo(other: Spell) : Int
 		= level - other.level

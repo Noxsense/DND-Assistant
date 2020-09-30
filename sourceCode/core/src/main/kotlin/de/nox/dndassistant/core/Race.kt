@@ -2,8 +2,6 @@ package de.nox.dndassistant.core
 
 import kotlin.math.floor
 
-private val logger = LoggerFactory.getLogger("Race")
-
 data class Race(
 	val name: String,
 	val abilityScoreIncrease: Map<Ability, Int> = mapOf(),
@@ -17,6 +15,9 @@ data class Race(
 	val features: List<Feature> = listOf(),
 	val subrace: Map<String, List<Feature>> = mapOf()
 ) {
+
+	private val LOG_TAG = "D&D Race"
+
 	var description: String = "${name} description"
 
 	fun allFeatures(forSubrace: String = "") : List<Feature>

@@ -58,7 +58,7 @@ data class Weapon(
 	val note: String  // notes
 ) : Item, Skillable {
 
-	private val logger = LoggerFactory.getLogger("Weapon")
+	private val LOG_TAG = "D&D Weapon"
 
 	override fun toString() : String = name
 

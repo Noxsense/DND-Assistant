@@ -21,8 +21,6 @@ data class Armor(
 	val description : String = ""
 ) : Wearable, Skillable {
 
-	private val Logger = LoggerFactory.getLogger("Armor")
-
 	enum class Weight {
 		LIGHT, // for agile adventures: DEX plus armor's AC
 		MEDIUM, // bad for movement, DEX (max +2) plus armor's AC
