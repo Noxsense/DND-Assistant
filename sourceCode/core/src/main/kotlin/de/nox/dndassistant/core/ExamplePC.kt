@@ -4,18 +4,18 @@ package de.nox.dndassistant.core
 
 fun playgroundWithOnyx() : PlayerCharacter {
 	val pc : PlayerCharacter
-		= PlayerCharacter("Onyx Necklace", player = "Nox")
+		= PlayerCharacter(name = "Onyx Necklace", player = "Nox")
 
 	// pc.rollAbilityScores()
 
-	pc.setAbilityScores(mapOf(
+	listOf(
 		Ability.STR to 6,
 		Ability.DEX to 17,
 		Ability.CON to 11,
 		Ability.INT to 16,
 		Ability.WIS to 15,
 		Ability.CHA to 10
-	))
+	).forEach { pc.setAbilityScore(it.first, it.second) }
 
 	pc.addProficiency(Skill.SLEIGHT_OF_HAND) // proficient
 	pc.addProficiency(Skill.STEALTH) // proficient
@@ -163,14 +163,16 @@ fun playgroundWithOnyx() : PlayerCharacter {
 	pc.maxHitPoints = 12
 	pc.curHitPoints = 7
 
-	pc.setBackground(Background(
-		name = "Sage",
-		proficiencies = listOf(Skill.ARCANA, Skill.HISTORY),
-		equipment = listOf(/*bottle,ink,pen,small knife, letter,clothes*/),
-		money = Money(gp=10)).apply {
-		extraLanguages = 2
+	pc.setBackground(
+		background = Background(
+			name = "Sage",
+			proficiencies = listOf(Skill.ARCANA, Skill.HISTORY),
+			equipment = listOf(/*bottle,ink,pen,small knife, letter,clothes*/),
+			money = Money(gp=10)
+		).apply {
+			extraLanguages = 2
 		},
-		true)
+		bgSpeciality = "Liberian")
 
 	val rogue = Klass("Rogue",
 	hitdie = D8,
@@ -240,7 +242,6 @@ fun playgroundWithOnyx() : PlayerCharacter {
 	pc.history += "Got abducted, sold into a brothel "
 	pc.history += "Run away after learning how to fight back by mysterious elf woman"
 	pc.history += "Became Assassin (Rogue)"
-
 
 	pc.conditions += Condition.UNCONSCIOUS
 	pc.deathSavesSuccess()

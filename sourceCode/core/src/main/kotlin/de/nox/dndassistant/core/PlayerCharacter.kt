@@ -2,14 +2,14 @@ package de.nox.dndassistant.core
 
 import kotlin.math.floor
 
-private fun getModifier(value: Int) = floor((value - 10) / 2.0).toInt()
-
 private val logger = LoggerFactory.getLogger("PlayerCharacter")
 
+// TODO (2020-09-30) renaming, genderfluid, ...
+
 data class PlayerCharacter(
+	val player: String = "",
 	val name: String,
-	val gender: String = "divers",
-	val player: String = ""
+	val gender: String = "divers"
 	) {
 
 	/* ------------------------------------------------------------------------
@@ -53,19 +53,21 @@ data class PlayerCharacter(
 	val proficientValue: Int get() = levelToProficiencyBonus(level)
 
 	/** THE basic ability scores. */
-	var abilityScore: Map<Ability, Int>
+	private var abilityScore: Map<Ability, Int>
 		= enumValues<Ability>().map { it }.associateWith { 10 }
 		private set
 
-	/** The modifier, according to the values for the certain scores. */
-	var abilityModifier: Map<Ability, Int>
-		= abilityScore.mapValues { getModifier(it.value) }
-		private set
+	/** Get the pure ability score. */
+	fun abilityScore(a: Ability) : Int
+		= abilityScore.getOrDefault(a, 10)
+
+	/** Get the ability modifier. */
+	fun abilityModifier(a: Ability) : Int
+		= getModifier(abilityScore.get(a) ?: 0)
 
 	/** The combat's initiative, mostly the DEX modifier. (in-combat) */
 	val initiative: Int get()
-		= this.abilityModifier.getOrDefault(Ability.DEX,
-			getModifier(this.abilityScore.getOrDefault(Ability.DEX, 0)))
+		= this.abilityModifier(Ability.DEX)
 
 	/** The abilities, the character has proficiency for saving throws. */
 	var savingThrows: List<Ability>
@@ -81,6 +83,14 @@ data class PlayerCharacter(
 	var knownLanguages: List<String>
 		= listOf("Common")
 		private set
+
+	/** Get the score for the requested abilty saving throw. */
+	fun savingScore(a: Ability) : Int
+		= abilityModifier(a) + getProficiencyBonusFor(a)
+
+	/** Get the score for the requested skill check. */
+	fun skillScore(s: Skill) : Int
+		= abilityModifier(s.source) + getProficiencyBonusFor(s)
 
 	/** Spell slots the character has available and used.
 	 * Ordered list of max and available spell slots. */
@@ -130,6 +140,10 @@ data class PlayerCharacter(
 	var hitdice : Map<Int, Pair<Int, Int>> = mapOf()
 		private set
 
+	/** Deathsaves as successes and fails, fighting against the dead. */
+	var deathSaves: Pair<Int,Int> = 0 to 0 // successes and fails
+		private set
+
 	/** Maximal hit points of the character. If dropped to 0, the character becomes unconscious.
 	 * If dropped to -maxHitPoints in one hit, the character dies immediately. */
 	var maxHitPoints: Int = 1
@@ -152,7 +166,7 @@ data class PlayerCharacter(
 	 * Personality and character, roleplaying.
 	 * Getter and Setter are all public and modifiable. Won't change other attributes.
 	 */
-	
+
 	/** Age of the character, in years. (If younger than a year, use negative as days.) */
 	var age : Int = 0
 
@@ -194,43 +208,30 @@ data class PlayerCharacter(
 	 * (Simple) Getter and Setters..
 	 */
 
-	fun setAbilityScores(xs: Map<Ability,Int>) {
-		abilityScore = xs
-		setAbilityModifiers()
-	}
-
-	private fun setAbilityModifiers() {
-		abilityModifier = abilityScore.mapValues { getModifier(it.value) }
-	}
-
 	/* Set the attributes' values.
-	 * If a param is set to (-1), it will be rolled with a D20.
-	 */
+	 * If a param is set to (-1), it will be rolled with a D20. */
 	fun setAbilityScore(a: Ability, v: Int) {
 		abilityScore += Pair(a, if (v > 0) v else 0)
-		abilityModifier = abilityScore.mapValues { getModifier(it.value) }
 	}
 
-	fun savingScore(a: Ability) : Int
-		= abilityModifier.getOrDefault(a, 0) +
-			if (a in savingThrows) proficientValue else 0
+	/** Add proficiency bonus,
+	 * if the Skillable item is in a saving throw of with proficiency. */
+	private fun getProficiencyBonusFor(s: Any) : Int
+		= when {
+			s is Skill -> getProficiencyFor(s).factor * proficientValue
+			s is Ability -> if (s in savingThrows) proficientValue else 0
+			else -> 0
+		}
 
-	fun skillScore(s: Skill) : Int
-		= abilityModifier.getOrDefault(s.source, 0) +
-			getProficiencyFor(s).factor * proficientValue
-
-	fun abilityScore(a: Ability) : Int
-		= abilityScore.getOrDefault(a, 10)
-
-	fun abilityModifier(a: Ability) : Int
-		= abilityModifier.getOrDefault(a, 10)
-
-	fun getProficiencyFor(skill: Skill) : Proficiency
-		= proficiencies.getOrDefault(skill, Proficiency.NONE)
-
-	fun getProficiencyFor(saving: Ability) : Proficiency
-		= when (saving in savingThrows) {
-			true -> Proficiency.PROFICIENT
+	/** Get a proficiency for any value.
+	 * If the parameter was a skill or saving throw, the character has actually
+	 * proficiency for, return the proficiency value, otherwise it has none.
+	 * @param x anything, which could have proficiency.
+	 * @return Proficiency.NONE by default. */
+	fun getProficiencyFor(x: Any) : Proficiency
+		= when {
+			x is Skill -> proficiencies.getOrDefault(x, Proficiency.NONE)
+			x is Ability && (x in savingThrows) -> Proficiency.PROFICIENT
 			else -> Proficiency.NONE
 		}
 
@@ -259,50 +260,50 @@ data class PlayerCharacter(
 			speedMap
 		}
 
-	/* Supporting variable, if the background is already set. */
+	/* Supporting variables to control one-time set. */
+	private var raceAlreadyDefined = false
 	private var backgroundAlreadyDefined = false
 
-	/** Set background, but only once! */
-	fun setBackground(
-		bg: Background,
-		addProf: Boolean = false,
-		addItems: Boolean = false,
-		chooseSpecial: Int = -1,
-		chooseTrait: Int = -1,
-		chooseIdeal: Int = -1,
-		chooseBonds: Int = -1,
-		chooseFlaws: Int = -1
-	) {
-		if (backgroundAlreadyDefined) return // only set once!
+	/** Set the race.
+	 * @param race the race the character has.
+	 * @param subrace the subrace the character has.
+	 */
+	fun setRace(newRace: Race, newSubrace: String) {
+		if (raceAlreadyDefined) return
 
-		background = bg to (bg.suggestedSpeciality[chooseSpecial] ?: "")
-		backgroundAlreadyDefined = true
+		raceAlreadyDefined = true
+		raceSubrace = newRace to newSubrace
+		size = newRace.size
 
-		if (addProf) {
-			// add only as proficient.
-			proficiencies += bg.proficiencies.associateWith { Proficiency.PROFICIENT }
-		}
-
-		if (addItems) {
-			// TODO (2020-08-06) implement inventory / equipment
-		}
-
-		if (chooseSpecial in (1 until bg.suggestedSpeciality.size))
-			background = (background.first to bg.suggestedSpeciality[chooseSpecial])
-
-		if (chooseTrait in (1 until bg.suggestedTraits.size))
-			trait = bg.suggestedTraits[chooseTrait]
-
-		if (chooseIdeal in (1 until bg.suggestedIdeals.size))
-			ideal = bg.suggestedIdeals[chooseIdeal]
-
-		if (chooseBonds in (1 until bg.suggestedBonds.size))
-			bonds = bg.suggestedBonds[chooseBonds]
-
-		if (chooseFlaws in (1 until bg.suggestedFlaws.size))
-			flaws = bg.suggestedFlaws[chooseFlaws]
+		/* Add speed and languages. */
+		speedMap += newRace.speed
+		println(newRace.languages)
 	}
 
+	/** Set background, but only once!
+	 * @param background the actual background added.
+	 * @param bgSpeciality the speciality flavour of the background.
+	 */
+	fun setBackground(background: Background, bgSpeciality: String) {
+		if (backgroundAlreadyDefined) {
+			logger.log("WARM", "You already set the background.")
+			return // only set once!
+		}
+
+		this.background = background to (bgSpeciality)
+		this.backgroundAlreadyDefined = true
+	}
+
+	/** Add a new level for a certain class.
+	 * @param klass the class, the character levels in.
+	 * @param specialisation the path or way or school,
+	 * the character takes in their occupation(s).
+	 *
+	 * If the maximum character level is already reached with the sum of the levels,
+	 * the new klass level won't apply.
+	 *
+	 * Other selections like spells or fighting styles needs to be added separately.
+	 */
 	fun addKlassLevel(klass: Klass, specialisation: String = "") {
 		/* Check, if conditions are met, to gain a level for that class.*/
 		val curKlassLevels = klasses.values.sumBy { it.first }
@@ -323,36 +324,21 @@ data class PlayerCharacter(
 		klasses += klass to Pair(newLevel, newSpecial)
 	}
 
-	/* supporting variable to check, if the race is already set. */
-	private var raceAlreadyDefined = false
-
-	/** Set the race. */
-	fun setRace(newRace: Race, newSubrace: String) {
-		if (raceAlreadyDefined) return
-
-		raceAlreadyDefined = true
-		raceSubrace = newRace to newSubrace
-		size = newRace.size
-
-		/* Add speed and languages. */
-		speedMap += newRace.speed
-		println(newRace.languages)
-	}
-
+	/** Check if currently temporary hitpoints are used. */
 	val hasTmpHitpoints: Boolean get()
 		= tmpHitPoints > 0 && tmpHitPoints != maxHitPoints
 
-	var deathSaves: Pair<Int,Int> = 0 to 0 // successes and fails
-		private set
-
+	/** Add a success to the death saves. */
 	fun deathSavesSuccess() {
 		deathSaves = deathSaves.first + 1 to deathSaves.second
 	}
 
+	/** Add a fail to the death saves. */
 	fun deathSavesFail() {
 		deathSaves = deathSaves.first to deathSaves.second + 1
 	}
 
+	/** Set all fails and successes to zero. */
 	fun resetDeathSaves() {
 		deathSaves = 0 to 0
 	}
@@ -363,10 +349,10 @@ data class PlayerCharacter(
 		val failed = deathSaves.second
 
 		return when {
-			success > 2 -> 3
-			failed > 2 -> -3
-			success > failed -> 1
-			success < failed -> -1
+			success > 2 -> 3 // decided, final result.
+			failed > 2 -> -3 // decided, final result.
+			success > failed -> 1 // intermediate result, more successes
+			success < failed -> -1 // intermediate result, more fails
 			else -> 0
 		}
 	}
@@ -608,6 +594,7 @@ data class PlayerCharacter(
 		}
 	}
 
+	/** Check if the storage name is valid / available. */
 	private fun validStorage(storage: String) : Boolean
 		= (storage.startsWith("BAG:") && bags.containsKey(storage))
 
@@ -845,7 +832,7 @@ data class PlayerCharacter(
 		// TODO (2020-08-13) unarmored defense
 		// - races and classes benefiting from unarmed defense / natural armor ...
 		// - no armor or few => alternative modifiers.
-		
+
 		// TODO (2020-08-13) additional spells, changed AC
 		// conditions, etc..
 
@@ -862,57 +849,56 @@ data class PlayerCharacter(
 			wornArmor.weightClass == H -> wAC
 			else -> uAC
 		}
-		
+
 		return ac + shieldAC
 	}
-}
 
-/** A simple mapping from experience points to level.
- * @param xp experience points to translate.
- * @return level as int, from 1 to 20.
- */
-fun xpToLevel(xp: Int) = when {
-	xp >= 355000 -> 20
-	xp >= 305000 -> 19
-	xp >= 265000 -> 18
-	xp >= 225000 -> 17
-	xp >= 195000 -> 16
-	xp >= 165000 -> 15
-	xp >= 140000 -> 14
-	xp >= 120000 -> 13
-	xp >= 100000 -> 12
-	xp >= 85000 -> 11
-	xp >= 64000 -> 10
-	xp >= 48000 -> 9
-	xp >= 34000 -> 8
-	xp >= 23000 -> 7
-	xp >= 14000 -> 6
-	xp >= 6500 -> 5
-	xp >= 2700 -> 4
-	xp >= 900 -> 3
-	xp >= 300 -> 2
-	else -> 1
-}
+	/** Companion object with basic translation methods. */
+	companion object {
 
-/** A simple mapping from level to proficiency bonus.
- * @param level to translate.
- * @return proficiency bonus, which is reached on a certain level. */
-fun levelToProficiencyBonus(lvl: Int) = when {
-	lvl >= 17 -> +6
-	lvl >= 13 -> +5
-	lvl >= 9 -> +4
-	lvl >= 5 -> +3
-	else -> +2
-}
+		/** A simple mapping from experience points to level.
+		 * @param xp experience points to translate.
+		 * @return level as int, from 1 to 20.
+		 */
+		fun xpToLevel(xp: Int) = when {
+			xp >= 355000 -> 20
+			xp >= 305000 -> 19
+			xp >= 265000 -> 18
+			xp >= 225000 -> 17
+			xp >= 195000 -> 16
+			xp >= 165000 -> 15
+			xp >= 140000 -> 14
+			xp >= 120000 -> 13
+			xp >= 100000 -> 12
+			xp >= 85000 -> 11
+			xp >= 64000 -> 10
+			xp >= 48000 -> 9
+			xp >= 34000 -> 8
+			xp >= 23000 -> 7
+			xp >= 14000 -> 6
+			xp >= 6500 -> 5
+			xp >= 2700 -> 4
+			xp >= 900 -> 3
+			xp >= 300 -> 2
+			else -> 1
+		}
 
-/* The base ability score.*/
-enum class Ability(val fullname: String) {
-	STR("STRENGTH"),
-	DEX("DEXTERITY"),
-	CON("CONSTITUTION"),
-	INT("INTELLIGENCE"),
-	WIS("WISDOM"),
-	CHA("CHARISMA")
+		/** A simple mapping from level to proficiency bonus.
+		 * @param level to translate.
+		 * @return proficiency bonus, which is reached on a certain level. */
+		fun levelToProficiencyBonus(lvl: Int) = when {
+			lvl >= 17 -> +6
+			lvl >= 13 -> +5
+			lvl >= 9 -> +4
+			lvl >= 5 -> +3
+			else -> +2
+		}
+
+		/** Translate a score to a modifier. */
+		private fun getModifier(value: Int) : Int
+			= floor((value - 10) / 2.0).toInt()
+
+	}
 }
 
 enum class BodyType {

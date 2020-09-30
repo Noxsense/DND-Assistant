@@ -5,6 +5,9 @@ import kotlin.math.floor
 private val logger = LoggerFactory.getLogger("Background")
 
 
+/** An Alignment is a direction of good or evil, and lawful or chaotic
+ * the character can take.
+ */
 enum class Alignment {
 	LAWFUL_GOOD,
 	LAWFUL_NEUTRAL,
@@ -24,6 +27,11 @@ enum class Alignment {
 		= name.toLowerCase().replace("_", " ")
 }
 
+/** A Background of a character provides two extra skills and
+ * in sum two tool proficiencies or languages.
+
+ * The background also defines the roleplay components a lot.
+ */
 data class Background(
 	val name: String,
 	val proficiencies : List<Skillable>, // skill, tool proficiencies

@@ -1,5 +1,12 @@
 package de.nox.dndassistant.core
 
+/** Something a character can learn.
+ * For example a skill, to add proficiency.
+ * A Weapon or armor to use it.
+ * A Tool to use it.
+ * A language to communicate. */
+interface Skillable;
+
 /* Proficiency level.*/
 enum class Proficiency{
 	NONE,
@@ -29,7 +36,18 @@ enum class Proficiency{
 	}
 }
 
-interface Skillable
+/** A language a character can speak, read and write. */
+data class Language(val name: String) : Skillable;
+
+/* The base ability score.*/
+enum class Ability(val fullname: String) {
+	STR("STRENGTH"),
+	DEX("DEXTERITY"),
+	CON("CONSTITUTION"),
+	INT("INTELLIGENCE"),
+	WIS("WISDOM"),
+	CHA("CHARISMA")
+}
 
 /* Body skill.*/
 enum class Skill(val source: Ability) : Skillable {

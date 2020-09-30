@@ -144,7 +144,7 @@ data class Money(
 	 * otherwise, if 100pc can be reduced, one new higher coin appear,
 	 * and 100p are removed.
 	 * @return a new Money pile with changed values.
-	 **/
+	 */
 	fun changeUp(from: Int) : Money {
 		var pP = pp; var gP = gp; var eP = ep; var sP = sp; var cP = cp
 
