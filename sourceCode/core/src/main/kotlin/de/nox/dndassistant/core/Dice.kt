@@ -4,6 +4,8 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
+// TODO (2020-10-01) Refactor !
+
 /* A complexer dice term with different dice and constants.*/
 class DiceTerm(vararg ds: SimpleDice) {
 	val dice : Array<SimpleDice> = arrayOf(*ds)
@@ -134,6 +136,8 @@ class DiceTerm(vararg ds: SimpleDice) {
 			if (it[0] == '+') it.substring(1) else it
 		}
 }
+
+// TODO (2020-10-01) Refactor !
 
 /* A simple dice term with only one kind of die and number.*/
 data class SimpleDice(val max: Int, val times: Int = 1) : Comparable<SimpleDice> {

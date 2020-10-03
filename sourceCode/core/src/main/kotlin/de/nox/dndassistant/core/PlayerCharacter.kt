@@ -1,53 +1,135 @@
 package de.nox.dndassistant.core
 
 import kotlin.math.floor
+import kotlin.math.min
 
 // TODO (2020-09-30) renaming, genderfluid, ...
 
-data class PlayerCharacter(
-	val player: String = "",
-	val name: String,
-	val gender: String = "divers"
-	) {
+public class PlayerCharacter private constructor(
+	val player: String,
 
-	private val log: Logger = LoggerFactory.getLogger("D&D PC")
+	val race: Race,
+	val subrace: String,
+
+	val background: Background,
+	val backgroundFlavour: String,
+
+	val klassFirst: Klass,
+	var baseKlassSpeciality: String = "",
+
+	var name: String,
+	var gender: String,
+	var age: Int
+) {
+	val log: Logger = LoggerFactory.getLogger("D&D PC")
+
+	/** The character Creator, Builder for a PlayerCharacter. */
+	data class Creator(val playername: String) {
+		var race: Race? = null
+		var subrace: String? = null
+
+		var background: Background? = null
+		var backgroundFlavour: String? = null
+
+		var klassFirst: Klass? = null
+		var baseKlassSpeciality: String = ""
+
+		var name: String = "Name"
+		var gender: String = "divers"
+		var age: Int = 0
+
+		/** Set race (and subrace). @return this@Creator. */
+		fun race(race: Race, subrace: String) = apply {
+			this.race = race
+			this.subrace = subrace
+		}
+
+		/** Set Background (and flavour). @return this@Creator. */
+		fun background(background: Background, flavour: String) = apply {
+			this.background = background
+			this.backgroundFlavour = flavour
+		}
+
+		/** Set the base klass. @return this@Creator. */
+		fun klass(klass: Klass, speciality: String = "") = apply {
+			this.klassFirst = klass
+			this.baseKlassSpeciality = speciality
+		}
+
+		/** Set the age in years. @return this@Creator. */
+		fun ageInYears(years: Int) = apply {
+			this.age = Math.abs(years)
+		}
+
+		/** Set the age in days, if larger than 5 years, translate it to years.
+		 * @return this@Creator. */
+		fun ageInDays(days: Int) = apply {
+			if (days > 5 * 365 + 1) {
+				ageInYears(days / 365)
+			} else {
+				this.age = - Math.abs(days) // make sure, it's a negative number.
+			}
+		}
+
+		/** Set name. @return this@Creator. */
+		fun name(name: String) = apply { this.name = name }
+
+		/** Set gender. @return this@Creator. */
+		fun gender(gender: String) = apply { this.gender = gender }
+
+		/** Build, but a fancy word for living things.
+		 * @return the new PlayerCharacter.
+		 * @throws NullPointerException if an attribute is still null.
+		 */
+		fun awake() = PlayerCharacter(
+			playername,
+			race!!, subrace!!,
+			background!!, backgroundFlavour!!,
+			klassFirst!!, baseKlassSpeciality,
+			name, gender, age
+		).apply {
+			hitpoints = klassFirst.hitdie.faces + abilityModifier(Ability.CON)
+		}
+	}
+
+	/** The one and only player, unless the character is free for adoption. */
+	val playername: String = player
 
 	/* ------------------------------------------------------------------------
 	 * Stats, Values and Scores defined by Klass, Race and Numbers.
 	 */
 
-	var expiriencePoints: Int
+	var experiencePoints : Int
 		= 0
 		// public getter and setter
 		// changes => will influence level and proficiency bonus and depended values.
+		// additional fun: setLevel() which sets the XP accordingly
 
-	/** Map of K/Classes (with Level and Specialities), the character has. */
-	var klasses : Map<Klass, Pair<Int, String>> = mapOf()
-		private set
-		// public getter.
-
-	/** Map of traits, gained from reaching levels in a certain class. */
-	var klassTraits: Map<String, String> = mapOf()
-		private set
-		// public getter.
+	/** Character level according to experience points. */
+	val level : Int get() = xpToLevel(experiencePoints)
 
 	/** Race and subrace. */
 	private var raceSubrace: Pair<Race, String> = Race("Human") to "Normal"
 
-	val race: Race get() = raceSubrace.first
-	val subrace: String get() = raceSubrace.second
+	/** Map of speed on different terrains and specialities. */
+	var speedMap : Map<String, Int>
+		= mapOf("normal" to 30 /*feet*/).apply {
+			plus("difficult" to (get("normal")?.div(2) ?: 0)) /*feet*/
+			plus("climbing" to  (get("normal")?.div(2) ?: 0)) /*feet*/
+			plus("swimming" to  (get("normal")?.div(2) ?: 0)) /*feet*/
+			plus("crawling" to  (get("normal")?.div(2) ?: 0)) /*feet*/
+			plus("flying" to 0) /*feet*/
+
+			// "longjump": run/spent 10ft => STR score ft
+			// "highjump": run/spent 10ft => 3 + STR mod ft
+		}
+		private set
 
 	/** The history of the character. */
-	var background: Pair<Background, String>
+	var backgroundX: Pair<Background, String>
 		= Background("Pure", listOf(), listOf(), Money()) to "Just Born"
 		private set
 		// private setter, with one time proof.
-
-	/** Map of speed on different terrains and specialities. */
-	private var speedMap : Map<String, Int> = mapOf("walking" to 30 /*feet*/)
-
-	/** Character level according to experience points. */
-	val level : Int get() = xpToLevel(expiriencePoints)
 
 	/** Proficiency bonus according to character level. */
 	val proficientValue: Int get() = levelToProficiencyBonus(level)
@@ -59,15 +141,37 @@ data class PlayerCharacter(
 
 	/** Get the pure ability score. */
 	fun abilityScore(a: Ability) : Int
-		= abilityScore.getOrDefault(a, 10)
+		= abilityScore.getOrElse(a, { 10 })
 
 	/** Get the ability modifier. */
 	fun abilityModifier(a: Ability) : Int
-		= getModifier(abilityScore.get(a) ?: 0)
+		= getModifier(abilityScore.getOrElse(a, { 0 }))
 
 	/** The combat's initiative, mostly the DEX modifier. (in-combat) */
 	val initiative: Int get()
 		= this.abilityModifier(Ability.DEX)
+
+	/** Map of K/Classes (with Level and Specialities), the character has. */
+	var klasses : Map<Klass, Pair<Int, String>> = mapOf()
+		private set
+		// see also klassFirst
+
+	/** Map of traits, gained from reaching levels in a certain class. */
+	var klassTraits: Map<String, String> = mapOf()
+		private set
+
+	/** Hit dice as a list of faces, gained by every class level up. */
+	val hitdice : List<Int> get()
+		= klasses.toList().flatMap { (klass, lvlSpec) ->
+			/* Add level times the hitdie face to the hitdice list. */
+			(1 .. (lvlSpec.first)).map { klass.hitdie.faces }
+		}
+
+	/** Maximal hit points of the character.
+	 * If dropped to 0, the character becomes unconscious.
+	 * If dropped to negative max HP in one hit, the character dies at once. */
+	var hitpoints: Int
+		= klassFirst.hitdie.faces + abilityModifier(Ability.CON) // first HP
 
 	/** The abilities, the character has proficiency for saving throws. */
 	var savingThrows: List<Ability>
@@ -84,7 +188,7 @@ data class PlayerCharacter(
 		= listOf("Common")
 		private set
 
-	/** Get the score for the requested abilty saving throw. */
+	/** Get the score for the requested ability saving throw. */
 	fun savingScore(a: Ability) : Int
 		= abilityModifier(a) + getProficiencyBonusFor(a)
 
@@ -94,9 +198,12 @@ data class PlayerCharacter(
 
 	/** Spell slots the character has available and used.
 	 * Ordered list of max and available spell slots. */
-	var spellSlots : List<Pair<Int,Int>>
-		= (0..9).map { if (it == 0) (-1 to -1) else (0 to 0) }
-		private set
+	internal var spellSlots: IntArray
+		= IntArray(9) { 0 } // maximal available, 1 to 9 as [0 .. 8]
+
+	/** Getter for a available, left spell slot. */
+	fun spellSlot(slot: Int) : Int
+		= spellSlots[Math.min(Math.max(slot - 1, 0), 8)]
 
 	/** List of spells, this character has learnt, and the source, where it was learnt.
 	 * The source may influence the spell casting ability and strength of a cast spell. */
@@ -130,45 +237,14 @@ data class PlayerCharacter(
 		private set
 
 	/* ------------------------------------------------------------------------
-	 * Status and temporarily conditions.
-	 */
-
-	/** A list of Hitdice and the number of used dice.
-	 * D8: 5 at all / 4 available (received as rogue).
-	 * D6: 1 at all / 1 available (received as sorcerer).
-	 . */
-	var hitdice : Map<Int, Pair<Int, Int>> = mapOf()
-		private set
-
-	/** Deathsaves as successes and fails, fighting against the dead. */
-	var deathSaves: Pair<Int,Int> = 0 to 0 // successes and fails
-		private set
-
-	/** Maximal hit points of the character. If dropped to 0, the character becomes unconscious.
-	 * If dropped to -maxHitPoints in one hit, the character dies immediately. */
-	var maxHitPoints: Int = 1
-	var curHitPoints: Int = 1
-	var tmpHitPoints: Int = 0
-
-	/** A subset of the known spells. Some classes need to prepare a spell to cast it. */
-	var spellsPrepared: Map<Spell, Int> = mapOf()
-		private set // changes in prepareSpell(Spell,Int)
-
-	/** A map of activated spells with their left duration (seconds). */
-	var spellsActive: Map<Spell, Int> = mapOf()
-		private set // changes on spellCast(Spell,Int) and spellEnd(Spell)
-
-	/** Get the (first) active spell, which needs concentration. */
-	val spellConcentration: Spell? get()
-		= spellsActive.keys.find { it.concentration }
-
-	/* ------------------------------------------------------------------------
 	 * Personality and character, roleplaying.
-	 * Getter and Setter are all public and modifiable. Won't change other attributes.
+	 * Getter and Setter are all public and modifiable, to show progress in play.
+	 * Their change should not affect other attributes.
 	 */
 
-	/** Age of the character, in years. (If younger than a year, use negative as days.) */
-	var age : Int = 0
+	/** Age of the character, in years.
+	 * (If younger than a year, use negative as days.) */
+	// var age : Int = 0
 
 	/** Alignment of the character (roleplay). */
 	val alignment : Alignment = Alignment.NEUTRAL_NEUTRAL;
@@ -205,13 +281,81 @@ data class PlayerCharacter(
 		= listOf()
 
 	/* ------------------------------------------------------------------------
+	 * Status and temporarily conditions.
+	 */
+
+	var current: State = State(this)
+
+	/* TODO (2020-10-02) DELETEME, Refactor me
+
+	val speed : Map<String, Int> get()
+		= if (state.conditions.any{ when (it) {
+			Condition.GRAPPLED, Condition.INCAPACITATED, Condition.PARALYZED,
+			Condition.PETRIFIED, Condition.PRONE, Condition.RESTRAINED,
+			Condition.STUNNED, Condition.UNCONSCIOUS -> true
+			else -> false
+		}}) {
+			mapOf("prone" to 0)
+		} else {
+			speedMap
+		}
+	*/
+
+	/** A subset of the known spells.
+	 * Some classes need to prepare a spell to cast it. */
+	var spellsPrepared: Map<Spell, Int> = mapOf()
+		private set // changes in prepareSpell(Spell,Int)
+
+	/** A map of activated spells with their left duration (seconds). */
+	var spellsActive: Map<Spell, Int> = mapOf()
+		private set // changes on spellCast(Spell,Int) and spellEnd(Spell)
+
+	/** Get the (first) active spell, which needs concentration. */
+	val spellConcentration: Spell? get()
+		= spellsActive.keys.find { it.concentration }
+
+	/* ------------------------------------------------------------------------
+	 * Override basic class methods.
+	 */
+
+	/** Initiate the character. */
+	init {
+		// add base klass also to the learnt klasses.
+		// baseKlassSpeciality by default ("") aka not given.
+		klasses += klassFirst to Pair(1, baseKlassSpeciality)
+	}
+
+	/** PlayerCharacter is equal to another PlayerCharacter,
+	 * if the player and the character name are the same. */
+	override fun equals(other: Any?) : Boolean
+		= (other != null
+		&& other is PlayerCharacter
+		&& other.playername == playername
+		&& other.name == name)
+
+	/** String representation: Name, The Klass (char.lvl). */
+	override fun toString() : String
+		= "${name}, The ${klassFirst} (lvl ${level})"
+
+	/* ------------------------------------------------------------------------
 	 * (Simple) Getter and Setters..
 	 */
 
+	/** Set the experience points to fit the given level. */
+	fun setLevel(lvl: Int) {
+		experiencePoints = levelToXP(lvl)
+	}
+
 	/* Set the attributes' values.
-	 * If a param is set to (-1), it will be rolled with a D20. */
+	 * If a param is set to (-1), it will be rolled with a D20.
+	 * If the constitution is changed while on first level:
+	 * adjust the first-level hitpoints. */
 	fun setAbilityScore(a: Ability, v: Int) {
 		abilityScore += Pair(a, if (v > 0) v else 0)
+
+		if (a == Ability.CON && level < 2) {
+			hitpoints = abilityModifier(a) + klassFirst.hitdie.faces
+		}
 	}
 
 	/** Add proficiency bonus,
@@ -226,7 +370,7 @@ data class PlayerCharacter(
 	/** Get a proficiency for any value.
 	 * If the parameter was a skill or saving throw, the character has actually
 	 * proficiency for, return the proficiency value, otherwise it has none.
-	 * @param x anything, which could have proficiency.
+	* @param x anything, which could have proficiency.
 	 * @return Proficiency.NONE by default. */
 	fun getProficiencyFor(x: Any) : Proficiency
 		= when {
@@ -246,54 +390,6 @@ data class PlayerCharacter(
 		proficiencies += Pair(skill, Proficiency.PROFICIENT + proficiencies[skill])
 	}
 
-	var conditions : Set<Condition> = setOf()
-
-	val speed : Map<String, Int> get()
-		= if (conditions.any{ when (it) {
-			Condition.GRAPPLED, Condition.INCAPACITATED, Condition.PARALYZED,
-			Condition.PETRIFIED, Condition.PRONE, Condition.RESTRAINED,
-			Condition.STUNNED, Condition.UNCONSCIOUS -> true
-			else -> false
-		}}) {
-			mapOf("prone" to 0)
-		} else {
-			speedMap
-		}
-
-	/* Supporting variables to control one-time set. */
-	private var raceAlreadyDefined = false
-	private var backgroundAlreadyDefined = false
-
-	/** Set the race.
-	 * @param race the race the character has.
-	 * @param subrace the subrace the character has.
-	 */
-	private fun setRace(newRace: Race, newSubrace: String) {
-		if (raceAlreadyDefined) return
-
-		raceAlreadyDefined = true
-		raceSubrace = newRace to newSubrace
-		size = newRace.size
-
-		/* Add speed and languages. */
-		speedMap += newRace.speed
-		println(newRace.languages)
-	}
-
-	/** Set background, but only once!
-	 * @param background the actual background added.
-	 * @param bgSpeciality the speciality flavour of the background.
-	 */
-	private fun setBackground(background: Background, bgSpeciality: String) {
-		if (backgroundAlreadyDefined) {
-			log.warn("You already set the background.")
-			return // only set once!
-		}
-
-		this.background = background to (bgSpeciality)
-		this.backgroundAlreadyDefined = true
-	}
-
 	/** Add a new level for a certain class.
 	 * @param klass the class, the character levels in.
 	 * @param specialisation the path or way or school,
@@ -305,6 +401,8 @@ data class PlayerCharacter(
 	 * Other selections like spells or fighting styles needs to be added separately.
 	 */
 	fun addKlassLevel(klass: Klass, specialisation: String = "") {
+		// for each newly learnt klass, check if it's applicable. (multi-classing)
+
 		/* Check, if conditions are met, to gain a level for that class.*/
 		val curKlassLevels = klasses.values.sumBy { it.first }
 
@@ -318,43 +416,7 @@ data class PlayerCharacter(
 		val newLevel = old.first + 1
 		val newSpecial = if (old.second == "") specialisation else old.second
 
-		/* Add hitdie to hitdice */
-		addHitdie(klass.hitdie.faces)
-
 		klasses += klass to Pair(newLevel, newSpecial)
-	}
-
-	/** Check if currently temporary hitpoints are used. */
-	val hasTmpHitpoints: Boolean get()
-		= tmpHitPoints > 0 && tmpHitPoints != maxHitPoints
-
-	/** Add a success to the death saves. */
-	fun deathSavesSuccess() {
-		deathSaves = deathSaves.first + 1 to deathSaves.second
-	}
-
-	/** Add a fail to the death saves. */
-	fun deathSavesFail() {
-		deathSaves = deathSaves.first to deathSaves.second + 1
-	}
-
-	/** Set all fails and successes to zero. */
-	fun resetDeathSaves() {
-		deathSaves = 0 to 0
-	}
-
-	/* Count fails and successes and returns the more significant value.*/
-	fun checkDeathFight() : Int {
-		val success = deathSaves.first
-		val failed = deathSaves.second
-
-		return when {
-			success > 2 -> 3 // decided, final result.
-			failed > 2 -> -3 // decided, final result.
-			success > failed -> 1 // intermediate result, more successes
-			success < failed -> -1 // intermediate result, more fails
-			else -> 0
-		}
 	}
 
 	/* Take a short rest. Recover hitpoints, maybe magic points, etc. */
@@ -362,13 +424,12 @@ data class PlayerCharacter(
 		if (shortRest) {
 			// use up to all hit dice and add rolled hit points up to full HP.
 			// do other reloading(s).
-			// TODO (2020-09-03) add param with how many hitdice will be spent
 			log.info("Short rest")
 		} else {
 			log.info("Long rest")
 
 			/* Back to full hp. */
-			curHitPoints = maxHitPoints
+			// TODO (2020-10-01)
 
 			/* Restore half of used hit dice. */
 			// hitdice.mapValues { it / 2 }
@@ -377,26 +438,6 @@ data class PlayerCharacter(
 			// TODO (2020-09-03) implement magic points restoration [ RULES needed ]
 		}
 	}
-
-	/** Get a new hitdie (by leveling up a klass).
-	 * @param face new hitdie's face.
-	 * @return get the new maximum number of hitdice.
-	 */
-	fun addHitdie(face: Int) : Int {
-		log.debug("Add new hitdie d${face}")
-
-		val current = hitdice[face] ?: Pair(0, 0)
-		val newCount = current.first + 1
-
-		// add as new and available.
-		hitdice += face to (newCount to Math.max(newCount, current.second + 1))
-
-		return newCount
-	}
-
-	/** Get the number of all hitdie (every face). */
-	fun countHitdice() : Int
-		= hitdice.values.sumBy { it.first }
 
 	/** Learn a new spell with the given source, this character has.
 	 * If the spell is already learnt, do no update.
@@ -491,16 +532,6 @@ data class PlayerCharacter(
 		spellsActive += spell to Math.max(1, spell.duration)
 
 		log.info("Casts ${spell.name}, left duration ${spell.duration} seconds")
-	}
-
-	/** Decrease left duration of all activated spells.
-	 * Remove spells, with left duration below 1 seconds.
-	 * @param sec seconds to reduce from active spells.
-	 */
-	fun tickSpellsActivated(sec: Int = 6) {
-		spellsActive = spellsActive
-			.mapValues { it.value -  Math.abs(sec) }
-			.filterValues { it > 0 }
 	}
 
 	/** The number of free hands. */
@@ -856,31 +887,31 @@ data class PlayerCharacter(
 	/** Companion object with basic translation methods. */
 	companion object {
 
+		private val nextLevel = listOf(
+			355000 /*20*/, 305000 /*19*/, 265000 /*18*/, 225000 /*17*/
+			, 195000 /*16*/, 165000 /*15*/, 140000 /*14*/, 120000 /*13*/
+			, 100000 /*12*/, 85000 /*11*/, 64000 /*10*/, 48000 /*9*/
+			, 34000 /*8*/, 23000 /*7*/, 14000 /*6*/, 6500  /*5*/
+			, 2700 /*4*/, 900 /*3*/, 300 /*2*/)
+
 		/** A simple mapping from experience points to level.
 		 * @param xp experience points to translate.
 		 * @return level as int, from 1 to 20.
 		 */
-		fun xpToLevel(xp: Int) = when {
-			xp >= 355000 -> 20
-			xp >= 305000 -> 19
-			xp >= 265000 -> 18
-			xp >= 225000 -> 17
-			xp >= 195000 -> 16
-			xp >= 165000 -> 15
-			xp >= 140000 -> 14
-			xp >= 120000 -> 13
-			xp >= 100000 -> 12
-			xp >= 85000 -> 11
-			xp >= 64000 -> 10
-			xp >= 48000 -> 9
-			xp >= 34000 -> 8
-			xp >= 23000 -> 7
-			xp >= 14000 -> 6
-			xp >= 6500 -> 5
-			xp >= 2700 -> 4
-			xp >= 900 -> 3
-			xp >= 300 -> 2
-			else -> 1
+		fun xpToLevel(xp: Int) : Int {
+			val maxLevel = nextLevel.size // minus one, since we don't need 1
+
+			for (lvlPre in (0 until maxLevel)) {
+				if (xp >= nextLevel[lvlPre]) {
+					return nextLevel.size - lvlPre + 1
+				}
+			}
+			return 1
+		}
+
+		/** Get the experience points which need to be reached to get the level. */
+		fun levelToXP(lvl: Int) : Int {
+			return nextLevel.getOrElse(lvl - 1, { 0 })
 		}
 
 		/** A simple mapping from level to proficiency bonus.
@@ -897,18 +928,5 @@ data class PlayerCharacter(
 		/** Translate a score to a modifier. */
 		private fun getModifier(value: Int) : Int
 			= floor((value - 10) / 2.0).toInt()
-
 	}
-}
-
-enum class BodyType {
-	HEAD, // hat, helmet...
-	SHOULDERS, // like cloaks ...
-	NECK, // like necklace ...
-	BODY, // like main outfit, onsies or dresses ...
-	HAND, // like for one glove (2x)
-	RING, // for fingers (10x... species related)
-	FOOT, // for one shoe or so (2x)
-	ARMOR, // worn above clothes.
-	SHIELD; // only one; can strapped on one arm, maximally one weapon can be wield, and other non-combat items can be hold.
 }
