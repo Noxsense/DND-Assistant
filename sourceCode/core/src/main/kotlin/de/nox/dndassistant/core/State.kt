@@ -85,7 +85,7 @@ data class State(val pc: PlayerCharacter) {
 	 */
 	fun takeHit(hp: Int, critical: Boolean = false) {
 		/* buffer the damage taken. */
-		
+
 		val hpRest = hp - hitpointsTMP
 		hitpointsTMP -= hp
 		pc.log.info("Buffer/tmp HP reduced damage from $hp to $hpRest")
@@ -112,7 +112,7 @@ data class State(val pc: PlayerCharacter) {
 		} else {
 			pc.log.info("The character takes damage")
 			hitpoints = Math.max(hitpoints - hpRest, 0)
-			
+
 			/* Check if now unconscious. */
 			if (hitpoints < 1) {
 				/* drop unconscious, and not stabilised. */

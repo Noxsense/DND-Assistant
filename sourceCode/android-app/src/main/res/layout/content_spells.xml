@@ -1,0 +1,28 @@
+<LinearLayout
+  android:layout_height="match_parent"
+  android:layout_width="match_parent"
+  android:orientation="vertical"
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  >
+  <TextView
+    android:id="@+id/title"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/title_spells"
+    android:textSize="20sp"
+    />
+  <TextView
+    android:background="@drawable/framed"
+    android:id="@+id/spell_slots"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:text="[11111] [11111] [11111] [11111] [11111] [11111] [11111] [11111] [11111] [11111] [11111] [11111] [11111] [11111]"
+    android:textSize="12sp"
+    />
+  <ListView
+    android:background="@drawable/framed"
+    android:id="@+id/list_spells"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    />
+</LinearLayout>

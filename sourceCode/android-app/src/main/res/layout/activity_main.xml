@@ -47,15 +47,6 @@
     android:layout_width="match_parent"
     />
 
-  <!-- Custom dice to roll. (also listed in history) -->
-  <include
-    android:id="@+id/extra_dice"
-    android:layout_height="wrap_content"
-    android:layout_marginVertical="@dimen/vmargin"
-    android:layout_width="match_parent"
-    layout="@layout/extra_dice"
-    />
-
   <!-- overview on abilities, attacks, spells, feats, inventory and other -->
   <LinearLayout
     android:background="@drawable/framed"
@@ -155,7 +146,7 @@
           />
         <TextView
           android:background="@drawable/framed"
-          android:id="@+id/label_species_background"
+          android:id="@+id/label_race_background"
           android:layout_height="wrap_content"
           android:layout_marginVertical="@dimen/vmargin"
           android:layout_width="match_parent"
@@ -200,78 +191,74 @@
       android:orientation="vertical"
       android:padding="6sp"
       >
-      <ScrollView
+      <LinearLayout
+        android:id="@+id/contents"
         android:layout_width="match_parent"
         android:layout_height="0sp"
         android:layout_weight="0.9"
+        android:orientation="vertical"
         >
-        <LinearLayout
-          android:id="@+id/contents"
+        <include
+          android:id="@+id/content_skills"
           android:layout_height="match_parent"
           android:layout_width="match_parent"
-          android:orientation="vertical"
-          >
-          <TextView
-            android:background="#77BAB300"
-            android:id="@+id/content_skills"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"
-            android:padding="10sp"
-            android:visibility="gone"
-            />
-          <TextView
-            android:background="#7762D100"
-            android:id="@+id/content_attacks"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"
-            android:padding="10sp"
-            android:visibility="gone"
-            />
-          <TextView
-            android:background="#7700CAD1"
-            android:id="@+id/content_spells"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"
-            android:padding="10sp"
-            android:visibility="gone"
-            />
-          <TextView
-            android:background="#770062D1"
-            android:id="@+id/content_classes"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"
-            android:padding="10sp"
-            android:visibility="gone"
-            />
-          <TextView
-            android:background="#77D100CA"
-            android:id="@+id/content_inventory"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"
-            android:padding="10sp"
-            android:visibility="gone"
-            />
-          <TextView
-            android:background="#77D10062"
-            android:id="@+id/content_species_background"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"
-            android:padding="10sp"
-            android:visibility="gone"
-            />
-          <ListView
-            android:background="#77000000"
-            android:id="@+id/content_rolls"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"
-            android:padding="10sp"
-            android:visibility="visible"
-            />
-        </LinearLayout>
-      </ScrollView>
+          android:padding="10sp"
+          android:visibility="gone"
+          layout="@layout/content_skills"
+          />
+        <include
+          android:id="@+id/content_attacks"
+          android:layout_height="match_parent"
+          android:layout_width="match_parent"
+          android:padding="10sp"
+          android:visibility="gone"
+          layout="@layout/content_attacks"
+          />
+        <include
+          android:id="@+id/content_spells"
+          android:layout_height="match_parent"
+          android:layout_width="match_parent"
+          android:padding="10sp"
+          android:visibility="gone"
+          layout="@layout/content_spells"
+          />
+        <include
+          android:id="@+id/content_classes"
+          android:layout_height="match_parent"
+          android:layout_width="match_parent"
+          android:padding="10sp"
+          android:visibility="gone"
+          layout="@layout/content_classes"
+          />
+        <include
+          android:id="@+id/content_inventory"
+          android:layout_height="match_parent"
+          android:layout_width="match_parent"
+          android:padding="10sp"
+          android:visibility="gone"
+          layout="@layout/content_inventory"
+          />
+        <include
+          android:id="@+id/content_race_background"
+          android:layout_height="match_parent"
+          android:layout_width="match_parent"
+          android:padding="10sp"
+          android:visibility="gone"
+          layout="@layout/content_race_background"
+          />
+        <include
+          android:id="@+id/content_rolls"
+          android:layout_height="match_parent"
+          android:layout_width="match_parent"
+          android:padding="10sp"
+          android:visibility="visible"
+          layout="@layout/content_rolls_counters"
+          />
+      </LinearLayout>
       <EditText
         android:background="@drawable/framed"
-        android:id="@+id/content_search"
+        android:gravity="bottom"
+        android:id="@+id/search_content"
         android:layout_width="match_parent"
         android:layout_height="0sp"
         android:layout_weight="0.1"

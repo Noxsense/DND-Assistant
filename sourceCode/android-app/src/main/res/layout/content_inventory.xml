@@ -1,0 +1,36 @@
+<LinearLayout
+  android:layout_height="match_parent"
+  android:layout_width="match_parent"
+  android:orientation="vertical"
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  >
+  <TextView
+    android:layout_height="0sp"
+    android:layout_weight="0.2"
+    android:layout_width="match_parent"
+    android:text="@string/title_inventory"
+    android:textSize="20sp"
+    />
+  <ProgressBar
+    android:id="@+id/bar_carried_weight"
+    android:layout_height="0sp"
+    android:layout_weight="0.1"
+    android:layout_width="match_parent"
+    style="@android:style/Widget.ProgressBar.Horizontal"
+    />
+  <TextView
+    android:background="@drawable/framed"
+    android:layout_height="0sp"
+    android:layout_weight="0.1"
+    android:layout_width="match_parent"
+    android:id="@+id/equipped"
+    />
+  <ListView
+    android:background="@drawable/framed"
+    android:id="@+id/list_bags"
+    android:layout_height="0sp"
+    android:layout_weight="0.6"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    />
+</LinearLayout>

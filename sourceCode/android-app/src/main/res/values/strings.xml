@@ -3,15 +3,27 @@
 
   <!-- Name panel -->
 	<string name="character_name" formatted="false">%s</string>
-	<string name="level_xp" formatted="false">Level %d, %d XP</string>
+  <string name="level_xp" formatted="false"><b>Level %d</b>, <i>%d XP</i></string>
 
   <!-- health panel. -->
   <string name="healthbarlabel" formatted="false">%d/%d</string>
-  <string name="longrest">zzZ</string>
+  <string name="longrest"><b>zzZ</b></string>
   <string name="deathfail">/</string>
   <string name="deathsuccess">X</string>
 
   <!-- combat panel -->
 	<string name="speed" formatted="false">%d ft</string>
 	<string name="armorclass" formatted="false">%d</string>
+
+  <!-- panel preview label formatter -->
+  <string name="panel_label_format" formatted="false"><b>%s</b> <i>(%s)</i></string>
+
+  <string name="title_skills">Skills &amp; Proficiencies</string>
+  <string name="title_attacks">Attacks</string>
+  <string name="title_spells">Spells &amp; Magic</string>
+  <string name="title_classes">Classes</string>
+  <string name="title_inventory">Inventory</string>
+  <string name="title_race_background">My History</string>
+  <string name="title_rolls">Rolls &amp; Counters</string>
+
 </resources>

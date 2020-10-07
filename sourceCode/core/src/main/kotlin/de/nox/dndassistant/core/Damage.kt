@@ -51,6 +51,20 @@ data class Attack(
 	/** Compare an attack by it's average damage */
 	override fun compareTo(other: Attack) : Int
 		= (damageRoll.average - other.damageRoll.average).toInt()
+
+	/** Make a nice string representation, see example.
+	 * Example 0: Unarmed Attack (+2) 1 + 2 (B, 3.0)
+	 * Example 1: Dagger (+5) 1d4 + 3 (P, 5.5)
+	 * Example 2: Spell (+2) Dc 11 (B+F, 0.5)
+	 */
+	override fun toString() : String
+		= "%s (%+d) %s (%s, %.1f)".format(
+			name,
+			attackBonus,
+			damageRoll,
+			damageType.joinToString("+") { it.name.first().toString() },
+			damageRoll.average
+		)
 }
 
 /** DamageType.

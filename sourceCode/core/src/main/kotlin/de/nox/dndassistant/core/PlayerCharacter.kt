@@ -125,14 +125,8 @@ public class PlayerCharacter private constructor(
 		}
 		private set
 
-	/** The history of the character. */
-	var backgroundX: Pair<Background, String>
-		= Background("Pure", listOf(), listOf(), Money()) to "Just Born"
-		private set
-		// private setter, with one time proof.
-
 	/** Proficiency bonus according to character level. */
-	val proficientValue: Int get() = levelToProficiencyBonus(level)
+	val proficiencyBonus: Int get() = levelToProficiencyBonus(level)
 
 	/** THE basic ability scores. */
 	private var abilityScore: Map<Ability, Int>
@@ -184,8 +178,7 @@ public class PlayerCharacter private constructor(
 		private set
 
 	/** The list of languages the character has learnt, can understand and uses. */
-	var knownLanguages: List<String>
-		= listOf("Common")
+	var knownLanguages: List<String> = listOf()
 		private set
 
 	/** Get the score for the requested ability saving throw. */
@@ -195,6 +188,8 @@ public class PlayerCharacter private constructor(
 	/** Get the score for the requested skill check. */
 	fun skillScore(s: Skill) : Int
 		= abilityModifier(s.source) + getProficiencyBonusFor(s)
+
+	// TODO (2020-10-05) other spell sources ? other feat sources: like x times a long/short rest. ki points, etc.
 
 	/** Spell slots the character has available and used.
 	 * Ordered list of max and available spell slots. */
@@ -245,6 +240,11 @@ public class PlayerCharacter private constructor(
 	/** Age of the character, in years.
 	 * (If younger than a year, use negative as days.) */
 	// var age : Int = 0
+	val ageString: String get()
+		= when {
+			age > 0 -> "$age yrs"
+			else -> "${-age} days"
+		}
 
 	/** Alignment of the character (roleplay). */
 	val alignment : Alignment = Alignment.NEUTRAL_NEUTRAL;
@@ -360,10 +360,11 @@ public class PlayerCharacter private constructor(
 
 	/** Add proficiency bonus,
 	 * if the Skillable item is in a saving throw of with proficiency. */
-	private fun getProficiencyBonusFor(s: Any) : Int
+	fun getProficiencyBonusFor(s: Any) : Int
 		= when {
-			s is Skill -> getProficiencyFor(s).factor * proficientValue
-			s is Ability -> if (s in savingThrows) proficientValue else 0
+			s is Skill -> getProficiencyFor(s).factor * proficiencyBonus
+			s is Ability -> if (s in savingThrows) proficiencyBonus else 0
+			s is Weapon -> getProficiencyFor(s).factor * proficiencyBonus
 			else -> 0
 		}
 
@@ -376,8 +377,16 @@ public class PlayerCharacter private constructor(
 		= when {
 			x is Skill -> proficiencies.getOrDefault(x, Proficiency.NONE)
 			x is Ability && (x in savingThrows) -> Proficiency.PROFICIENT
+			x is Weapon -> proficiencies
+				.getOrDefault(x, proficiencies // get proficiency for the weapon itself
+				.getOrDefault(x.weaponType, // get proficiency for the weapon type instead
+				Proficiency.NONE)) // or return no proficiency at all
 			else -> Proficiency.NONE
 		}
+
+	fun isProficientIn(any: Skillable): Boolean
+		= (proficiencies.contains(any)
+		|| (any is Weapon && proficiencies.contains(any.weaponType)))
 
 	/* Add proficiency to saving throw.*/
 	fun addProficiency(saving: Ability) {

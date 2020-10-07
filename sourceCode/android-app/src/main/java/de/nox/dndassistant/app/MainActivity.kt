@@ -9,6 +9,7 @@ import android.view.View.OnClickListener
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.LinearLayout.LayoutParams
 import android.widget.ProgressBar
 import android.widget.ListView
 import android.widget.TextView
@@ -29,6 +30,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	/* The player character. */
 	private lateinit var character : PlayerCharacter
 
+	private var attacks: List<Attack> = listOf()
+
 	/* The roll history: Timestamp (milliseconds) -> (Result, Reason). */
 	private var rollHistory: List<Pair<Long, Pair<Int, String>>> = listOf()
 
@@ -42,7 +45,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		setContentView(R.layout.activity_main)
 		logger.debug("Initiated Activity.")
 
-		// TODO (2020-09-27) load character, create character.
+		// XXX (2020-09-27) load character, create character.
 		character = playgroundWithOnyx()
 
 		logger.debug("Player Character is loaded.")
@@ -56,18 +59,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		/* Show rolls. */
 		label_rolls.setOnClickListener(this)
-		content_rolls.setAdapter(ArrayAdapter<Pair<Long, Pair<Int, String>>>(
-			this@MainActivity,
-			android.R.layout.simple_list_item_1,
-			rollHistory))
+		(content_rolls.findViewById(R.id.list_rolls) as ListView).run {
+			adapter = ArrayAdapter<Pair<Long, Pair<Int, String>>>(
+				this@MainActivity,
+				android.R.layout.simple_list_item_1,
+				rollHistory)
+		}
 
 		/* Open content panels on click. */
 		label_skills.setOnClickListener(this)
-		label_attacks.setOnClickListener(this)
+		label_attacks.setOnClickListener(this@MainActivity)
 		label_spells.setOnClickListener(this)
 		label_inventory.setOnClickListener(this)
 		label_classes.setOnClickListener(this)
-		label_species_background.setOnClickListener(this)
+		label_race_background.setOnClickListener(this)
 	}
 
 	/** Initiate the panel with extra dice.
@@ -75,7 +80,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * to roll outside of possible ability or attack rolls. */
 	private fun initiateExtraRolls() {
 		/* Assign this listener to each custom dice term. */
-		val extraDice = extra_dice as LinearLayout
+		val extraDice = content_rolls.findViewById(R.id.extra_dice) as LinearLayout
+
+		logger.debug("Set up extra dice to roll.")
 
 		(0 until extraDice.getChildCount()).forEach {
 			extraDice.getChildAt(it).apply {
@@ -105,7 +112,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		/* Show Level and XP, formatted. */
 		experience.text = getString(R.string.level_xp)
-			.format(character.level, character.expiriencePoints)
+			.format(character.level, character.experiencePoints)
 
 		logger.debug("Lvl (XP) displayed.")
 
@@ -120,6 +127,54 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		showRestingPanel(initiation)
 
 		// TODO (2020-09-27) previews and content.
+
+		val formatLabel = { a: String, b: String ->
+			getString(R.string.panel_label_format).format(a, b)
+		}
+
+		updateSkills(initiation)
+
+		label_skills.text = formatLabel(
+			"Abilities",
+			"%+d, Passive Perception %2d".format(
+				character.proficiencyBonus,
+				character.skillScore(Skill.PERCEPTION) + 10
+			))
+
+		updateAttacks(clearBefore = initiation)
+
+		label_attacks.text = formatLabel(
+			"Attacks",
+			"${attacks.maxByOrNull{ it.damage.first.average }}"
+			)
+
+		updateSpells(initiation)
+
+		label_spells.text = formatLabel(
+			"Spells",
+			"*Concentration*, ${character.current.spellSlot(1)}")
+
+		updateInventory(initiation)
+
+		label_inventory.text = formatLabel(
+			"Inventory",
+			"Money ${character.purse}, Bag weight ${56.6} lb")
+
+		updateKlasses(initiation)
+
+		label_classes.text = formatLabel(
+			"Classes",
+			"(${character.klassFirst}, ${character.klasses[character.klassFirst]})")
+
+		updateStory(initiation) // story, species, background
+
+		label_race_background.text = formatLabel(
+			"Story / Species / Background",
+			"${character.background}")
+
+		label_rolls.text = formatLabel(
+			"Rolls and extra counters",
+			"0") // Last Roll
 	}
 
 	/** Fill the Ability Panel (STR, DEX, CON, INT, WIS, CHA).
@@ -132,8 +187,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		var i = 0
 		var v : View
-
-		val abilities = abilities_grid as LinearLayout
 
 		enumValues<Ability>().toList().forEach {
 			v = (abilities_grid as LinearLayout).getChildAt(i)
@@ -179,15 +232,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		// val healthPanel = findViewById(R.id.panel_health) as LinearLayout
 
 		(speed).apply {
-			text = "${character.speed}" // maps: reason --> speed
+			// text = "${character.speed}" // maps: reason --> speed
 			if (setListener) {
 				setOnClickListener(this@MainActivity)
 			}
 		}
 
 		(healthbar).run {
-			max = character.maxHitPoints
-			progress = character.curHitPoints
+			max = character.hitpoints
+			progress = character.current.hitpoints
 			setOnClickListener(this@MainActivity)
 		}
 
@@ -293,12 +346,208 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		}
 	}
 
-	private fun addHitDie() {
+	/** Update the "content_skills" panel.
+	 * Clicking on skill will make a skill check.
+	 * Here also new proficiencies and languages and changes can be done.
+	 */
+	private fun updateSkills(setListener: Boolean = false) {
+		val skillPanel = contents.findViewById(R.id.content_skills) as LinearLayout
+
+		val skillList = skillPanel.findViewById(R.id.list_skills) as ListView
+		val profList = skillPanel.findViewById(R.id.list_proficiencies_and_languages) as ListView
+
+		if (skillList.adapter == null || setListener) {
+			logger.debug("Set up te skillList.adapter")
+
+			// XXX (2020-10-06) REFACTOR, proper classes.
+
+			skillList.adapter = ArrayAdapter<Skill>(
+				this@MainActivity,
+				R.layout.list_item_skill,
+				R.id.name,
+				enumValues<Skill>().toList())
+
+			profList.adapter = ArrayAdapter<Skillable>(
+				this@MainActivity,
+				R.layout.list_item_skill,
+				R.id.name,
+				character.proficiencies.keys.toList().filter {
+					it !is Skill
+				}) //  + character.knownLanguages)
+		}
 	}
 
-	// TODO
-	override fun onClick(view: View) {
+	/** Set up the attacks for the character.
+	 * Setup unarmed strike, equipped, spell attacks
+	 * and improvised attacks, bag attacks.
+	 * Clicking on an attack activate further options: Try to hit -> Damage dealt.
+	 * Here also new shortcuts be added, otherwise it's for overview.
+	 */
+	private fun updateAttacks(clearBefore: Boolean = false) {
+		val str = character.abilityModifier(Ability.STR)
+		val dex = character.abilityModifier(Ability.DEX)
 
+		attacks += Attack("Unarmed",
+			ranged = false,
+			damage = DiceTerm(0) to setOf(DamageType.BLUDGEONING),
+			note = "slap, hit, kick, push ...",
+			proficientValue = character.proficiencyBonus, // always proficient
+			modifierStrDex = str to dex)
+
+		// inventory weapons to attack
+		attacks += character.bags.values.map { it.inside }.flatten().toSet()
+			.filter { it is Weapon && it != character.hands.first && it != character.hands.second }
+			.map { Attack(
+				(it as Weapon).name,
+				ranged = !it.weaponType.melee,
+				damage = it.damage to it.damageType,
+				)}
+
+		val attackPanel = content_attacks
+			.findViewById(R.id.list_attacks) as ListView
+
+		attackPanel.adapter = ArrayAdapter(
+			this@MainActivity,
+			android.R.layout.simple_list_item_1,
+			attacks)
+	}
+
+	/** Make a weapon to an attack for the selected character. */
+	private fun weaponToAttack(wpn: Weapon, str: Int = 0, dex: Int = 0) : Attack
+		= Attack(
+			wpn.name,
+			ranged = !wpn.weaponType.melee,
+			damage = wpn.damage to wpn.damageType,
+			note = wpn.note,
+			finesse = wpn.isFinesse,
+			proficientValue = character.getProficiencyBonusFor(wpn),
+			modifierStrDex = str to dex)
+
+	/** Update the "content_spells" panel.
+	 * Show left and available spell slots.
+	 * Show data of each learned spell and click to cast them.
+	 * Here new spells which may be learnt can be added, or known spells can be prepared.
+	 */
+	private fun updateSpells(setListener: Boolean = false) {
+		val spellPanel = contents.findViewById(R.id.content_spells) as LinearLayout
+
+		/* Spell slots. */
+		val spellSlots = spellPanel.findViewById(R.id.spell_slots) as TextView
+
+		/* Known spells. */
+		val spellList = spellPanel.findViewById(R.id.list_spells) as ListView
+
+		if (spellList.adapter == null || setListener) {
+			logger.debug("Set up te spellList.adapter")
+			// XXX (2020-10-06) REFACTOR, proper classes.
+
+			spellSlots.text = (0 .. 9).joinToString("") {
+				it.toString()
+			}
+
+			spellList.adapter = ArrayAdapter<Spell>(
+				this@MainActivity,
+				R.layout.list_item_spell,
+				R.id.name,
+				character.spellsKnown)
+		}
+	}
+
+	/** Update the "content_inventory" panel.
+	 * Show currently carried weight, money and equipped items.
+	 * Also show the carried or owned bags.
+	 * Click a bag item, to get more options, what to do with it [equip, drop, sell].
+	 * Also new items or money can be added, and equipped items can be dropped or stored.
+	 */
+	private fun updateInventory(setListener: Boolean = false) {
+		logger.debug("Update inventory")
+
+		// XXX (2020-10-07) refactor
+
+		/* Weight bar. */
+		(content_inventory.findViewById(R.id.bar_carried_weight) as ProgressBar).run {
+			max = 100
+			progress  = 10
+		}
+
+		/* Equipped. */
+		(content_inventory.findViewById(R.id.equipped) as TextView).run {
+			text = "Equipped and in Hands!"
+		}
+
+		/* List of bags. And their content. */
+		(content_inventory.findViewById(R.id.list_bags) as ListView).run {
+				adapter = ArrayAdapter(
+					this@MainActivity,
+					android.R.layout.simple_list_item_1,
+					(1.. 20).map { it })
+			}
+	}
+
+	/** Update the "content_classes" panel.
+	 * Clicking on a feast will show more information about the feast.
+	 * Also limited feasts can be activated.
+	 * Here a new klass level can also be added.
+	 */
+	private fun updateKlasses(setListener: Boolean = false) {
+		// XXX (2020-10-07) implement
+		(content_classes.findViewById(R.id.list_classes) as ListView)
+			.adapter = ArrayAdapter(
+				this@MainActivity,
+				android.R.layout.simple_list_item_1, // TODO (2020-10-07) complex layout with 1-level nested listviews: klass -> feats.
+				character.klasses.keys.toList())
+	}
+
+	/** Update the "content_race_background" panel.
+	 * Here are information about the race, the background and also pure story focussed notes.
+	 * New notes can be added and also race or background features reviewed or activated.
+	 */
+	private fun updateStory(setListener: Boolean = false) {
+		// XXX (2020-10-07) implement
+		val findView = { id: Int ->
+			content_race_background.findViewById(id) as View
+		}
+
+		(findView(R.id.the_species) as TextView)
+			.text = "${character.race} (${character.subrace})"
+
+		(findView(R.id.about_species) as TextView)
+			.text = """
+				Darkvision: ${character.race.darkvision}
+				Base-Speed: ${character.race.speed}
+				Languages: ${character.race.languages}
+				Features: ${character.race.features}
+				Description: ${character.race.description}
+				""".trimIndent()
+
+		(findView(R.id.the_background) as TextView)
+			.text = "${character.background} (${character.backgroundFlavour})"
+
+		(findView(R.id.about_background) as TextView)
+			.text = """
+				Alignment: ${character.alignment}
+				Trait: ${character.trait}
+				Ideal: ${character.ideal}
+				Bonds: ${character.bonds}
+				Flaws: ${character.flaws}
+				""".trimIndent()
+
+		(findView(R.id.about_appearance) as TextView)
+			.text = """
+				Age: ${character.ageString}
+				Size: ${character.size}
+				Weight: ${character.weight} lb
+				Height: ${character.height} ft
+				Appearance: ${character.appearance}
+				Form: ${character.form}
+				""".trimIndent()
+
+		(findView(R.id.history) as TextView)
+			.text = character.history.joinToString("\n")
+	}
+
+	// TODO (2020-10-06) separate single logics.
+	override fun onClick(view: View) {
 		logger.debug("Clicked on $view")
 
 		var context = this@MainActivity
@@ -310,7 +559,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				ac_speed_death_rest.toggleVisibility()
 			}
 
-			// TODO (2020-09-29) open content panels, hide the others.
 			R.id.label_skills -> {
 				closeContentsBut(R.id.content_skills)
 			}
@@ -326,22 +574,22 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			R.id.label_classes -> {
 				closeContentsBut(R.id.content_classes)
 			}
-			R.id.label_species_background -> {
-				closeContentsBut(R.id.content_species_background)
+			R.id.label_race_background -> {
+				closeContentsBut(R.id.content_race_background)
 			}
 
 			R.id.label_rolls -> {
-				(content_rolls.adapter as ArrayAdapter<*>).notifyDataSetChanged()
+				// (content_rolls.adapter as ArrayAdapter<*>).notifyDataSetChanged()
 				closeContentsBut(R.id.content_rolls)
 			}
 
 			R.id.speed -> {
 			  Toast.makeText(context, "Go 5ft", short).show()
-			  // TODO (2020-09-29)
+			  // XXX (2020-09-29)
 			}
 			R.id.armorclass -> {
 			  Toast.makeText(context, "Open Dresser", long).show()
-			  // TODO (2020-09-29)
+			  // XXX (2020-09-29)
 			}
 			else -> {
 			  Toast.makeText(context, "Clicked on ${view}", long).show()
@@ -366,6 +614,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		}
 
 		view.toggleVisibility()
+		// view.setLayoutParams(VIEW_MATCH_PARENT)
 
 		return view
 	}
