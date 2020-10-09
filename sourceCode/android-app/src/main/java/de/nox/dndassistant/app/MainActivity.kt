@@ -3,6 +3,7 @@ package de.nox.dndassistant.app
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.View.OnClickListener
@@ -25,15 +26,12 @@ import de.nox.dndassistant.core.*
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
-	private val logger = LoggerFactory.getLogger("D&D Main")
+	private val log = LoggerFactory.getLogger("D&D Main")
 
 	/* The player character. */
 	private lateinit var character : PlayerCharacter
 
 	private var attacks: List<Attack> = listOf()
-
-	/* The roll history: Timestamp (milliseconds) -> (Result, Reason). */
-	private var rollHistory: List<Pair<Long, Pair<Int, String>>> = listOf()
 
 	data class Replacement(val name: String) {
 		var bags: Map<String, String> = HashMap<String,String>()
@@ -43,12 +41,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		/* default loading. */
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
-		logger.debug("Initiated Activity.")
+		log.debug("Initiated Activity.")
 
 		// XXX (2020-09-27) load character, create character.
 		character = playgroundWithOnyx()
 
-		logger.debug("Player Character is loaded.")
+		log.debug("Player Character is loaded.")
 
 		/* Update the character specific panels:
 		 * Fill them with current character's data. */
@@ -60,10 +58,52 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		/* Show rolls. */
 		label_rolls.setOnClickListener(this)
 		(content_rolls.findViewById(R.id.list_rolls) as ListView).run {
-			adapter = ArrayAdapter<Pair<Long, Pair<Int, String>>>(
+			adapter = object: ArrayAdapter<RollResult>(
 				this@MainActivity,
-				android.R.layout.simple_list_item_1,
-				rollHistory)
+				R.layout.list_item_roll) {
+					override fun getItem(p0: Int) : RollResult
+						= Rollers.history.toList().get(p0)
+
+					override fun getCount() : Int
+						= Rollers.history.size
+
+					override fun getView(i: Int, v: View?, parent: ViewGroup) : View {
+						if (v == null) {
+							val newView = LayoutInflater.from(this@MainActivity).run {
+								inflate(R.layout.list_item_roll, parent, false)
+							}
+							return getView(i, newView, parent)
+						}
+
+						// no null
+
+						val e = getItem(i) // the element: RollResult to show
+
+						/* +-------+----------------- +
+						 * | ROLL  | rolls, why, when |
+						 * +-------+------------------+ */
+
+						(v.findViewById(R.id.value) as TextView)
+							.text = "${e.value}"
+
+						(v.findViewById(R.id.single_rolls) as TextView)
+							.text = e.single.joinToString(" + ")
+
+						(v.findViewById(R.id.note) as TextView)
+							.text = e.reason
+
+						(v.findViewById(R.id.timestamp) as TextView)
+							.text = e.timestampString
+
+						when (e.single.first()) {
+							1 -> v.setBackgroundColor(0xff0000)
+							20 -> v.setBackgroundColor(0x00ff00)
+							else -> Unit // pass
+						}
+
+						return v
+					}
+				}
 		}
 
 		/* Open content panels on click. */
@@ -82,13 +122,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		/* Assign this listener to each custom dice term. */
 		val extraDice = content_rolls.findViewById(R.id.extra_dice) as LinearLayout
 
-		logger.debug("Set up extra dice to roll.")
+		log.debug("Set up extra dice to roll.")
 
 		(0 until extraDice.getChildCount()).forEach {
 			extraDice.getChildAt(it).apply {
 				if (this is EditText) {
 					// insert term and roll it. (keep text)
-					setOnKeyListener(OnKeyEventRoller(rollHistory))
+					setOnKeyListener(OnKeyEventRoller())
 					setTextSize(5.toFloat())
 
 				} else if (this is TextView) {
@@ -97,12 +137,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 					val faces: Int = term.substring(1).toInt()
 					setTextSize(5.toFloat())
 					setOnClickListener(
-						OnClickRoller(DiceTerm(faces), term, rollHistory))
+						OnClickRoller(DiceTerm(faces), term))
 				}
 			}
 		}
 
-		logger.debug("Extra Rolls are initiated.")
+		log.debug("Extra Rolls are initiated.")
 	}
 
 	/** Update the character specific panels: fill them with character's data. */
@@ -114,19 +154,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		experience.text = getString(R.string.level_xp)
 			.format(character.level, character.experiencePoints)
 
-		logger.debug("Lvl (XP) displayed.")
+		log.debug("Lvl (XP) displayed.")
 
 		/* Fill ability panel. */
 		showabilities(initiation) // if initiation.: set OnClickListener
 
-		logger.debug("Abilities displayed.")
+		log.debug("Abilities displayed.")
 
 		/* Update the healthbar, conditions, death saves and also speed and AC. */
 		showHealthPanel(initiation) // if initiation: set OnClickListener
 
 		showRestingPanel(initiation)
 
-		// TODO (2020-09-27) previews and content.
+		// TODO (2020-09-27) previews and content. (less hacked, pls)
 
 		val formatLabel = { a: String, b: String ->
 			getString(R.string.panel_label_format).format(a, b)
@@ -192,7 +232,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			v = (abilities_grid as LinearLayout).getChildAt(i)
 			i += 1 // next
 
-			logger.debug("Write ability '$it' into $v, next index $i.")
+			log.debug("Write ability '$it' into $v, next index $i.")
 
 			/* Set label. */
 			(v.findViewById(R.id.ability_title) as TextView).apply {
@@ -216,8 +256,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				if (setListener) {
 					setOnClickListener(OnClickRoller(
 						DiceTerm(D20, SimpleDice(1, mod)),
-						"Ability ${it.name} ($text)",
-						rollHistory))
+						"Ability ${it.name} ($text)"))
 				}
 			}
 		}
@@ -289,10 +328,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 					.groupingBy { it.substring(1).toInt() }
 					.eachCount()
 
-			logger.debug("Displayed hitdie: {$displayed} => $hitdieDisplayed")
+			log.debug("Displayed hitdie: {$displayed} => $hitdieDisplayed")
 
 			// add missing hitdice.
-
 			longrest.setOnClickListener {
 				val max = hitdiceCount / 2
 				var restored = 0
@@ -302,7 +340,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 						restored += 1 // restore one more hitdie.
 						it.setTextColor(android.graphics.Color.BLACK)
 						it.setClickable(true)
-						logger.debug("Restored $it, ${it.text}")
+						log.debug("Restored $it, ${it.text}")
 					}
 				}
 			}
@@ -324,8 +362,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 						// roll the healing.
 						val roll: Int = (1..face).random()
 
-						val ts: Long = System.currentTimeMillis()
-						rollHistory += (ts to (roll to ("Short Rest (d$face)")))
+						Rollers.history += listOf(RollResult(
+							value = roll,
+							reason = "Short Rest (d$face)")) + Rollers.history
 
 						// disables this hitdie.
 						if (v is TextView) {
@@ -339,7 +378,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 					resting.addView(view)
 					hitdiceViews += (view)
 
-					logger.debug("Display a new hitdie [d$face[: $view")
+					log.debug("Display a new hitdie [d$face[: $view")
 					missing -= 1
 				}
 			}
@@ -357,7 +396,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		val profList = skillPanel.findViewById(R.id.list_proficiencies_and_languages) as ListView
 
 		if (skillList.adapter == null || setListener) {
-			logger.debug("Set up te skillList.adapter")
+			log.debug("Set up te skillList.adapter")
 
 			// XXX (2020-10-06) REFACTOR, proper classes.
 
@@ -438,8 +477,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		val spellList = spellPanel.findViewById(R.id.list_spells) as ListView
 
 		if (spellList.adapter == null || setListener) {
-			logger.debug("Set up te spellList.adapter")
-			// XXX (2020-10-06) REFACTOR, proper classes.
+			log.debug("Set up te spellList.adapter")
+			// XXX (2020-10-06) REFACTOR, proper classes. (spells)
 
 			spellSlots.text = (0 .. 9).joinToString("") {
 				it.toString()
@@ -460,7 +499,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * Also new items or money can be added, and equipped items can be dropped or stored.
 	 */
 	private fun updateInventory(setListener: Boolean = false) {
-		logger.debug("Update inventory")
+		log.debug("Update inventory")
 
 		// XXX (2020-10-07) refactor
 
@@ -546,9 +585,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			.text = character.history.joinToString("\n")
 	}
 
-	// TODO (2020-10-06) separate single logics.
+	// TODO (2020-10-06) separate single logics. (onClick(view))
 	override fun onClick(view: View) {
-		logger.debug("Clicked on $view")
+		log.debug("Clicked on $view")
 
 		var context = this@MainActivity
 		var (long, short) = Toast.LENGTH_LONG to Toast.LENGTH_SHORT
@@ -579,8 +618,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			}
 
 			R.id.label_rolls -> {
-				// (content_rolls.adapter as ArrayAdapter<*>).notifyDataSetChanged()
 				closeContentsBut(R.id.content_rolls)
+
+				/* Update roll shower. */
+				val listRolls = content_rolls.findViewById(R.id.list_rolls) as ListView
+				(listRolls.adapter as ArrayAdapter<*>).notifyDataSetChanged()
+				listRolls.invalidateViews()
+				listRolls.refreshDrawableState()
 			}
 
 			R.id.speed -> {
@@ -625,16 +669,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		= when (visibility) {
 			View.GONE -> true.also {
 				visibility = View.VISIBLE
-				logger.debug("VISIBLE    $this")
+				log.debug("VISIBLE    $this")
 			}
 			else -> false.also {
 				visibility = View.GONE
-				logger.debug("GONE       $this")
+				log.debug("GONE       $this")
 			}
 		}
 }
 
-/** Android specific logger. */
+/** Android specific log. */
 object LoggerFactory {
 	fun getLogger(tag: String) : Logger
 		= object : Logger {

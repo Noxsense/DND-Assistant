@@ -13,7 +13,7 @@ class DiceTest {
 
 	private fun Double.shouldBe(other: Double)
 		= abs(this - other).run {
-			println("Difference: $this")
+			log.info("Difference: $this")
 			this < 0.5
 		}
 
@@ -24,7 +24,7 @@ class DiceTest {
 		var rolled: List<Int>
 		var avg: Double
 
-		println("\n>>> Test: testRoll()")
+		log.info("\n>>> Test: testRoll()")
 
 		// d20
 
@@ -32,8 +32,8 @@ class DiceTest {
 		expected = (1..20)
 		rolled = (1..repeatRolls).map { dice.roll() }.sorted()
 		avg = rolled.sum() / repeatRolls.toDouble()
-		println("Roll: $dice: (${expected.average()}) $expected (Expected)")
-		println("Roll: $dice: ($avg) $rolled")
+		log.info("Roll: $dice: (${expected.average()}) $expected (Expected)")
+		log.info("Roll: $dice: ($avg) $rolled")
 
 		// test if every expected number is thrown.
 		rolled.forEach { assertTrue(it in expected, "Dice ($dice): $it in $expected") }
@@ -49,8 +49,8 @@ class DiceTest {
 		expected = (9 .. (5*9))
 		rolled = (1..repeatRolls).map { dice.roll() }.sorted()
 		avg = rolled.sum() / repeatRolls.toDouble()
-		println("Roll: $dice: (${expected.average()}) $expected (Expected)")
-		println("Roll: $dice: ($avg) $rolled")
+		log.info("Roll: $dice: (${expected.average()}) $expected (Expected)")
+		log.info("Roll: $dice: ($avg) $rolled")
 
 		// test if every expected number is thrown.
 		rolled.forEach { assertTrue(it in expected, "Dice ($dice): $it in $expected") }
@@ -65,8 +65,8 @@ class DiceTest {
 		expected = (-6) .. (-2)
 		rolled = (1..repeatRolls).map { dice.roll() }.sorted()
 		avg = rolled.sum() / repeatRolls.toDouble()
-		println("Roll: $dice: (${expected.average()}) $expected (Expected)")
-		println("Roll: $dice: ($avg) $rolled")
+		log.info("Roll: $dice: (${expected.average()}) $expected (Expected)")
+		log.info("Roll: $dice: ($avg) $rolled")
 
 		// test if every expected value occurred.
 		rolled.forEach { assertTrue(it in expected, "Dice ($dice): $it in $expected") }
@@ -85,7 +85,7 @@ class DiceTest {
 		var rolls: List<Int>
 		var sum: Int
 
-		println("\n>>> Test: testRollList()")
+		log.info("\n>>> Test: testRollList()")
 
 		// d20
 
@@ -97,7 +97,7 @@ class DiceTest {
 		for (i in (1 .. repeatRolls)) {
 			rolls = dice.rollList()
 			sum = rolls.sum()
-			println("Rolled $dice: ($sum) $rolls")
+			log.info("Rolled $dice: ($sum) $rolls")
 
 			assertEquals(expectedNum, rolls.size, "Expected Number of rolls.")
 			assertTrue(rolls.all { it in expectedRange }, "All rolls in expected range.")
@@ -114,7 +114,7 @@ class DiceTest {
 		for (i in (1..repeatRolls)) {
 			rolls = dice.rollList()
 			sum = rolls.sum()
-			println("Rolled $dice: ($sum) $rolls")
+			log.info("Rolled $dice: ($sum) $rolls")
 
 			assertEquals(expectedNum, rolls.size, "Expected Number of rolls.")
 			assertTrue(rolls.all { it in expectedRange }, "All rolls in expected range.")
@@ -131,7 +131,24 @@ class DiceTest {
 		for (i in (1 .. repeatRolls)) {
 			rolls = dice.rollList()
 			sum = rolls.sum()
-			println("Rolled $dice: ($sum) $rolls")
+			log.info("Rolled $dice: ($sum) $rolls")
+
+			assertEquals(expectedNum, rolls.size, "Expected Number of rolls.")
+			assertTrue(rolls.all { it in expectedRange }, "All rolls in expected range.")
+			assertTrue(rolls.sum() in expectedSumRange, "All rolls in expected range.")
+		}
+
+		log.info(">>> Do not unfold Bonus aka. SimpleDice(1, bonus) == '+bonus'")
+
+		dice = SimpleDice(0, +3)
+		expectedNum = 1
+		expectedRange = (3) .. (3)
+		expectedSumRange = expectedRange
+
+		for (i in (1 .. repeatRolls)) {
+			rolls = dice.rollList()
+			sum = rolls.sum()
+			log.info("Rolled $dice: ($sum) $rolls")
 
 			assertEquals(expectedNum, rolls.size, "Expected Number of rolls.")
 			assertTrue(rolls.all { it in expectedRange }, "All rolls in expected range.")
@@ -141,7 +158,7 @@ class DiceTest {
 
 	@Test
 	fun testToString() {
-		println("\n>>> Test testToString()")
+		log.info("\n>>> Test testToString()")
 
 		var str = "Just null, 0d20"
 		assertEquals("+0", SimpleDice(20, 0).toString(), str)
@@ -172,7 +189,7 @@ class DiceTest {
 
 	@Test
 	fun testAverage() {
-		println("\n>>> Test testAverage()")
+		log.info("\n>>> Test testAverage()")
 
 		assertEquals(  1.0, SimpleDice(1).average)
 		assertEquals(  1.5, SimpleDice(2).average)
@@ -187,11 +204,11 @@ class DiceTest {
 
 	@Test
 	fun testCustomDice() {
-		println("\n>>> Test testCustomDice()")
+		log.info("\n>>> Test testCustomDice()")
 
 		val dice = SimpleDice(-3, 1)
 		val rolled = (1..repeatRolls).map { dice.roll() }
-		println("Roll: $dice: $rolled")
+		log.info("Roll: $dice: $rolled")
 		for (i in 1..3) {
 			assertTrue((-i) in rolled, "Thrown ${-i} with $dice")
 		}
@@ -199,18 +216,18 @@ class DiceTest {
 
 	@Test
 	fun testRollBonus() {
-		println("\n>>> Test testRollBonus()")
+		log.info("\n>>> Test testRollBonus()")
 
 		/// only fixied values.
 		val dice = SimpleDice(1, -3)
 		val rolled = (1..repeatRolls).map { dice.roll() }
-		println("Roll: $dice: $rolled")
+		log.info("Roll: $dice: $rolled")
 		assertTrue(rolled.all { it == (-3) }, "Thrown only (-3) with $dice")
 	}
 
 	@Test
 	fun testTermInitiators() {
-		println("\n>>> Test testTermInitiators()")
+		log.info("\n>>> Test testTermInitiators()")
 
 		// 2d6
 		var a = DiceTerm(SimpleDice(6, 2))
@@ -239,7 +256,7 @@ class DiceTest {
 
 	@Test
 	fun testSimplifyTerm() {
-		println("\n>>> Test testSimplifyTerm()")
+		log.info("\n>>> Test testSimplifyTerm()")
 
 		val dice = DiceTerm(
 			// + 3 + 3 - 3 + 3d8 - d8 + 5d12 + d12 + 2d21 - d21
@@ -264,9 +281,9 @@ class DiceTest {
 		)
 		val simplified = dice.contracted()
 
-		println("Expected: $expected")
-		println("Input:    $dice")
-		println("Simple:   $simplified")
+		log.info("Expected: $expected")
+		log.info("Input:    $dice")
+		log.info("Simple:   $simplified")
 
 		assertTrue(expected.same(simplified), "Simple: {$dice \u21D2 $simplified} vs {$expected}")
 
@@ -292,12 +309,12 @@ class DiceTest {
 
 	@Test
 	fun testDiceParsing() {
-		println("\n>>> Test testDiceParsing()")
+		log.info("\n>>> Test testDiceParsing()")
 
 		val string = "3d8 + d12 - D21 + 3 + 3 - 3"
 		val dice = DiceTerm.parse(string)
 		val rolled = (1..repeatRolls).map { dice.roll() }
-		println("Roll: $dice: $rolled")
+		log.info("Roll: $dice: $rolled")
 		assertTrue(SimpleDice(8, 3) in dice, "3d8 in $dice")
 		assertTrue(SimpleDice(12) in dice, "3d8 in $dice")
 		assertTrue(SimpleDice(-21) in dice, "3d8 in $dice")
@@ -306,15 +323,15 @@ class DiceTest {
 		// 1. parse, 2. to string, 3. parse
 		val diceStr = dice.toString()
 		val diceStrDice = DiceTerm.parse(diceStr)
-		println("($string) \u21d2 ($diceStr)")
-		println("($dice) \u21d2 ($diceStrDice)")
+		log.info("($string) \u21d2 ($diceStr)")
+		log.info("($dice) \u21d2 ($diceStrDice)")
 		// assertEquals(dice, diceStrDice, "String \u2192 Dice \u2192 String \u2192 Dice")
 		// TODO (2020-07-14)
 	}
 
 	@Test
 	fun testTake3of4() {
-		println("\n>>> Test testTake3of4()")
+		log.info("\n>>> Test testTake3of4()")
 
 		// TODO (2020-07-14)
 		D6.rollTake(3, 4, true)

@@ -216,7 +216,10 @@ data class SimpleDice(val max: Int, val times: Int = 1) : Comparable<SimpleDice>
 	/** Roll these dice.
 	 * @return a list of rolled faces. */
 	fun rollList(): List<Int>
-		= (0 until count).map { (1 .. faces).random() * sign }
+		= when {
+			faces < 2 -> listOf(count * sign) // constant
+			else -> (0 until count).map { (1 .. faces).random() * sign }
+		}
 
 	/* Roll the SimpleDice {num} times, take {take} best/worst values. */
 	fun rollTake(take: Int = 3, num: Int = 4, best: Boolean = true) : List<Int> {

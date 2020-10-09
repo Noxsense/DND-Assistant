@@ -9,12 +9,55 @@ import android.view.View.OnKeyListener
 import android.widget.TextView
 import android.widget.Toast
 
+import java.util.Date
+import java.util.SortedSet
+import java.util.TreeSet
+import java.text.SimpleDateFormat
+
 import de.nox.dndassistant.core.DiceTerm
 
-class OnClickRoller(
+object Rollers {
+	var history: List<RollResult> = listOf()
+}
+
+private val log = LoggerFactory.getLogger("D&D Main")
+
+data class RollResult(
+	val value: Int,
+	val single: List<Int> = listOf(value), // default [value]
+	val reason: String = "", // default: no reason
+	val timestamp: Long = System.currentTimeMillis() // default now!
+	) : Comparable<RollResult>
+{
+	private companion object {
+		val DATE_FORMAT = "yyyy-MM-dd HH:mm:ss"
+		val formatter = SimpleDateFormat(DATE_FORMAT)
+	}
+
+	public val timestampString: String = formatter.format(timestamp)
+
+	/** Equality defined by value (sum) and timestamp. */
+	override fun equals(other: Any?) : Boolean
+		= (other != null && other is RollResult
+			&& other.value == value && other.timestamp == timestamp)
+
+	/** Compared by the timestamp. */
+	override fun compareTo(other: RollResult) : Int
+		= this.timestamp.compareTo(other.timestamp)
+
+	override fun toString() : String
+		= ("$value ${single.joinToString("+", " = ", "")}"
+		+ (if (reason.length > 0) ": $reason" else "")
+		+ " ($timestampString)")
+}
+
+/**
+ * OnClickRoller extends an OnClickRoller.
+ * On click a prepared dice term will be rolled.
+ */
+public class OnClickRoller(
 	val diceTerm: DiceTerm,
-	var reason: String = diceTerm.toString(),
-	var rollHistory: List<Pair<Long, Pair<Int,String>>>? = null
+	var reason: String = diceTerm.toString()
 ) : View.OnClickListener {
 
 	/* Return the last roll, this Roller returned. */
@@ -24,25 +67,14 @@ class OnClickRoller(
 	/* Roll, when a (DiceView) was clicked. */
 	override fun onClick(view: View) {
 		/* Roll the result. */
-
-		val rolls = diceTerm.rollList()
-		roll = rolls.sum()
-
-		Log.d("D&D Roller", "Rolled $rolls => $roll ($reason)")
-
-		/* Add to roll history: <Timestamp, <Result, Reason>>. */
-		val ts: Long = System.currentTimeMillis()
-		rollHistory?.plus(ts to (roll to "$rolls <== $reason"))
-
-		/* Show the result. */
-		toastRoll(view.getContext(), roll, "$rolls \u21d0 $reason")
+		roll(diceTerm, reason, view.getContext())
 	}
 }
 
-class OnKeyEventRoller(
-	var rollHistory: List<Pair<Long, Pair<Int,String>>>? = null
-) : View.OnKeyListener {
-	
+/** OnKeyEventRoller implements an OnClickListener.
+ * On Enter, it parses the given term and rolls the term. */
+public class OnKeyEventRoller() : View.OnKeyListener {
+
 	/** Parse TextView text to DiceTerm and return rolled result. */
 	override fun onKey(view: View, code: Int, event: KeyEvent) : Boolean {
 		/* Don't do anything, if this wasn't a TextView (or Heritance). */
@@ -61,18 +93,9 @@ class OnKeyEventRoller(
 		val term = view.text.toString().trim()
 		val diceTerm = DiceTerm.parse(term)
 
-		/* Roll the result. */
-		val rolls = diceTerm.rollList()
-		val roll = rolls.sum()
+		/* Roll the result, toast it. */
+		roll(diceTerm, term, view.getContext()) // reason: the custom term written.
 
-		Log.d("D&D Roller", "Rolled $rolls => $roll ($term)")
-
-		/* Add to roll history: <Timestamp, <Result, Reason>>. */
-		val ts: Long = System.currentTimeMillis()
-		rollHistory?.plus(ts to (roll to (
-			"$rolls" + if (term.length > 0) " <== $term" else "")))
-
-		toastRoll(view.getContext(), roll, "$rolls \u21d0 $term")
 		return true
 	}
 
@@ -80,8 +103,32 @@ class OnKeyEventRoller(
 		= event.action == KeyEvent.ACTION_DOWN && code == KeyEvent.KEYCODE_ENTER
 }
 
+/** Make the actual roll and add the result to the history (with current timestamp).
+ * @param term DiceTerm to be rolled.
+ * @param reason why the roll was thrown
+ * @param toastContext if given, toast the result there. (default: null)
+ * @return the value (as int).
+ */
+private fun roll(term: DiceTerm, reason: String, toastContext: Context? = null) : Int {
+	/* Roll the result. */
+	val rolls = term.rollList()
+	val roll = rolls.sum()
+
+	log.debug("Rolled $rolls => $roll ($reason)")
+
+	/* Add to roll history: <Timestamp, <Result, Reason>>. */
+	val result = RollResult(roll, rolls, reason) // default ts: now
+	Rollers.history = listOf(result) + Rollers.history // workaround: prepend.
+
+	log.debug("Rollers.history: Last entry: ${Rollers.history.last()}")
+
+	/* Show the result. */
+	if (toastContext != null) toastRoll(toastContext, result)
+
+	return roll
+}
+
 /** Show a number with reason in a toast. */
-fun toastRoll(context: Context, roll: Int, reason: String = "") {
-	val text = "Rolled $roll " + (if (reason.length > 0) "($reason)" else "")
-	Toast.makeText(context, text, Toast.LENGTH_LONG).show()
+fun toastRoll(context: Context, result: RollResult) {
+	Toast.makeText(context, "Rolled $result", Toast.LENGTH_LONG).show()
 }
