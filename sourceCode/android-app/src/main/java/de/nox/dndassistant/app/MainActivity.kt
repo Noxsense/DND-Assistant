@@ -409,24 +409,71 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	private fun updateSkills(setListener: Boolean = false) {
 		val skillPanel = contents.findViewById(R.id.content_skills) as LinearLayout
 
+		val profValue = skillPanel.findViewById(R.id.proficiency_value) as TextView
 		val skillList = skillPanel.findViewById(R.id.list_skills) as ListView
 		val profList = skillPanel.findViewById(R.id.list_proficiencies_and_languages) as ListView
+
+		profValue.text = "Proficiency: %+d".format(character.proficiencyBonus)
 
 		if (skillList.adapter == null || setListener) {
 			log.debug("Set up te skillList.adapter")
 
-			// XXX (2020-10-06) REFACTOR, proper classes.
+			// XXX (2020-10-06) REFACTOR, proper classes. (content_skills)
+			// TODO (2020-10-07) actual filling (content_skills)
+			// TODO (2020-10-07) add roller (content_skills)
 
-			skillList.adapter = ArrayAdapter<Skill>(
+			skillList.adapter = object: ArrayAdapter<Skill>(
 				this@MainActivity,
 				R.layout.list_item_skill,
 				R.id.name,
-				enumValues<Skill>().toList())
+				enumValues<Skill>().toList()
+			) {
+					override fun getView(i: Int, view: View?, parent: ViewGroup) : View {
+						log.debug("getView($i, $view, $parent)")
+
+						if (view == null) {
+							val newView = LayoutInflater.from(this@MainActivity).run {
+								inflate(R.layout.list_item_skill, parent, false)
+							}
+							return getView(i, newView, parent)
+						}
+
+						// view now not null for sure.
+
+						val skill = getItem(i)!!
+						val smod = character.skillModifier(skill)
+						val proficiency = character.getProficiencyFor(skill).first
+
+						log.debug("Update skill value ($skill: $smod).")
+
+						(view.findViewById(R.id.name) as TextView).run {
+							text = skill.name.toLowerCase().capitalize()
+						}
+
+						(view.findViewById(R.id.value) as TextView).run {
+							/* Show skill modifier. */
+							text = "%+d".format(smod)
+
+							/* Add skill check roll. */
+							setOnClickListener(OnClickRoller(
+								DiceTerm(D20, SimpleDice(1, smod)),
+								"Skill Check ($skill)"))
+						}
+
+						/* Highlight the item according to it's proficiency level. */
+						view.setBackground(getDrawable(when (proficiency) {
+							Proficiency.EXPERT -> R.drawable.bg_expert
+							Proficiency.PROFICIENT -> R.drawable.bg_proficient
+							else -> R.drawable.framed
+						}))
+
+						return view
+					}
+				}
 
 			profList.adapter = ArrayAdapter<Skillable>(
 				this@MainActivity,
-				R.layout.list_item_skill,
-				R.id.name,
+				android.R.layout.simple_list_item_1,
 				character.proficiencies.keys.toList().filter {
 					it !is Skill
 				}) //  + character.knownLanguages)
@@ -461,6 +508,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		val attackPanel = content_attacks
 			.findViewById(R.id.list_attacks) as ListView
+
+		// TODO (2020-10-07) add attack roller
+		// TODO (2020-10-07) add all attacks and a listener (auto level-up/equipment update)
 
 		attackPanel.adapter = ArrayAdapter(
 			this@MainActivity,

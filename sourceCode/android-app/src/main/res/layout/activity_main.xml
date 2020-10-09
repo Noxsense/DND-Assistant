@@ -26,6 +26,14 @@
     android:text="@string/level_xp"
     />
 
+  <CheckBox
+    android:id="@+id/inspiration"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="@dimen/vmargin"
+    android:layout_width="match_parent"
+    android:text="@string/inspiration"
+    />
+
   <!-- Ability Scores.
     Background colour indicates prof in ability saving throws.
     onClick: roll value
