@@ -1,5 +1,8 @@
 <resources>
     <!-- Base application theme. -->
+    <!-- with api 29 / android 10
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight">
+    -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Remove Top Action Bar, but not fullscreen. -->
         <item name="windowActionBar">false</item>

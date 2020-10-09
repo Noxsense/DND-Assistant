@@ -2,6 +2,7 @@
   android:layout_height="match_parent"
   android:layout_width="match_parent"
   android:orientation="vertical"
+  android:paddingVertical="@dimen/hmargin"
   xmlns:android="http://schemas.android.com/apk/res/android"
   >
   <TextView
@@ -14,21 +15,33 @@
   <ProgressBar
     android:id="@+id/bar_carried_weight"
     android:layout_height="0sp"
-    android:layout_weight="0.1"
+    android:layout_marginVertical="@dimen/vmargin"
+    android:layout_weight="0.01"
     android:layout_width="match_parent"
     style="@android:style/Widget.ProgressBar.Horizontal"
     />
   <TextView
     android:background="@drawable/framed"
+    android:id="@+id/money"
     android:layout_height="0sp"
-    android:layout_weight="0.1"
+    android:layout_marginVertical="@dimen/vmargin"
+    android:layout_weight="0.04"
     android:layout_width="match_parent"
+    />
+  <TextView
+    android:background="@drawable/framed"
     android:id="@+id/equipped"
+    android:layout_height="0sp"
+    android:layout_marginVertical="@dimen/vmargin"
+    android:layout_weight="0.15"
+    android:layout_width="match_parent"
     />
   <ListView
     android:background="@drawable/framed"
+    android:divider="@android:color/transparent"
     android:id="@+id/list_bags"
     android:layout_height="0sp"
+    android:layout_marginVertical="@dimen/vmargin"
     android:layout_weight="0.6"
     android:layout_width="match_parent"
     android:orientation="vertical"

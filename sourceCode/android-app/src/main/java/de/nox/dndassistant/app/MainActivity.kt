@@ -206,9 +206,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		updateStory(initiation) // story, species, background
 
-		label_race_background.text = formatLabel(
-			"Story / Species / Background",
-			"${character.background}")
+		var string = "${character.race}:${character.subrace} ("
+
+		if (character.race.darkvision > 29) {
+			// unicode: dark shade
+			string += "${character.race.darkvision} ft \u2593, "
+		}
+
+		string += "${character.size})"
+		string += "${character.background}:${character.backgroundFlavour}"
+
+		label_race_background.text = formatLabel("About Me", string)
 
 		label_rolls.text = formatLabel(
 			"Rolls and extra counters",
@@ -568,26 +576,45 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	private fun updateInventory(setListener: Boolean = false) {
 		log.debug("Update inventory")
 
-		// XXX (2020-10-07) refactor
 
 		/* Weight bar. */
 		(content_inventory.findViewById(R.id.bar_carried_weight) as ProgressBar).run {
-			max = 100
-			progress  = 10
+			max = character.carryingCapacity.toInt()
+			progress  = character.carriedWeight.toInt()
 		}
+
+		// XXX (2020-10-07) refactor inventory (currenlty equipped)
 
 		/* Equipped. */
 		(content_inventory.findViewById(R.id.equipped) as TextView).run {
 			text = "Equipped and in Hands!"
 		}
 
+		// XXX (2020-10-07) refactor inventory (nested bags)
+
 		/* List of bags. And their content. */
 		(content_inventory.findViewById(R.id.list_bags) as ListView).run {
-				adapter = ArrayAdapter(
-					this@MainActivity,
-					android.R.layout.simple_list_item_1,
-					(1.. 20).map { it })
+			val bags = character.bags.values.toList()
+
+			/* List outer bags. */
+			adapter = ArrayAdapter<Item>(
+				this@MainActivity,
+				android.R.layout.simple_list_item_1,
+				bags)
+
+			/* In click: container: Unfold / item: ??? */
+			setOnItemClickListener {_, _, pos, _ ->
+				if (bags[pos] is Container) {
+					Toast.makeText(this@MainActivity, "Unfold bag", Toast.LENGTH_LONG).show()
+				}
 			}
+
+			/* In click: container: Unfold / item: ??? */
+			setOnItemLongClickListener {_, _, pos, _ ->
+				Toast.makeText(this@MainActivity, "Open Option menu $pos", Toast.LENGTH_LONG).show()
+				true
+			}
+		}
 	}
 
 	/** Update the "content_classes" panel.
@@ -596,11 +623,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * Here a new klass level can also be added.
 	 */
 	private fun updateKlasses(setListener: Boolean = false) {
-		// XXX (2020-10-07) implement
+		// XXX (2020-10-07) implement (content_classes)
 		(content_classes.findViewById(R.id.list_classes) as ListView)
 			.adapter = ArrayAdapter(
 				this@MainActivity,
-				android.R.layout.simple_list_item_1, // TODO (2020-10-07) complex layout with 1-level nested listviews: klass -> feats.
+				// TODO (2020-10-07) complex layout with 1-level nested listviews: klass -> feats.
+				android.R.layout.simple_list_item_1,
 				character.klasses.keys.toList())
 	}
 
@@ -608,8 +636,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * Here are information about the race, the background and also pure story focussed notes.
 	 * New notes can be added and also race or background features reviewed or activated.
 	 */
-	private fun updateStory(setListener: Boolean = false) {
-		// XXX (2020-10-07) implement
+	private fun updateStory(stnetListener: Boolean = false) {
+		// XXX (2020-10-07) implement story view.
 		val findView = { id: Int ->
 			content_race_background.findViewById(id) as View
 		}
@@ -695,16 +723,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			}
 
 			R.id.speed -> {
-			  Toast.makeText(context, "Go 5ft", short).show()
-			  // XXX (2020-09-29)
+			  // XXX (2020-09-29) implement walk steps. (gui)
+			  if (character.current.walk(ft = 5)) {
+				  Toast.makeText(context, "Went 5ft", short).show()
+				  speed.text = "${character.current.feetLeft} ft"
+			  }
+
 			}
 			R.id.armorclass -> {
 			  Toast.makeText(context, "Open Dresser", long).show()
-			  // XXX (2020-09-29)
+			  // XXX (2020-09-29) implement equip armor, hands, etc.
 			}
 			else -> {
 			  Toast.makeText(context, "Clicked on ${view}", long).show()
-			  // TODO (2020-09-29)
+			  // TODO (2020-09-29) rest case? any click without purpose?
 			}
 		}
 	}

@@ -77,7 +77,6 @@
         android:layout_width="match_parent"
         android:orientation="vertical"
         >
-        <!-- TODO: Skills (like stealth, persuasion, athletics) -->
         <TextView
           android:background="@drawable/framed"
           android:id="@+id/label_skills"
@@ -89,9 +88,6 @@
           android:textColorPrimary="#000000"
           android:textSize="@dimen/textSizeOverviewLabel"
           />
-          <!-- TODO: Choose how to sort: By name, by value, by category, filter ...
-            "(view:+val,bg: by prof) Acrobatics (str) | on click: roll",
-          -->
         <TextView
           android:background="@drawable/framed"
           android:id="@+id/label_attacks"
@@ -103,7 +99,6 @@
           android:textColorPrimary="#000000"
           android:textSize="@dimen/textSizeOverviewLabel"
           />
-          <!-- TODO -->
         <TextView
           android:background="@drawable/framed"
           android:id="@+id/label_spells"
@@ -114,16 +109,6 @@
           android:text="Spells (*focussed*, active, left spell slots)"
           android:textSize="@dimen/textSizeOverviewLabel"
           />
-          <!-- TODO
-            { Spell slots }
-            { sorted spells > active > prepared > spell slot possible > others }
-            onItemClick() //
-            menu
-            when active -> abort | again
-            when prepared -> cast | unprepare
-            known -> prepare | cast if possible
-            unknown -> try to learn (add source)
-          -->
         <TextView
           android:background="@drawable/framed"
           android:id="@+id/label_inventory"
@@ -134,14 +119,6 @@
           android:text="Inventory (5GP 16SP, 56.5lb / 20GP)"
           android:textSize="@dimen/textSizeOverviewLabel"
           />
-          <!-- TODO
-            { money and load status}
-            { equipped }
-            // toggle switch (sell|equip*)
-            { items in bags -> nested lists }
-            onItemClick() // drop
-            onItemLongClick() // sell / equip
-          -->
         <TextView
           android:background="@drawable/framed"
           android:id="@+id/label_classes"
@@ -162,15 +139,6 @@
           android:text="{Species}, {Background}, {weight}"
           android:textSize="@dimen/textSizeOverviewLabel"
           />
-          <!-- TODO
-            {Species}
-            { feats, eg. darkvision 60ft } onItemClick() // unfold notes.
-            {Background}
-            { feats, eg. darkvision 60ft } onItemClick() // unfold notes.
-            {Appearance}
-            {small, slim, 0.7m/20kg} onItemClick() // unfold notes.
-            {Picture}
-          -->
         <TextView
           android:background="@drawable/framed"
           android:id="@+id/label_rolls"
@@ -181,7 +149,6 @@
           android:text="Rolls (most recent roll)"
           android:textSize="@dimen/textSizeOverviewLabel"
           />
-          <!-- TODO { VAL (what, when) } -->
       </LinearLayout>
     </ScrollView>
 
@@ -265,7 +232,6 @@
       </LinearLayout>
       <EditText
         android:background="@drawable/framed"
-        android:gravity="bottom"
         android:id="@+id/search_content"
         android:layout_width="match_parent"
         android:layout_height="0sp"
