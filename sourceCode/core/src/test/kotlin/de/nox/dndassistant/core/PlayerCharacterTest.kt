@@ -132,17 +132,19 @@ class PlayerCharacterTest {
 		// pc.current.conditions += Condition.UNCONSCIOUS to -1
 		assertTrue(true, "Character is unconscious") // TODO
 
-		// TODO (2020-10-02) hit with pierce
-		// TODO (2020-10-02) hit with bludge
-		// TODO (2020-10-02) hit with slash
-		// TODO (2020-10-02) hit with fire, etc ...
+		// TODO (2020-10-02) test: hit with pierce
+		// TODO (2020-10-02) test: hit with bludge
+		// TODO (2020-10-02) test: hit with slash
+		// TODO (2020-10-02) test: hit with fire, etc ...
 
-		// TODO (2020-10-02) consume healing potion
+		// TODO (2020-10-02) test: consume healing potion
 
-		// TODO (2020-10-02) short rest, use ceil(hitdice.size/2) dice, check available spell slots
-		// TODO (2020-10-02) long rest => check available spellslots
+		// TODO (2020-10-02) test: short rest, use ceil(hitdice.size/2) dice, check available spell slots
+		// TODO (2020-10-02) test: long rest => check available spellslots
 
-		// TODO (2020-10-02) fight the death!
+		// TODO (2020-10-02) test: fight the death!
+
+		// TODO (2020-10-02) test: failures and exceptions, eg. leveling class with insufficient character level
 	}
 
 	@Test
@@ -161,15 +163,15 @@ class PlayerCharacterTest {
 
 	val mageHand = Spell(
 		name = "Mage Hand", // name
-		school = "CONJURATION", level = 0, // school, level
-		components = "V,S",
+		school = Spell.School.CONJURATION, level = 0, // school, level
+		invocationVerbal = true, invocationSomatic = true, invocationMatierial = false, // "V,S",
 		castingTime = "1 action",
-		range = "0 ft, TOUCH",
+		distance = 0 /*ft*/, area = Spell.Area.CUBE, // ???
 		duration = 60, // 1 minute
 		concentration = false, // casting time, range, components, duration, concentration
 		ritual = false,
-		// attackSave = null, // no attack
-		// damageEffect = "", // no effect
+		attackSave = null, // no attack
+		damageEffect = "", // no effect
 		note = """
 		Vansishes over 30ft range, or re-cast;
 		manipulate objects, open / unlock container, stow / retrive item, pour contents;
@@ -178,16 +180,17 @@ class PlayerCharacterTest {
 
 	val guidance = Spell(
 		name = "Guidance",
-		school = "DIVINATION",
+		school = Spell.School.DIVINATION,
 		level = 0,
-		components = "V,S",
+		invocationVerbal = true, invocationSomatic = true, invocationMatierial = false, // "V,S",
 		castingTime = "1 action",
-		range = "0 ft, TOUCH",
+		distance = 0,
+		area = Spell.Area.TOUCH, // ???
 		duration = 60, // 1 minute
 		concentration = true,
 		ritual = false, // is ritual
-		// attackSave = null, // no attack
-		// damageEffect = "", // no effect
+		attackSave = null, // no attack
+		damageEffect = "", // no effect
 		note = """
 		1. Touch a willing creature.
 		2. Roll d4, add to one ability check of choice (pre/post). End.
@@ -195,16 +198,16 @@ class PlayerCharacterTest {
 		)
 
 	val spells: List<Spell> = listOf(
-		  Spell("Spell 5", "ILLUSION",      5, "1 action", "5 ft  CUBE", "V,M,S",  1,    false, true , "...")
-		, Spell("Spell 1", "CONJURATION",   1, "1 action", "0 ft  TOUCH","V,M,S", 60,    false, false, "...")
+		  Spell("Spell 5", Spell.School.ILLUSION,      5, true, false, false, "1 action", 5,  Spell.Area.CUBE,  1,    false, true , null, "effect?", "...")
+		, Spell("Spell 1", Spell.School.CONJURATION,   1, true, false, false, "1 action", 0,  Spell.Area.TOUCH, 60,   false, false, null, "effect?", "...")
 		, mageHand
-		, Spell("Spell 0", "ABJURATION",    0, "1 action", "0 ft  TOUCH","V,M,S", 60,    false, false, "...")
-		, Spell("Spell 6", "NECROMANCY",    6, "1 action", "6 ft  CUBE", "V,M,S", 1,     false, false, "...")
+		, Spell("Spell 0", Spell.School.ABJURATION,    0, true, false, false, "1 action", 0,  Spell.Area.TOUCH, 60,   false, false, null, "effect?", "...")
+		, Spell("Spell 6", Spell.School.NECROMANCY,    6, true, false, false, "1 action", 6,  Spell.Area.CUBE,  1,    false, false, null, "effect?", "...")
 		, guidance
-		, Spell("Spell 2", "DIVINATION",    2, "1 action", "1 ft  CUBE", "V,M,S", 1,     false, false, "...")
-		, Spell("Spell 4", "EVOCATION",     4, "1 action", "4 ft  CUBE", "V,M,S", 86400, false, true , "...")
-		, Spell("Spell 7", "TRANSMUTATION", 7, "1 action", "7 ft  CUBE", "V,M,S", 60,    false, false, "...")
-		, Spell("Spell 3", "ENCHANTMENT",   3, "1 action", "3 ft  CUBE", "V,M,S", 1,     false, false, "...")
+		, Spell("Spell 2", Spell.School.DIVINATION,    2, true, false, false, "1 action", 1,  Spell.Area.CUBE, 1,     false, false, null, "effect?", "...")
+		, Spell("Spell 4", Spell.School.EVOCATION,     4, true, false, false, "1 action", 4,  Spell.Area.CUBE, 86400, false, true , null, "effect?", "...")
+		, Spell("Spell 7", Spell.School.TRANSMUTATION, 7, true, false, false, "1 action", 7,  Spell.Area.CUBE, 60,    false, false, null, "effect?", "...")
+		, Spell("Spell 3", Spell.School.ENCHANTMENT,   3, true, false, false, "1 action", 3,  Spell.Area.CUBE, 1,     false, false, null, "effect?", "...")
 		)
 
 	val backpack = Container(

@@ -133,6 +133,22 @@ public fun playgroundWithOnyx() : PlayerCharacter {
 	pc.addProficiency(leather) // proficient
 	// TODO (2020-09-03) add proficiency for common/all LIGHT ARMOR
 
+	val illusion = Spell(
+		name = "Minor Illusion", // name
+		school = Spell.School.ILLUSION, level = 0, // school, level
+		invocationVerbal = true, invocationSomatic = true, invocationMatierial = false, // "V,S",
+		castingTime = "1 action",
+		distance = 0 /*ft*/, area = Spell.Area.CUBE, // ???
+		duration = 60, // 1 minute
+		concentration = false, // casting time, range, components, duration, concentration
+		ritual = false,
+		attackSave = null, // no attack
+		damageEffect = "", // no effect
+		note = """
+		Minor Illusion Description!!!! Make an illusion.
+		""")
+	pc.learnSpell(illusion, "Gnome (Forest)")
+
 	pc.wear(clothes)
 	pc.wear(leather)
 

@@ -2,20 +2,41 @@ package de.nox.dndassistant.core
 
 data class Spell(
 	val name: String,
-	val school: String,
+	val school: School,
 	val level: Int,
+	val invocationVerbal: Boolean,
+	val invocationSomatic: Boolean,
+	val invocationMatierial: Boolean,
 	val castingTime: String,
-	val range: String,
-	val components: String,
-	val duration: Int, // seconds.
+	val distance: Int, // feet
+	val area: Area = Area.CUBE,
+	val duration: Int = 0, // seconds.
 	val concentration: Boolean = false,
 	val ritual: Boolean = false,
-	// val attackSave: Ability? = null,
-	// val damageEffect: String = "",
+	val attackSave: Ability? = null,
+	val damageEffect: String = "",
 	// spellTag: String = "", // heal, damage, social, buff, debug, environmental, poison, ...
 	val note: String = ""
 	)
 	: Comparable<Spell> {
+
+	enum class Area {
+		SELF,
+		TOUCH,
+		CUBE,
+		CYLINDER,
+		CONE,
+		SPHERE; };
+
+	enum class School {
+		ABJURATION,
+		CONJURATION,
+		DIVINATION,
+		ENCHANTMENT,
+		EVOCATION,
+		ILLUSION,
+		NECROMANCY,
+		TRANSMUTATION; };
 
 	private val LOG_TAG = "D&D Spell"
 
