@@ -176,7 +176,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			"Abilities",
 			"%+d, Passive Perception %2d".format(
 				character.proficiencyBonus,
-				character.skillScore(Skill.PERCEPTION) + 10
+				character.skillModifier(Skill.PERCEPTION) + 10
 			))
 
 		updateAttacks(clearBefore = initiation)
@@ -476,7 +476,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			damage = wpn.damage to wpn.damageType,
 			note = wpn.note,
 			finesse = wpn.isFinesse,
-			proficientValue = character.getProficiencyBonusFor(wpn),
+			proficientValue = character.getProficiencyFor(wpn).second,
 			modifierStrDex = str to dex)
 
 	/** Update the "content_spells" panel.

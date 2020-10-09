@@ -183,11 +183,11 @@ public class PlayerCharacter private constructor(
 
 	/** Get the score for the requested ability saving throw. */
 	fun savingScore(a: Ability) : Int
-		= abilityModifier(a) + getProficiencyBonusFor(a)
+		= abilityModifier(a) + getProficiencyFor(a).second
 
 	/** Get the score for the requested skill check. */
-	fun skillScore(s: Skill) : Int
-		= abilityModifier(s.source) + getProficiencyBonusFor(s)
+	fun skillModifier(s: Skill) : Int
+		= abilityModifier(s.source) + getProficiencyFor(s).second
 
 	// TODO (2020-10-05) other spell sources ? other feat sources: like x times a long/short rest. ki points, etc.
 
@@ -358,23 +358,13 @@ public class PlayerCharacter private constructor(
 		}
 	}
 
-	/** Add proficiency bonus,
-	 * if the Skillable item is in a saving throw of with proficiency. */
-	fun getProficiencyBonusFor(s: Any) : Int
-		= when {
-			s is Skill -> getProficiencyFor(s).factor * proficiencyBonus
-			s is Ability -> if (s in savingThrows) proficiencyBonus else 0
-			s is Weapon -> getProficiencyFor(s).factor * proficiencyBonus
-			else -> 0
-		}
-
-	/** Get a proficiency for any value.
+	/** Get a proficiency and the resulting bonus value for any skill.
 	 * If the parameter was a skill or saving throw, the character has actually
 	 * proficiency for, return the proficiency value, otherwise it has none.
-	* @param x anything, which could have proficiency.
-	 * @return Proficiency.NONE by default. */
-	fun getProficiencyFor(x: Any) : Proficiency
-		= when {
+	 * @param x anything, which could have proficiency.
+	 * @return (Proficiency.NONE, 0) by default. */
+	fun getProficiencyFor(x: Any) : Pair<Proficiency, Int> {
+		val proficiency = when {
 			x is Skill -> proficiencies.getOrDefault(x, Proficiency.NONE)
 			x is Ability && (x in savingThrows) -> Proficiency.PROFICIENT
 			x is Weapon -> proficiencies
@@ -383,6 +373,11 @@ public class PlayerCharacter private constructor(
 				Proficiency.NONE)) // or return no proficiency at all
 			else -> Proficiency.NONE
 		}
+
+		val value = proficiency.factor * proficiencyBonus
+
+		return proficiency to value
+	}
 
 	fun isProficientIn(any: Skillable): Boolean
 		= (proficiencies.contains(any)
