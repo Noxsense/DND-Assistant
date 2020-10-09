@@ -5,21 +5,21 @@ import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.View.OnClickListener
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams
-import android.widget.ProgressBar
 import android.widget.ListView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.abilities.*
-import kotlinx.android.synthetic.main.health.*
+import kotlinx.android.synthetic.main.content_health.*
 import kotlinx.android.synthetic.main.extra_dice.*
 
 import de.nox.dndassistant.core.*
@@ -162,9 +162,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		log.debug("Abilities displayed.")
 
 		/* Update the healthbar, conditions, death saves and also speed and AC. */
-		showHealthPanel(initiation) // if initiation: set OnClickListener
-
-		showRestingPanel(initiation)
+		updateLifestate(initiation) // if initiation: set OnClickListener
 
 		// TODO (2020-09-27) previews and content. (less hacked, pls)
 
@@ -266,21 +264,32 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * and also speed and AC.
 	 * @param setListener if true, also initiate the listener.
 	 */
-	private fun showHealthPanel(setListener: Boolean = false) {
+	private fun updateLifestate(setListener: Boolean = false) {
 		/* Show speed (map). */
-		// val healthPanel = findViewById(R.id.panel_health) as LinearLayout
-
 		(speed).apply {
 			// text = "${character.speed}" // maps: reason --> speed
+			text = "${character.current.feetLeft}" // maps: reason --> speed
 			if (setListener) {
 				setOnClickListener(this@MainActivity)
+
+				// TODO (2020-10-08) set on long click: change taken steps.
 			}
 		}
 
+		/* Set up heatlh bar (progressbar) */
 		(healthbar).run {
 			max = character.hitpoints
 			progress = character.current.hitpoints
 			setOnClickListener(this@MainActivity)
+			setOnLongClickListener {
+				// TODO (2020-10-08) implement hit / heal dialog.
+				Toast.makeText(
+					this@MainActivity,
+					"HIT/HEAL Dialog.",
+					Toast.LENGTH_LONG
+				).show()
+				true
+			}
 		}
 
 		/* Show final armor class. */
@@ -291,10 +300,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				setOnClickListener(this@MainActivity)
 			}
 		}
+
+		/* Update. */
+		// showRestingPanel(setListener)
+		showRestingPanel()
+
+		// TODO (2020-10-08) setup heal / damage dialog.
 	}
 
 	// replacement and tests. // FIXME (2020-09-28) implement me right and remove me.
-	private var hitdice: Map<Int, Pair<Int, Int>> = mapOf() // [face: available, usable]
 	private var hitdiceViews: Set<TextView> = setOf() // [hit die: available/used ]
 
 	/** Update the resting panel.
@@ -303,13 +317,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * Hitdie: Spent it (as short rest) and mark as used.
 	 * Long Rest: Long Rest (also visibly restore hitdie accordingly). */
 	private fun showRestingPanel(initiate: Boolean = false) {
-		// val hitdiceCount = character.countHitdice()
+		log.debug("Set up hit dice.")
 
-		hitdice += 8 to (3 to 3)
-		hitdice += 6 to (1 to 1)
+		val hitdiceCount = character.hitdice.size
 
-		val hitdiceCount = hitdice.values.sumBy { it.first } // count all available.
+		// count displayed hit dice.
 		var restCount = resting.getChildCount()
+
+		// TODO (2020-10-07) consider gridview or listview for hitdice.
 
 		/* There are missing hit dice. */
 		if ((restCount - 1) < hitdiceCount) {
@@ -323,64 +338,66 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				displayed += this.text.toString()
 			}}
 
-			val hitdieDisplayed: Map<Int, Int>
-				= displayed
-					.groupingBy { it.substring(1).toInt() }
-					.eachCount()
+			val hitdieDisplayed: Map<Int, Int> = displayed
+				.groupingBy { it.substring(1).toInt() }
+				.eachCount()
 
 			log.debug("Displayed hitdie: {$displayed} => $hitdieDisplayed")
 
 			// add missing hitdice.
-			longrest.setOnClickListener {
-				val max = hitdiceCount / 2
-				var restored = 0
 
-				hitdiceViews.forEach {
-					if (restored < max && !it.isClickable()) {
-						restored += 1 // restore one more hitdie.
-						it.setTextColor(android.graphics.Color.BLACK)
-						it.setClickable(true)
-						log.debug("Restored $it, ${it.text}")
+			/* Long rest. */
+			if (!longrest.hasOnClickListeners()) {
+				longrest.setOnClickListener {
+					val max = Math.max(hitdiceCount / 2, 1) // at least 1
+					var restored = 0
+
+					// TODO (2020-10-07) avoid deep nesting.
+					log.debug("Restore $max hitdice")
+
+					hitdiceViews.forEach {
+						if (restored < max && !it.isClickable()) {
+							restored += 1 // restore one more hitdie.
+							it.setTextColor(android.graphics.Color.BLACK)
+							it.setClickable(true)
+							log.debug("Restored $it, ${it.text}")
+							log.debug("Restored $restored/$max hitdice")
+						}
 					}
 				}
 			}
 
-			hitdice.toList().forEach {
-				val (face, available) = it
-				val (count, _) = available
-				// var missing: Int = count - hitdieDisplayed.getOrDefault(face, 0) // Android 26
-				var missing: Int = count - 0
+			// TODO (2020-10-07) refactor: Update only needed / missing hitdice.
+			character.hitdice.forEach { face ->
+				val view: TextView = TextView(this@MainActivity)
 
-				while (missing > 0) {
-					val view: TextView = TextView(this@MainActivity)
+				view.text = "d$face"
+				view.setTextSize(20.toFloat())
+				view.setPadding(10, 0, 10, 0)
 
-					view.text = "d$face"
-					view.setTextSize(20.toFloat())
-					view.setPadding(10, 0, 10, 0)
+				view.setOnClickListener { v ->
+					// roll the healing.
+					val roll: Int = (1..face).random()
 
-					view.setOnClickListener { v ->
-						// roll the healing.
-						val roll: Int = (1..face).random()
+					Rollers.history += listOf(RollResult(
+						value = roll,
+						reason = "Short Rest (d$face)")) + Rollers.history
 
-						Rollers.history += listOf(RollResult(
-							value = roll,
-							reason = "Short Rest (d$face)")) + Rollers.history
-
-						// disables this hitdie.
-						if (v is TextView) {
-							v.setTextColor(0x33000000)
-							v.setClickable(false)
-						}
-
-						Toast.makeText(this@MainActivity, "Short Rest [$roll (d$face)]", Toast.LENGTH_LONG).show()
+					// disables this hitdie.
+					if (v is TextView) {
+						v.setTextColor(0x33000000)
+						v.setClickable(false)
 					}
 
-					resting.addView(view)
-					hitdiceViews += (view)
-
-					log.debug("Display a new hitdie [d$face[: $view")
-					missing -= 1
+					Toast.makeText(this@MainActivity,
+						"Short Rest [$roll (d$face)]",
+						Toast.LENGTH_LONG).show()
 				}
+
+				resting.addView(view)
+				hitdiceViews += (view)
+
+				log.debug("Display a new hitdie [d$face[: $view")
 			}
 		}
 	}
