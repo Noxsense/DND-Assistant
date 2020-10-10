@@ -48,7 +48,7 @@
 
   <!-- Health and Conditions. -->
   <include
-    android:id="@+id/panel_health"
+    android:id="@+id/content_health"
     layout="@layout/content_health"
     android:layout_height="wrap_content"
     android:layout_marginVertical="@dimen/vmargin"

@@ -15,6 +15,15 @@ data class Attack(
 	val note: String = ""
 ): Comparable<Attack> {
 
+	companion object {
+		val UNARMED: Attack = Attack(
+			name = "Unarmed",
+			ranged = false, damage = DiceTerm(0) to setOf(DamageType.BLUDGEONING),
+			note = "slap, hit, kick, push, ...",
+			proficientValue = 0, // XXX (2020-10-07) the current proficiency value
+			modifierStrDex = 0 to 0) // XXX (2020-10-07) ...
+	}
+
 	/** Decide which bonus is added. */
 	val bonus: Int = when {
 		finesse -> modifierStrDex.run { Math.max(first, second) }
@@ -69,13 +78,6 @@ data class Attack(
 
 // TODO (2020-10-07) give option to update, depending on character or less character dependent.
 // TODO (2020-10-07) spell attack => (optional) Difficulty class
-
-val ATTACK_UNARMED = Attack(
-	name = "Unarmed",
-	ranged = false, damage = DiceTerm(0) to setOf(DamageType.BLUDGEONING),
-	note = "slap, hit, kick, push, ...",
-	proficientValue = 0, // XXX (2020-10-07) the current proficiency value
-	modifierStrDex = 0 to 0) // XXX (2020-10-07) ...
 
 /** DamageType.
  * Different attacks, damaging Spells, and other harmful Effects deal different

@@ -6,6 +6,9 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.View.OnClickListener
 import android.view.View.OnKeyListener
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 
@@ -119,6 +122,23 @@ private fun roll(term: DiceTerm, reason: String, toastContext: Context? = null) 
 	/* Add to roll history: <Timestamp, <Result, Reason>>. */
 	val result = RollResult(roll, rolls, reason) // default ts: now
 	Rollers.history = listOf(result) + Rollers.history // workaround: prepend.
+
+	if (MainActivity.isInitializedRolls()) {
+		log.debug("Show roll on MainActivity.panelRolls")
+		val panelRolls = MainActivity.panelRolls
+		val rollList = panelRolls.second.findViewById(R.id.list_rolls) as ListView
+		val rollPreview = panelRolls.first
+
+		rollPreview.text = "Miep Rolled : $roll"
+
+		/* Poke roll history displayer. */
+		rollList.run {
+			(adapter as ArrayAdapter<RollResult>).notifyDataSetChanged()
+		}
+
+		/* Preview last roll. */
+		rollPreview.text = "Rolls and extra counters: $roll" // Last Roll
+	}
 
 	log.debug("Rollers.history: Last entry: ${Rollers.history.last()}")
 

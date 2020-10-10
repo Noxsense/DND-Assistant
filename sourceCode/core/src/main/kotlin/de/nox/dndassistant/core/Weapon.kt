@@ -53,7 +53,7 @@ data class Weapon(
 	 * otherwise, use STR for melee and DEX for ranged. */
 	val isFinesse: Boolean = false,
 
-	// TODO (2020-07-08) silvered
+	// TODO (2020-07-08) silvered and other / harder materials?
 
 	val note: String  // notes
 ) : Item, Skillable {
