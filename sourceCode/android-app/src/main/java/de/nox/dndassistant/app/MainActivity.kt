@@ -537,12 +537,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				content_attacks.findViewById(R.id.list_attacks) as ViewGroup)
 		}
 
-		val str = character.abilityModifier(Ability.STR)
-		val dex = character.abilityModifier(Ability.DEX)
+		attacks += character.attackUnarmed
+		attacks += character.attackImprovised
+		attacks += character.attackSpells
+		attacks += character.attackDrawNew
 
-		attacks += Attack.UNARMED
+		if (character.attackEquipped != null) {
+			attacks += character.attackEquipped!!
+		}
 
 		// inventory weapons to attack
+		/*
 		attacks += character.bags.values.map { it.inside }.flatten().toSet()
 			.filter { it is Weapon && it != character.hands.first && it != character.hands.second }
 			.map { Attack(

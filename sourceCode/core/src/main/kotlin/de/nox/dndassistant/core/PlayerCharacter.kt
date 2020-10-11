@@ -231,6 +231,54 @@ public class PlayerCharacter private constructor(
 	var bags: Map<String, Container> = mapOf()
 		private set
 
+	/** Supporting value to build an attack with the current STR and DEX modifiers. */
+	private val modsStrDex: Pair<Int, Int> get()
+		= abilityModifier(Ability.STR) to abilityModifier(Ability.CON)
+
+	/** Get the attack damage for an unarmed strike. */
+	val attackUnarmed: Attack get()
+		= Attack(
+			name = "Unarmed Strike",
+			note = """
+				Punch, kick, head-butt, or similar forceful blow.
+				Anything without a weapon or spell.
+				""".trimIndent(),
+			ranged = false,
+			finesse = false, // TODO (2020-10-10) unarmed strike is finesse with certain exceptions. classes
+			damage = DiceTerm(SimpleDice(1)) to setOf(DamageType.BLUDGEONING),
+			proficientValue = proficiencyBonus, // proficient with own hands
+			modifierStrDex = modsStrDex // XXX (2020-10-07) ...
+		)
+
+	/** Get the attack damage for an improvised (melee) attack. */
+	val attackImprovised: Attack get()
+		= Attack(
+			name = "Improvised Attack",
+			note = """
+				Use another thing as you describe,
+				but it doesn't really resemble any weapon.
+				Damage Type depends on the way
+				it was used or its own characterists.
+				""".trimIndent(),
+			ranged = false,
+			finesse = false,
+			damage = DiceTerm(SimpleDice(4)) to setOf(), // depends on the chosen item/ way to use.
+			proficientValue = proficiencyBonus, // XXX (2020-10-07) depends on the way it was intended?
+			modifierStrDex = modsStrDex // XXX (2020-10-07) ...
+		)
+
+	/** Get the attack damage for the currently hold item. */
+	val attackEquipped: Attack? get()
+		= null // TODO (2020-10-10) equipped attack getter()
+
+	/** Get the attack damage for the known spells. */
+	val attackSpells: List<Attack> get()
+		= listOf() // TODO (2020-10-10) as spell caster with damage spells, cast them.
+
+	/** Get the attack damage for the weapons (or items) which needs to be drawn. */
+	val attackDrawNew: List<Attack> get()
+		= listOf()
+
 	/* ------------------------------------------------------------------------
 	 * Personality and character, roleplaying.
 	 * Getter and Setter are all public and modifiable, to show progress in play.
