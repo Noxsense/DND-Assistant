@@ -14,7 +14,7 @@ data class Container(
 	val insideGrouped: Map<String, List<Item>> get()
 		= inside.groupBy { it.name }
 
-	val size : Int get()
+	val countItems : Int get()
 		= inside.size
 
 	fun isEmpty() : Boolean
@@ -30,7 +30,7 @@ data class Container(
 
 	/** The value of the items, maybe with the bag's value included.
 	 * @return a double, which represents the weight in lb. */
-	fun sumValue(thisInclusive: Boolean = false) : Money
+	fun sumCost(thisInclusive: Boolean = false) : Money
 		= ((if (thisInclusive) cost else Money())
 		+ inside.fold(Money(), { acc, i -> i.cost + acc }))
 

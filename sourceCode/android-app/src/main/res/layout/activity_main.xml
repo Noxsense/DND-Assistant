@@ -8,30 +8,36 @@
   android:paddingHorizontal="@dimen/hmargin"
   xmlns:android="http://schemas.android.com/apk/res/android"
   >
-  <TextView
-    android:enabled="false"
-    android:id="@+id/character_name"
+  <LinearLayout
     android:layout_height="wrap_content"
-    android:layout_marginVertical="@dimen/vmargin"
-    android:layout_width="wrap_content"
-    android:text="@string/character_name"
-    android:textColor="#000000"
-    android:textSize="30sp"
-    />
+    android:layout_width="match_parent"
+    >
+    <TextView
+      android:id="@+id/character_name"
+      android:layout_height="wrap_content"
+      android:layout_marginVertical="@dimen/vmargin"
+      android:layout_weight=".9"
+      android:layout_width="0sp"
+      android:text="@string/character_name"
+      android:textColor="#000000"
+      android:textSize="30sp"
+      />
+    <CheckBox
+      android:id="@+id/inspiration"
+      android:layout_height="wrap_content"
+      android:layout_marginVertical="@dimen/vmargin"
+      android:layout_weight=".1"
+      android:layout_width="0sp"
+      android:text="@string/inspiration"
+      />
+  </LinearLayout>
+
   <TextView
     android:id="@+id/experience"
     android:layout_height="wrap_content"
     android:layout_marginVertical="@dimen/vmargin"
     android:layout_width="match_parent"
     android:text="@string/level_xp"
-    />
-
-  <CheckBox
-    android:id="@+id/inspiration"
-    android:layout_height="wrap_content"
-    android:layout_marginVertical="@dimen/vmargin"
-    android:layout_width="match_parent"
-    android:text="@string/inspiration"
     />
 
   <!-- Ability Scores.

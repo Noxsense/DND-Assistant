@@ -2,15 +2,17 @@ package de.nox.dndassistant.app
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Html
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.OnClickListener
+import android.view.View.OnLongClickListener
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.LinearLayout.LayoutParams
+import android.widget.GridLayout
 import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -19,7 +21,6 @@ import androidx.appcompat.app.AppCompatActivity
 
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.abilities.*
-import kotlinx.android.synthetic.main.extra_dice.*
 
 import de.nox.dndassistant.core.*
 
@@ -98,19 +99,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 	private var attacks: List<Attack> = listOf()
 
-	data class Replacement(val name: String) {
-		var bags: Map<String, String> = HashMap<String,String>()
-	}
+	private lateinit var li: LayoutInflater
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		/* default loading. */
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
 
+		li = LayoutInflater.from(this)
+
 		instance = this
 
 		log.debug("Initiated Activity.")
-
 
 		// XXX (2020-09-27) load character, create character.
 		character = playgroundWithOnyx()
@@ -122,8 +122,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		updateViews(true) // initiation.
 
 		/* Show rolls. */
+		// TODO (2020-10-11) proper class for Array adapter or outsources
 		label_rolls.setOnClickListener(this)
-		(content_rolls.findViewById(R.id.list_rolls) as ListView).run {
+		(content_rolls.findViewById<ListView>(R.id.list_rolls)).run {
 			adapter = object: ArrayAdapter<RollResult>(
 				this@MainActivity,
 				R.layout.list_item_roll) {
@@ -135,9 +136,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 					override fun getView(i: Int, v: View?, parent: ViewGroup) : View {
 						if (v == null) {
-							val newView = LayoutInflater.from(this@MainActivity).run {
-								inflate(R.layout.list_item_roll, parent, false)
-							}
+							val newView = li.inflate(R.layout.list_item_roll, parent, false)
 							return getView(i, newView, parent)
 						}
 
@@ -149,16 +148,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 						 * | ROLL  | rolls, why, when |
 						 * +-------+------------------+ */
 
-						(v.findViewById(R.id.value) as TextView)
+						(v.findViewById<TextView>(R.id.value))
 							.text = "${e.value}"
 
-						(v.findViewById(R.id.single_rolls) as TextView)
+						(v.findViewById<TextView>(R.id.single_rolls))
 							.text = e.single.joinToString(" + ")
 
-						(v.findViewById(R.id.note) as TextView)
+						(v.findViewById<TextView>(R.id.note))
 							.text = e.reason
 
-						(v.findViewById(R.id.timestamp) as TextView)
+						(v.findViewById<TextView>(R.id.timestamp))
 							.text = e.timestampString
 
 						when (e.single.first()) {
@@ -172,7 +171,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				}
 		}
 
-		/* Initiate extra rolls (from extra_dice panel). */
+		/* Initiate extra rolls (from grid_dice panel). */
 		initiateExtraRolls()
 
 		panelRolls = Pair(label_rolls, content_rolls as ViewGroup)
@@ -185,6 +184,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		label_classes.setOnClickListener(this)
 		label_race_background.setOnClickListener(this)
 	}
+
+	// TODO (2020-10-12) handle on resume, to reload views after standby?
+	// override fun onResume()
 
 	/** Update the character specific panels: fill them with character's data. */
 	private fun updateViews(initiation: Boolean = false) {
@@ -249,18 +251,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			log.debug("Write ability '$it' into $v, next index $i.")
 
 			/* Set label. */
-			(v.findViewById(R.id.ability_title) as TextView).apply {
+			(v.findViewById<TextView>(R.id.ability_title)).apply {
 				text = "${it.fullname}"
 			}
 
 			/* Set whole score. */
-			(v.findViewById(R.id.ability_value) as TextView).apply {
+			(v.findViewById<TextView>(R.id.ability_value)).apply {
 				text = "%d".format(character.abilityScore(it))
 			}
 
 			/* Set modifier and add OnClickRoller (OnClickListener).
 			 * onClick: d20 + MOD. */
-			(v.findViewById(R.id.ability_modifier) as TextView).apply {
+			(v.findViewById<TextView>(R.id.ability_modifier)).apply {
 				val mod = character.abilityModifier(it)
 
 				// display
@@ -289,7 +291,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		}
 
 		/* Show speed (map). */
-		(panelHealth.second.findViewById(R.id.speed) as TextView).apply {
+		(panelHealth.second.findViewById<TextView>(R.id.speed)).apply {
 			// text = "${character.speed}" // maps: reason --> speed
 			text = "${character.current.feetLeft}" // maps: reason --> speed
 			if (setListener) {
@@ -316,7 +318,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		}
 
 		/* Show final armor class. */
-		(panelHealth.second.findViewById(R.id.armorclass) as TextView).apply {
+		(panelHealth.second.findViewById<TextView>(R.id.armorclass)).apply {
 			text = getString(R.string.armorclass).format(character.armorClass)
 			if (setListener) {
 				// on click open "dresser"
@@ -345,10 +347,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		val hitdiceCount = character.hitdice.size
 
 		// count displayed hit dice.
-		val resting = panelHealth.second.findViewById(R.id.resting) as LinearLayout
+		val resting = panelHealth.second.findViewById<LinearLayout>(R.id.resting)
 		var restCount = resting.getChildCount()
 
-		val longrest = resting.findViewById(R.id.longrest) as TextView
+		val longrest = resting.findViewById<TextView>(R.id.longrest)
 
 		// TODO (2020-10-07) consider gridview or listview for hitdice.
 
@@ -437,7 +439,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		if (!isInitializedPanelSkills()) {
 			panelSkills = Pair(
 				label_skills,
-				contents.findViewById(R.id.content_skills) as ViewGroup)
+				contents.findViewById<ViewGroup>(R.id.content_skills))
 		}
 
 		/* Set companion object's skillpanel label and Content. */
@@ -452,9 +454,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				character.skillModifier(Skill.PERCEPTION) + 10
 			))
 
-		val profValue = skillPanel.findViewById(R.id.proficiency_value) as TextView
-		val skillList = skillPanel.findViewById(R.id.list_skills) as ListView
-		val profList = skillPanel.findViewById(R.id.list_proficiencies_and_languages) as ListView
+		val profValue = skillPanel.findViewById<TextView>(R.id.proficiency_value)
+		val skillList = skillPanel.findViewById<ListView>(R.id.list_skills)
+		val profList = skillPanel.findViewById<ListView>(R.id.list_proficiencies_and_languages)
 
 		profValue.text = "Proficiency: %+d".format(character.proficiencyBonus)
 
@@ -471,48 +473,47 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				R.id.name,
 				enumValues<Skill>().toList()
 			) {
-					override fun getView(i: Int, view: View?, parent: ViewGroup) : View {
-						log.debug("getView($i, $view, $parent)")
+				override fun getView(i: Int, view: View?, parent: ViewGroup) : View {
+					log.debug("getView($i, $view, $parent)")
 
-						if (view == null) {
-							val newView = LayoutInflater.from(this@MainActivity).run {
-								inflate(R.layout.list_item_skill, parent, false)
-							}
-							return getView(i, newView, parent)
-						}
+					if (view == null) {
+						val newView = li.inflate(R.layout.list_item_skill, parent, false)
+						return getView(i, newView, parent)
+					}
 
-						// view now not null for sure.
+					// view now not null for sure.
 
-						val skill = getItem(i)!!
-						val smod = character.skillModifier(skill)
-						val proficiency = character.getProficiencyFor(skill).first
+					val skill = getItem(i)!!
+					val smod = character.skillModifier(skill)
+					val proficiency = character.getProficiencyFor(skill).first
 
-						log.debug("Update skill value ($skill: $smod).")
+					log.debug("Update skill value ($skill: $smod).")
 
-						(view.findViewById(R.id.name) as TextView).run {
-							text = skill.name.toLowerCase().capitalize()
-						}
+					(view.findViewById<TextView>(R.id.name)).run {
+						text = skill.name.toLowerCase().capitalize()
+					}
 
-						(view.findViewById(R.id.value) as TextView).run {
-							/* Show skill modifier. */
-							text = "%+d".format(smod)
+					(view.findViewById<TextView>(R.id.value)).run {
+						/* Show skill modifier. */
+						text = "%+d".format(smod)
 
-							/* Add skill check roll. */
-							setOnClickListener(OnClickRoller(
-								DiceTerm(D20, SimpleDice(1, smod)),
-								"Skill Check ($skill)"))
-						}
+						/* Add skill check roll. */
+						setOnClickListener(OnClickRoller(
+							DiceTerm(D20, SimpleDice(1, smod)),
+							"Skill Check ($skill)"))
+					}
 
-						/* Highlight the item according to it's proficiency level. */
+					/* Highlight the item according to it's proficiency level. */
+					if (proficiency != Proficiency.NONE) {
 						view.setBackground(getDrawable(when (proficiency) {
 							Proficiency.EXPERT -> R.drawable.bg_expert
-							Proficiency.PROFICIENT -> R.drawable.bg_proficient
-							else -> R.drawable.framed
+							else -> R.drawable.bg_proficient
 						}))
-
-						return view
 					}
+
+					return view
 				}
+			}
 
 			profList.adapter = ArrayAdapter<Skillable>(
 				this@MainActivity,
@@ -534,43 +535,90 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			/* Set companion object's panelAttacks label and Content. */
 			panelAttacks = Pair(
 				label_attacks,
-				content_attacks.findViewById(R.id.list_attacks) as ViewGroup)
+				content_attacks.findViewById<ViewGroup>(R.id.list_attacks))
 		}
 
-		attacks += character.attackUnarmed
-		attacks += character.attackImprovised
-		attacks += character.attackSpells
-		attacks += character.attackDrawNew
+		attacks += character.attackUnarmed // unarmed strike
+		attacks += character.attackImprovised // melee improvised (1d4)
+		attacks += character.attackSpells // spells to attacks
+		attacks += character.attackDrawNew // "inventory" to attacks
 
 		if (character.attackEquipped != null) {
 			attacks += character.attackEquipped!!
 		}
-
-		// inventory weapons to attack
-		/*
-		attacks += character.bags.values.map { it.inside }.flatten().toSet()
-			.filter { it is Weapon && it != character.hands.first && it != character.hands.second }
-			.map { Attack(
-				(it as Weapon).name,
-				ranged = !it.weaponType.melee,
-				damage = it.damage to it.damageType,
-				)}
 
 		val attackPanel = panelAttacks.second as ListView
 
 		// TODO (2020-10-07) add attack roller
 		// TODO (2020-10-07) add all attacks and a listener (auto level-up/equipment update)
 
-		attackPanel.adapter = ArrayAdapter(
+		attackPanel.adapter = object: ArrayAdapter<Attack>(
 			this@MainActivity,
-			android.R.layout.simple_list_item_1,
-			attacks)
+			R.layout.list_item_attack,
+			R.id.title,
+			attacks){
+				override fun getView(i: Int, v: View?, p: ViewGroup) : View {
+					if (v == null) {
+						val newView = li.inflate(R.layout.list_item_attack, p, false)
+						return getView(i, newView, p)
+					}
+
+					if (i > getCount()) return v
+
+					// view now not null for sure.
+
+					val attack = getItem(i)!!
+
+					(v.findViewById<TextView>(R.id.title)).run {
+						text = attack.name
+						// setOnClickListener() // TODO (2020-10-11) // show notes.
+					}
+
+					(v.findViewById<TextView>(R.id.attack_roll)).run {
+						text = "%+d".format(attack.attackBonus)
+						setOnClickListener(OnClickRoller(
+							DiceTerm(D20, SimpleDice(1, attack.attackBonus)),
+							"Attack with ${attack.name}"))
+					}
+
+					(v.findViewById<TextView>(R.id.attack_range))
+						.text = "TODO"
+
+					// TODO (2020-10-11) refactor: attack.ranged, add actual range for disadvantage rolls, etc?
+
+					(v.findViewById<TextView>(R.id.damage_dice)).run {
+						val dmgRoll = attack.damageRoll
+						text = dmgRoll.toString()
+						// TODO (2020-10-11) make depended on attack roll ? => 20 -> Crit?
+						setOnClickListener(OnClickRoller(
+							dmgRoll, "Damage with ${attack.name}"))
+					}
+
+					(v.findViewById<TextView>(R.id.damage_type)).run {
+						val dmgTypes = attack.damageType
+						text = when (dmgTypes.size) {
+							0 -> "???"
+							else -> dmgTypes.joinToString()
+						}
+					}
+
+					(v.findViewById<TextView>(R.id.note)).run {
+							/* Hide, if there is no note to show. */
+							if (attack.note.trim().length < 1) {
+								visibility = View.GONE
+							} else {
+								text = attack.note
+							}
+						}
+
+					return v
+				}
+			}
 
 		/* Update preview. */
 		label_attacks.text = formatLabel(
 			"Attacks",
-			"${attacks.maxByOrNull{ it.damage.first.average }}"
-			)
+			"${attacks.maxByOrNull{ it.damage.first.average }}")
 	}
 
 	/** Make a weapon to an attack for the selected character. */
@@ -593,16 +641,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		if (!isInitializedSpells()) {
 			panelSpells = Pair(
 				label_spells,
-				contents.findViewById(R.id.content_spells) as ViewGroup)
+				contents.findViewById<ViewGroup>(R.id.content_spells))
 		}
 
 		val spellPanel = panelSpells.second
 
 		/* Spell slots. */
-		val spellSlots = spellPanel.findViewById(R.id.spell_slots) as TextView
+		val spellSlots = spellPanel.findViewById<TextView>(R.id.spell_slots)
 
 		/* Known spells. */
-		val spellList = spellPanel.findViewById(R.id.list_spells) as ListView
+		val spellList = spellPanel.findViewById<ListView>(R.id.list_spells)
 
 		/* Show left spell slots. */
 		// TODO (2020-10-10) show left spell slots.
@@ -622,11 +670,77 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				it.toString()
 			}
 
-			spellList.adapter = ArrayAdapter<Spell>(
+			// TODO (2020-10-11) replace with real code instead of placeholder
+			spellList.adapter = object: ArrayAdapter<Spell>(
 				this@MainActivity,
 				R.layout.list_item_spell,
 				R.id.name,
-				character.spellsKnown)
+				character.spellsKnown
+			){
+				override fun getView(i: Int, v: View?, p: ViewGroup): View {
+					if (v == null) {
+						val newView = li.inflate(R.layout.list_item_spell, p, false)
+						return getView(i, newView, p)
+					}
+
+					if (i >= getCount()) return v // make sure, spell is not null
+
+					val spell = getItem(i)!!
+
+					/* Show spell and make clickable / interactive. */
+
+					(v.findViewById<TextView>(R.id.name)).run {
+						text = spell.name
+						// setOnClickListener() // TODO (unfold info and options /replace/(un)prepare)
+					}
+
+					// TODO (2020-10-11) pretty stats.
+
+					(v.findViewById<TextView>(R.id.stats)).run {
+						var vsm = ""
+
+						if (spell.invocationVerbal) vsm += "V"
+						if (spell.invocationSomatic) vsm += "S"
+						if (spell.invocationMatierial) vsm += "M (the material?)"
+
+						text = """
+							${spell.school}, ${spell.level}
+							${spell.castingTime} / ${spell.ritual}, $vsm
+							${spell.distance} ft (${spell.area})
+							${spell.duration} sec (${spell.concentration})
+
+							${spell.attackSave} \u21d2 ${spell.damageEffect}
+							""".trimIndent()
+					}
+
+					(v.findViewById<TextView>(R.id.note)).run {
+						text = spell.note
+					}
+
+					(v.findViewById<TextView>(R.id.spell_cast)).run {
+						setOnClickListener {
+							// XXX (2020-10-11) needs to be implemented. (normal cast on level)
+							// TODO (2020-10-11) consider accidentally casted
+							Toast.makeText(
+								this@MainActivity,
+								"Cast spell ${spell}",
+								Toast.LENGTH_SHORT)
+								.show()
+						}
+						setOnLongClickListener {
+							// XXX (2020-10-11) needs to be implemented. (cast with higher level)
+							Toast.makeText(
+								this@MainActivity,
+								"Attempt to cast spell ${spell} with higher spell slot.",
+								Toast.LENGTH_SHORT)
+								.show()
+							true
+						}
+					}
+
+					return v
+				}
+			}
 		}
 
 		/* Update preview. */
@@ -649,55 +763,173 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		log.debug("Update inventory")
 
+		val content = panelInventory.second
+		val preview = panelInventory.first
+
+		val weightBar = content.findViewById<ProgressBar>(R.id.bar_carried_weight)
+		val moneyNote = content.findViewById<TextView>(R.id.money)
+		val equipment = content.findViewById<TextView>(R.id.equipped)
+
+		val bags = panelInventory.second.findViewById<LinearLayout>(R.id.list_bags)
+
 		/* Weight bar. */
-		(panelInventory.second.findViewById(R.id.bar_carried_weight) as ProgressBar).run {
+		weightBar.run {
 			max = character.carryingCapacity.toInt()
 			progress  = character.carriedWeight.toInt()
+		}
+
+		/* Money. */
+		moneyNote.run {
+			text = "Purse: ${character.purse}"
 		}
 
 		// XXX (2020-10-07) refactor inventory (currenlty equipped)
 
 		/* Equipped. */
-		(panelInventory.second.findViewById(R.id.equipped) as TextView).run {
-			text = "Equipped and in Hands!"
+		equipment.run {
+			text = Html.fromHtml("""
+				<b>Equipped and in Hands!</b>
+				<p>(WIP)
+
+				${character.worn}
+				</p>""".trimIndent())
+
+			setOnClickListener {
+				Toast.makeText(
+					this@MainActivity,
+					"Open dresser", // see also armorclass
+					Toast.LENGTH_SHORT
+				).show()
+			}
 		}
 
 		// XXX (2020-10-07) refactor inventory (nested bags)
 
+		/* Sorted map keys. */
+		val keys: List<String>
+			= character.bags.keys.toList().sorted()
+
+		/* Top level of bags. */
+		val topLevel: List<String>
+			= keys.filter { it.count { it == ':' }  < 2 }
+
 		/* List of bags. And their content. */
-		(panelInventory.second.findViewById(R.id.list_bags) as ListView).run {
-			val bags = character.bags.values.toList()
+		bags.run {
+			// XXX placeholder.
 
-			/* List outer bags. */
-			adapter = ArrayAdapter<Item>(
-				this@MainActivity,
-				android.R.layout.simple_list_item_1,
-				bags)
+			/* Check for changes. Update. */
+			// TODO (2020-10-11) implement: inventory Check for changes. Update.
 
-			/* In click: container: Unfold / item: ??? */
-			setOnItemClickListener {_, _, pos, _ ->
-				if (bags[pos] is Container) {
-					Toast.makeText(this@MainActivity, "Unfold bag", Toast.LENGTH_LONG).show()
-				}
-			}
+			removeAllViews() // clean children.
 
-			/* In click: container: Unfold / item: ??? */
-			setOnItemLongClickListener {_, _, pos, _ ->
-				Toast.makeText(this@MainActivity, "Open Option menu $pos", Toast.LENGTH_LONG).show()
-				true
+			topLevel.forEach { bagkey ->
+				val bag = character.bags[bagkey]!!
+
+				log.debug("Setup view for '$bag'")
+
+				val bagView = createNewItemView(bags)
+				bags.addView(fillItemView(bag, bagView))
 			}
 		}
 
-		label_inventory.text = formatLabel(
+		preview.text = formatLabel(
 			"Inventory",
-			"Money ${character.purse}, Bag weight ${56.6} lb")
+			"Money ${character.purse}, Carrying ${character.carriedWeight} lb")
 	}
+
+	// create a new view for an item / bag.
+	private fun createNewItemView(parent: ViewGroup) : View
+		= li.inflate(R.layout.list_item_item, parent, false)
+
+	/** Fill View with Container information. */
+	private fun fillItemView(item: Item, itemView: View) = itemView.run {
+		log.debug("Fill data of just an item ($item).")
+		(this.findViewById<TextView>(R.id.item_name))
+			?.text = item.name
+
+		/* Open dialog for more options. */
+		setOnLongClickListener(onInventoryLongkListener)
+
+		if (item is Container) {
+			// go to fillBagView
+			// differs in container_inside and info views, also other click.
+			fillBagView(item, itemView)
+
+		} else {
+			(this.findViewById<TextView>(R.id.item_info_0))
+				?.text = "${item.weight} -- ${item.cost}"
+
+			(this.findViewById<TextView>(R.id.item_info_1))
+				?.text = ""
+
+			// remove for normal object.
+			// (this as ViewGroup).removeView(itemView.findViewById(R.id.container_inside))
+
+			this
+		}
+	}
+
+	/** Fill View with normal Item information. */
+	private fun fillBagView(bag: Container, bagView: View) : View = bagView.run {
+		log.debug("Fill Data with Bag/Container Content ($bag).")
+
+		this.findViewById<TextView>(R.id.item_info_0)
+			?.text = "(${bag.sumWeight()} + ${bag.weight})" +
+			" -- (${bag.sumCost()} + ${bag.cost})"
+
+		this.findViewById<TextView>(R.id.item_info_1)
+			?.text = "contains: ${bag.countItems} items."
+
+		log.debug("Add panel for own content.")
+		val bagViewStore = this.findViewById<LinearLayout>(R.id.container_inside)
+
+		bagViewStore.visibility = View.VISIBLE // View.GONE
+
+		/* add nested list for stored items. */
+		bag.inside.map { stored ->
+			bagViewStore.addView(
+				/* inflate a new layout and add new view into container_inside. */
+				fillItemView(stored, createNewItemView(bagViewStore)))
+		}
+
+		/* On click: Open / Collapse bag content. */
+		setOnClickListener(onBagClickListener)
+
+		this
+	}
+
+	/** Find own container_inside child: toggle it's visibility. */
+	private val onBagClickListener: OnClickListener
+		= OnClickListener { v ->
+			val insideView = v.findViewById<LinearLayout>(R.id.container_inside)
+			insideView?.toggleVisibility()
+
+			log.debug("Toggle bag.container_inside, direct kids: "
+				+ "${insideView?.getChildCount() ?: 0}")
+		}
+
+	/** Open dialog with more information and options. */
+	private val onInventoryLongkListener: OnLongClickListener
+		= OnLongClickListener { v ->
+			// TODO (2020-10-12) find the concrete item / reference of item below view.
+
+			val item: Item? = null
+
+			log.debug("Open menu for item: $item (on $v)")
+
+			Toast.makeText(
+				this@MainActivity,
+				"Open menu for item: $item (on $v)",
+				Toast.LENGTH_SHORT
+			).show()
+
+			true
+		}
 
 	/** Update the "content_classes" panel.
 	 * Clicking on a feast will show more information about the feast.
 	 * Also limited feasts can be activated.
-	 * Here a new klass level can also be added.
-	 */
+	 * Here a new klass level can also be added. */
 	private fun updateKlasses(setListener: Boolean = false) {
 		if (!isInitializedKlasses()) {
 			panelKlasses = Pair(
@@ -706,16 +938,57 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		}
 
 		// XXX (2020-10-07) implement (content_classes)
-		(content_classes.findViewById(R.id.list_classes) as ListView)
-			.adapter = ArrayAdapter(
-				this@MainActivity,
-				// TODO (2020-10-07) complex layout with 1-level nested listviews: klass -> feats.
-				android.R.layout.simple_list_item_1,
-				character.klasses.keys.toList())
+		val klassList = (panelKlasses.second.findViewById<LinearLayout>(R.id.list_classes))
 
-		label_classes.text = formatLabel(
+		// TODO (2020-10-12) update only needed.
+		klassList.removeAllViews() // remove all views.
+
+		var previewText = ""
+
+		/* Add for each class a new List of each klass and their feats. */
+		character.klasses.toList().forEach { (klass, lvlSpecial) ->
+			val (lvl, special) = lvlSpecial
+
+			previewText += ", $klass"
+			if (special.trim().length > 0) previewText += " $special"
+			previewText += " (lvl. $lvl)"
+
+			val kv = li.inflate(R.layout.list_item_klass, klassList, false)
+
+			klassList.addView(kv) // add to overview.
+
+			kv.findViewById<TextView>(R.id.title)?.run {
+				text = "${klass.name} ($special $lvl)"
+			}
+
+			kv.findViewById<TextView>(R.id.description)?.run {
+				text = """
+					Hitdie: ${klass.hitdie}
+					${klass.description}
+					""".trimIndent()
+			}
+
+			val klassFeatList = kv.findViewById<LinearLayout>(R.id.list)
+
+			klass.getFeaturesAtLevel(lvl, special).forEach { feat ->
+				val view = li.inflate(R.layout.list_item_feat, klassFeatList, false)
+
+				view.apply {
+					findViewById<TextView>(R.id.name).text = feat.title
+					findViewById<TextView>(R.id.level).text = "${feat.level}"
+					findViewById<TextView>(R.id.description).text = "${feat.description}"
+
+					// TODO (2020-10-12) refactor klasses and feats.
+					// findViewById<TextView>(R.layout.limits).text = "LIMITS"
+				}
+
+				klassFeatList.addView(view)
+			}
+		}
+
+		panelKlasses.first.text = formatLabel(
 			"Classes",
-			"(${character.klassFirst}, ${character.klasses[character.klassFirst]})")
+			"${previewText.substring(2)}")
 	}
 
 	/** Update the "content_race_background" panel.
@@ -731,7 +1004,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		// XXX (2020-10-07) implement story view.
 		val findView = { id: Int ->
-			content_race_background.findViewById(id) as View
+			content_race_background.findViewById<View>(id)
 		}
 
 		(findView(R.id.the_species) as TextView)
@@ -774,11 +1047,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		var string = "${character.race}:${character.subrace} ("
 
 		if (character.race.darkvision > 29) {
-			// unicode: dark shade
-			string += "${character.race.darkvision} ft \u2593, "
+			// unicode: first quarter moon symbol
+			string += "\uD83C\uDF13 ${character.race.darkvision} ft, "
 		}
 
-		string += "${character.size})"
+		string += "${character.size}) - "
 		string += "${character.background}:${character.backgroundFlavour}"
 
 		label_race_background.text = formatLabel("About Me", string)
@@ -789,7 +1062,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * to roll outside of possible ability or attack rolls. */
 	private fun initiateExtraRolls() {
 		/* Assign this listener to each custom dice term. */
-		val extraDice = content_rolls.findViewById(R.id.extra_dice) as LinearLayout
+		val extraDice = content_rolls.findViewById<GridLayout>(R.id.grid_dice)
 
 		log.debug("Set up extra dice to roll.")
 
@@ -798,13 +1071,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				if (this is EditText) {
 					// insert term and roll it. (keep text)
 					setOnKeyListener(OnKeyEventRoller())
-					setTextSize(5.toFloat())
 
 				} else if (this is TextView) {
 					// simply roll the die
 					val term = this.text.toString()
 					val faces: Int = term.substring(1).toInt()
-					setTextSize(5.toFloat())
 					setOnClickListener(
 						OnClickRoller(DiceTerm(faces), term))
 				}
@@ -850,7 +1121,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				closeContentsBut(R.id.content_rolls)
 
 				/* Update roll shower. */
-				val listRolls = content_rolls.findViewById(R.id.list_rolls) as ListView
+				val listRolls = content_rolls.findViewById<ListView>(R.id.list_rolls)
 				(listRolls.adapter as ArrayAdapter<*>).notifyDataSetChanged()
 				listRolls.invalidateViews()
 				listRolls.refreshDrawableState()
@@ -860,7 +1131,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			  // XXX (2020-09-29) implement walk steps. (gui)
 			  if (character.current.walk(ft = 5)) {
 				  Toast.makeText(context, "Went 5ft", short).show()
-				  (panelHealth.second.findViewById(R.id.text) as TextView).text = "${character.current.feetLeft} ft"
+				  (panelHealth.second.findViewById<TextView>(R.id.text))
+					.text = "${character.current.feetLeft} ft"
 			  }
 
 			}

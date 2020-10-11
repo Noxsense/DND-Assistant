@@ -741,9 +741,9 @@ public class PlayerCharacter private constructor(
 	fun storeItem(item: Item, bag: String) : Boolean {
 		val bagContainer = bags.getOrElse(bag, { null })
 		if (bagContainer != null) {
-			val s0 = bagContainer.size // count items inside
+			val s0 = bagContainer.countItems // count items inside
 			bagContainer.insert(item) // try to store, only reference differentiable objects.
-			val success = bagContainer.size != s0 // success, if one more.
+			val success = bagContainer.countItems != s0 // success, if one more.
 			return success
 		}
 		return false

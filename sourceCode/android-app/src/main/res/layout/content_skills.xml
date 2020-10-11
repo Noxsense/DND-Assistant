@@ -6,7 +6,7 @@
   >
   <TextView
     android:layout_height="0sp"
-    android:layout_weight="0.1"
+    android:layout_weight="0.05"
     android:layout_width="match_parent"
     android:text="@string/title_skills"
     android:textSize="20sp"
@@ -29,27 +29,28 @@
     />
   <ListView
     android:background="@drawable/framed"
-    android:divider="@android:color/transparent"
     android:id="@+id/list_skills"
     android:layout_height="0sp"
     android:layout_marginVertical="@dimen/vmargin"
-    android:layout_weight="0.405"
+    android:layout_weight="0.655"
     android:layout_width="match_parent"
     />
+    <!-- list_item_skill.xml -->
   <TextView
     android:layout_height="0sp"
-    android:layout_marginVertical="@dimen/vmargin"
+    android:layout_marginBottom="@dimen/vmargin"
+    android:layout_marginTop="10sp"
     android:layout_weight="0.045"
     android:layout_width="match_parent"
     android:text="Proficiencies"
     android:textSize="15sp"
     />
   <ListView
-    android:divider="@android:color/transparent"
+    android:background="@drawable/framed"
     android:id="@+id/list_proficiencies_and_languages"
     android:layout_height="0sp"
     android:layout_marginVertical="@dimen/vmargin"
-    android:layout_weight="0.405"
+    android:layout_weight="0.305"
     android:layout_width="match_parent"
     />
 </LinearLayout>

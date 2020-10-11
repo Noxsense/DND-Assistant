@@ -25,7 +25,7 @@ data class Attack(
 	}
 
 	/** Decide which bonus is added. */
-	val bonus: Int = when {
+	private val bonus: Int = when {
 		finesse -> modifierStrDex.run { Math.max(first, second) }
 		ranged -> modifierStrDex.second // dex
 		else -> modifierStrDex.first // str

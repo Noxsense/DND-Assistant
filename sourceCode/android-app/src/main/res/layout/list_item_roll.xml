@@ -8,6 +8,7 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   >
   <TextView
+    android:gravity="center"
     android:id="@+id/value"
     android:layout_height="match_parent"
     android:layout_weight="0.5"
@@ -16,10 +17,10 @@
     android:textSize="20sp"
     />
   <LinearLayout
+    android:gravity="center"
     android:layout_height="match_parent"
     android:layout_weight="0.5"
     android:layout_width="0sp"
-    android:gravity="center"
     android:orientation="vertical"
     >
     <TextView
