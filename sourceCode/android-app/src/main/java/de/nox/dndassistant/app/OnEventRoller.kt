@@ -50,28 +50,26 @@ data class RollResult(
 }
 
 /**
- * OnClickRoller extends an OnClickRoller.
+ * OnEventRoller extends an OnEventRoller.
  * On click a prepared dice term will be rolled.
  */
-public class OnClickRoller(
-	val diceTerm: DiceTerm,
-	var reason: String = diceTerm.toString()
-) : View.OnClickListener {
-
-	/* Return the last roll, this Roller returned. */
-	var roll: Int = -1
-		private set
+public class OnEventRoller(
+	var baseTerm: DiceTerm,
+	var reason: String = baseTerm.toString())
+	: View.OnClickListener, View.OnLongClickListener, View.OnKeyListener {
 
 	/* Roll, when a (DiceView) was clicked. */
 	override fun onClick(view: View) {
 		/* Roll the result. */
-		roll(diceTerm, reason, view.getContext())
+		roll(baseTerm, reason, view.getContext())
 	}
-}
 
-/** OnKeyEventRoller implements an OnClickListener.
- * On Enter, it parses the given term and rolls the term. */
-public class OnKeyEventRoller() : View.OnKeyListener {
+	/* Roll, when a (DiceView) was clicked. */
+	override fun onLongClick(view: View) : Boolean {
+		/* Roll the result. */
+		roll(baseTerm, reason, view.getContext())
+		return true
+	}
 
 	/** Parse TextView text to DiceTerm and return rolled result. */
 	override fun onKey(view: View, code: Int, event: KeyEvent) : Boolean {
@@ -89,10 +87,16 @@ public class OnKeyEventRoller() : View.OnKeyListener {
 
 		/* Parse the current dice term. */
 		val term = view.text.toString().trim()
-		val diceTerm = DiceTerm.parse(term)
 
-		/* Roll the result, toast it. */
-		roll(diceTerm, term, view.getContext()) // reason: the custom term written.
+		// TODO (2020-10-15)
+		val profTerm = "+\\s*prof"
+		val parsedAdditions: List<Any> = emptyList()
+
+		val parsedTerm = DiceTerm.parse(term.replace(profTerm, ""))
+
+		/* Roll the result, toast it.
+		 * Reason: the custom term written. */
+		roll(parsedTerm, term, view.getContext())
 
 		return true
 	}
