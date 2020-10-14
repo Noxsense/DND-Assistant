@@ -99,6 +99,10 @@ class DiceTerm(vararg ds: SimpleDice) {
 			else -> xs + ((1..x.count).map { SimpleDice(x.faces, x.sign) })
 		}}).toTypedArray())
 
+	/** Create new dice term with added bonus.*/
+	operator fun plus(b: Int) : DiceTerm
+		= DiceTerm(*dice, SimpleDice(1, b))
+
 	/** Create new dice term with added dice.*/
 	operator fun plus(d: SimpleDice) : DiceTerm
 		= DiceTerm(*dice, d)
@@ -106,6 +110,10 @@ class DiceTerm(vararg ds: SimpleDice) {
 	/** Create new dice term with added dice term.*/
 	operator fun plus(ds: DiceTerm) : DiceTerm
 		= DiceTerm(*dice, *ds.dice)
+
+	/** Create new dice term with subtracted bonus.*/
+	operator fun minus(b: Int) : DiceTerm
+		= DiceTerm(*dice, SimpleDice(1, -b))
 
 	/** Create new dice term with reducing dice (more dice, but negativly).*/
 	operator fun minus(d: SimpleDice) : DiceTerm
@@ -152,6 +160,10 @@ data class SimpleDice(val max: Int, val times: Int = 1) : Comparable<SimpleDice>
 			faces == other.faces -> factor - other.factor
 			else -> faces - other.faces
 		}
+
+	/** Simple conversion to a DiceTerm.
+	 * @return DiceTerm with only this/these SimpleDice. */
+	fun toTerm() : DiceTerm = DiceTerm(this)
 
 	/** Get a new simple dice term with same count of dice, but other faces.*/
 	fun addFaces(i: Int) : SimpleDice
