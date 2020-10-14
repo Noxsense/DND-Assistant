@@ -20,9 +20,21 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.abilities.*
 
-import de.nox.dndassistant.core.*
+import de.nox.dndassistant.core.PlayerCharacter
+import de.nox.dndassistant.core.Item
+import de.nox.dndassistant.core.Ability
+import de.nox.dndassistant.core.Proficiency
+import de.nox.dndassistant.core.Spell
+import de.nox.dndassistant.core.Container
+import de.nox.dndassistant.core.Skill
+import de.nox.dndassistant.core.Skillable
+import de.nox.dndassistant.core.Weapon
+import de.nox.dndassistant.core.Attack
+import de.nox.dndassistant.core.playgroundWithOnyx
+import de.nox.dndassistant.core.DiceTerm
+import de.nox.dndassistant.core.SimpleDice
+import de.nox.dndassistant.core.D20
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -1179,22 +1191,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			else -> false.also {
 				visibility = View.GONE
 				log.debug("GONE       $this")
-			}
-		}
-}
-
-/** Android specific log. */
-object LoggerFactory {
-	fun getLogger(tag: String) : Logger
-		= object : Logger {
-			override fun log(t: LoggingLevel, msg: Any?) {
-				when (t) {
-					LoggingLevel.ERROR -> Log.e(tag, "${msg}")
-					LoggingLevel.INFO -> Log.i(tag, "${msg}")
-					LoggingLevel.WARN -> Log.w(tag, "${msg}")
-					LoggingLevel.VERBOSE -> Log.v(tag, "${msg}")
-					LoggingLevel.DEBUG -> Log.d(tag, "${msg}")
-				}
 			}
 		}
 }
