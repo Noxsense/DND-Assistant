@@ -139,7 +139,7 @@ public class PlayerCharacter private constructor(
 
 	/** Get the ability modifier. */
 	fun abilityModifier(a: Ability) : Int
-		= getModifier(abilityScore.getOrElse(a, { 0 }))
+		= Ability.scoreToModifier(abilityScore.getOrElse(a, { 0 }))
 
 	/** The combat's initiative, mostly the DEX modifier. (in-combat) */
 	val initiative: Int get()
@@ -976,9 +976,5 @@ public class PlayerCharacter private constructor(
 			lvl >= 5 -> +3
 			else -> +2
 		}
-
-		/** Translate a score to a modifier. */
-		private fun getModifier(value: Int) : Int
-			= floor((value - 10) / 2.0).toInt()
 	}
 }

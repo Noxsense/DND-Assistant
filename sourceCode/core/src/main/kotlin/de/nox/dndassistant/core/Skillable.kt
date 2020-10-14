@@ -1,5 +1,7 @@
 package de.nox.dndassistant.core
 
+import kotlin.math.floor
+
 /** Something a character can learn.
  * For example a skill, to add proficiency.
  * A Weapon or armor to use it.
@@ -46,7 +48,13 @@ enum class Ability(val fullname: String) {
 	CON("CONSTITUTION"),
 	INT("INTELLIGENCE"),
 	WIS("WISDOM"),
-	CHA("CHARISMA")
+	CHA("CHARISMA");
+
+	companion object {
+		/** Get the modifier for a certain score value. */
+		public fun scoreToModifier(score: Int) : Int
+			= floor((score - 10) / 2.0).toInt()
+	}
 }
 
 /* Body skill.*/
