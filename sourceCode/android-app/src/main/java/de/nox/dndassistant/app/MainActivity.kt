@@ -400,9 +400,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 					// roll the healing.
 					val roll: Int = (1..face).random()
 
-					Rollers.history += listOf(RollResult(
+					Rollers.history = listOf(RollResult(
 						value = roll,
 						reason = "Short Rest (d$face)")) + Rollers.history
+
+					this@MainActivity.notifyRollsUpdated()
 
 					// disables this hitdie.
 					if (v is TextView) {
