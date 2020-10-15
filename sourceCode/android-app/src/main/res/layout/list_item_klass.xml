@@ -7,7 +7,7 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   >
   <TextView
-    android:id="@+id/title"
+    android:id="@+id/name_klass"
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
     android:textSize="15sp"
@@ -28,7 +28,7 @@
     >
     <LinearLayout
       android:id="@+id/list"
-      android:layout_height="match_parent"
+      android:layout_height="wrap_content"
       android:layout_width="match_parent"
       android:orientation="vertical"
       >

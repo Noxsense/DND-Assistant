@@ -16,7 +16,7 @@
     <TextView
       android:background="@drawable/framed"
       android:gravity="start|top"
-      android:id="@+id/title"
+      android:id="@+id/name_attack"
       android:layout_height="match_parent"
       android:layout_weight="4"
       android:layout_width="0sp"

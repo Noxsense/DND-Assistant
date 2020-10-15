@@ -46,68 +46,68 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	companion object {
 		lateinit var instance: AppCompatActivity
 			private set
-
-		lateinit var panelAbilities: View
-			private set
-
-		/** Check if preview and context (abilities) are initiated. */
-		fun isInitializedPanelAbilities() : Boolean = ::panelAbilities.isInitialized
-
-		lateinit var panelHealth: Pair<View, ViewGroup>
-			private set
-
-		/** Check if preview and context (health) are initiated. */
-		fun isInitializedPanelHealth() : Boolean = ::panelHealth.isInitialized
-
-		lateinit var panelSkills: Pair<TextView, ViewGroup>
-			private set
-			// initiated on updateSkills()
-
-		/** Check if preview and context (skills) are initiated. */
-		fun isInitializedPanelSkills() : Boolean = ::panelSkills.isInitialized
-
-		lateinit var panelAttacks: Pair<TextView, ViewGroup>
-			private set
-			// initiated on updateAttacks()
-
-		/** Check if preview and context (attacks) are initiated. */
-		fun isInitializedAttacks() : Boolean = ::panelAttacks.isInitialized
-
-		lateinit var panelSpells: Pair<TextView, ViewGroup>
-			private set
-			// initiated on updateSpells()
-
-		/** Check if preview and context (spells) are initiated. */
-		fun isInitializedSpells() : Boolean = ::panelSpells.isInitialized
-
-		lateinit var panelInventory: Pair<TextView, ViewGroup>
-			private set
-			// initiated on updateInventory()
-
-		/** Check if preview and context (inventory) are initiated. */
-		fun isInitializedInventory() : Boolean = ::panelInventory.isInitialized
-
-		lateinit var panelKlasses: Pair<TextView, ViewGroup>
-			private set
-			// initiated on updatecClasses()
-
-		/** Check if preview and context (klasses) are initiated. */
-		fun isInitializedKlasses() : Boolean = ::panelKlasses.isInitialized
-
-		lateinit var panelStory: Pair<TextView, ViewGroup>
-			private set
-			// initiated on updateStory()
-
-		/** Check if preview and context (story) are initiated. */
-		fun isInitializedStory() : Boolean = ::panelStory.isInitialized
-
-		lateinit var panelRolls: Pair<TextView, ViewGroup>
-			private set
-			// initiated on initiateExtraRolls()
-
-		/** Check if preview and context (rolls) are initiated. */
-		fun isInitializedRolls() : Boolean = ::panelRolls.isInitialized
 	}
+
+	private lateinit var panelAbilities: View
+		private set
+
+	/** Check if preview and context (abilities) are initiated. */
+	private fun isInitializedPanelAbilities() : Boolean = ::panelAbilities.isInitialized
+
+	private lateinit var panelHealth: Pair<View, ViewGroup>
+		private set
+
+	/** Check if preview and context (health) are initiated. */
+	private fun isInitializedPanelHealth() : Boolean = ::panelHealth.isInitialized
+
+	private lateinit var panelSkills: Pair<TextView, ViewGroup>
+		private set
+		// initiated on updateSkills()
+
+	/** Check if preview and context (skills) are initiated. */
+	private fun isInitializedPanelSkills() : Boolean = ::panelSkills.isInitialized
+
+	private lateinit var panelAttacks: Pair<TextView, ViewGroup>
+		private set
+		// initiated on updateAttacks()
+
+	/** Check if preview and context (attacks) are initiated. */
+	private fun isInitializedAttacks() : Boolean = ::panelAttacks.isInitialized
+
+	private lateinit var panelSpells: Pair<TextView, ViewGroup>
+		private set
+		// initiated on updateSpells()
+
+	/** Check if preview and context (spells) are initiated. */
+	private fun isInitializedSpells() : Boolean = ::panelSpells.isInitialized
+
+	private lateinit var panelInventory: Pair<TextView, ViewGroup>
+		private set
+		// initiated on updateInventory()
+
+	/** Check if preview and context (inventory) are initiated. */
+	private fun isInitializedInventory() : Boolean = ::panelInventory.isInitialized
+
+	private lateinit var panelKlasses: Pair<TextView, ViewGroup>
+		private set
+		// initiated on updatecClasses()
+
+	/** Check if preview and context (klasses) are initiated. */
+	private fun isInitializedKlasses() : Boolean = ::panelKlasses.isInitialized
+
+	private lateinit var panelStory: Pair<TextView, ViewGroup>
+		private set
+		// initiated on updateStory()
+
+	/** Check if preview and context (story) are initiated. */
+	private fun isInitializedStory() : Boolean = ::panelStory.isInitialized
+
+	private lateinit var panelRolls: Pair<TextView, ViewGroup>
+		private set
+		// initiated on initiateExtraRolls()
+
+	/** Check if preview and context (rolls) are initiated. */
+	private fun isInitializedRolls() : Boolean = ::panelRolls.isInitialized
 
 	private var attacks: List<Attack> = listOf()
 
@@ -195,6 +195,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		label_inventory.setOnClickListener(this)
 		label_classes.setOnClickListener(this)
 		label_race_background.setOnClickListener(this)
+	}
+
+	/** Poke the roll history view to display potentially updated entries.
+	 * Also display the most recent result in the preview. */
+	public fun notifyRollsUpdated() {
+		if (!isInitializedRolls()) return
+		val (preview, content) = panelRolls
+		content.findViewById<ListView>(R.id.list_rolls).run {
+			(adapter as ArrayAdapter<RollResult>).notifyDataSetChanged()
+
+			preview.text = formatLabel(
+				"Rolls & Counters",
+				"Latest: ${(adapter.getItem(0) as RollResult?)?.value}")
+		}
 	}
 
 	// TODO (2020-10-12) handle on resume, to reload views after standby?
@@ -534,7 +548,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		attackPanel.adapter = object: ArrayAdapter<Attack>(
 			this@MainActivity,
 			R.layout.list_item_attack,
-			R.id.title,
+			R.id.name_attack,
 			attacks){
 				override fun getView(i: Int, v: View?, p: ViewGroup) : View {
 					if (v == null) {
@@ -548,7 +562,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 					val attack = getItem(i)!!
 
-					(v.findViewById<TextView>(R.id.title)).run {
+					(v.findViewById<TextView>(R.id.name_attack)).run {
 						text = attack.name
 						// setOnClickListener() // TODO (2020-10-11) // show notes.
 					}
@@ -936,7 +950,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 			klassList.addView(kv) // add to overview.
 
-			kv.findViewById<TextView>(R.id.title)?.run {
+			kv.findViewById<TextView>(R.id.name_klass)?.run {
 				text = "${klass.name} ($special $lvl)"
 			}
 
@@ -1101,7 +1115,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 				/* Update roll shower. */
 				val listRolls = content_rolls.findViewById<ListView>(R.id.list_rolls)
-				(listRolls.adapter as ArrayAdapter<*>).notifyDataSetChanged()
+				(listRolls.adapter as ArrayAdapter<RollResult>).notifyDataSetChanged()
 				listRolls.invalidateViews()
 				listRolls.refreshDrawableState()
 			}

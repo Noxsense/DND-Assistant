@@ -64,6 +64,7 @@
   <!-- overview on abilities, attacks, spells, feats, inventory and other -->
   <LinearLayout
     android:background="@drawable/framed"
+    android:baselineAligned="false"
     android:layout_height="match_parent"
     android:layout_marginVertical="@dimen/vmargin"
     android:layout_width="match_parent"
@@ -72,14 +73,14 @@
     <!-- Overview -->
     <ScrollView
       android:layout_height="match_parent"
-      android:layout_marginLeft="@dimen/hmargin"
-      android:layout_marginRight="@dimen/vmargin"
+      android:layout_marginStart="@dimen/hmargin"
+      android:layout_marginEnd="@dimen/vmargin"
       android:layout_marginVertical="@dimen/vmargin"
       android:layout_weight="0.5"
       android:layout_width="0sp"
       >
       <LinearLayout
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:orientation="vertical"
         >
@@ -164,8 +165,8 @@
       android:focusable="true"
       android:focusableInTouchMode="true"
       android:layout_height="match_parent"
-      android:layout_marginLeft="@dimen/vmargin"
-      android:layout_marginRight="@dimen/hmargin"
+      android:layout_marginStart="@dimen/vmargin"
+      android:layout_marginEnd="@dimen/hmargin"
       android:layout_marginVertical="@dimen/vmargin"
       android:layout_weight="0.5"
       android:layout_width="0sp"
@@ -238,10 +239,12 @@
       </LinearLayout>
       <EditText
         android:background="@drawable/framed"
+        android:hint="Search"
         android:id="@+id/search_content"
-        android:layout_width="match_parent"
+        android:inputType="text"
         android:layout_height="0sp"
         android:layout_weight="0.1"
+        android:layout_width="match_parent"
         />
     </LinearLayout>
   </LinearLayout>

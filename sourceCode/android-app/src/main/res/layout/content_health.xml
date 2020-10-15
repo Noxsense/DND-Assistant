@@ -89,7 +89,7 @@
     android:layout_marginVertical="@dimen/vmargin"
     android:layout_width="match_parent"
     android:padding="6sp"
-    android:text="Prone ..."
+    android:text="Conditions"
     />
   <!-- health panel end -->
 </LinearLayout>

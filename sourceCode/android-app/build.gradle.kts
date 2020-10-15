@@ -48,6 +48,12 @@ android {
   lintOptions {
     isWarningsAsErrors = false
     isAbortOnError = true
+
+    disable("HardcodedText") // ignore since it's mostly place holder text.
+    disable("IconLauncherShape") // ignore my shape
+    disable("SmallSp") // ignore too small size warnings.
+    disable("UnsafeExperimentalUsageError") // Obsolete custom lint check
+    disable("UnsafeExperimentalUsageWarning") // Obsolete custom lint check
   }
 
   packagingOptions {

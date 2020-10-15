@@ -11,6 +11,7 @@ import android.widget.TextView
 import android.widget.Toast
 
 import java.text.SimpleDateFormat
+import java.util.Locale
 
 import de.nox.dndassistant.core.DiceTerm
 
@@ -29,7 +30,7 @@ data class RollResult(
 {
 	private companion object {
 		val DATE_FORMAT = "yyyy-MM-dd HH:mm:ss"
-		val formatter = SimpleDateFormat(DATE_FORMAT)
+		val formatter = SimpleDateFormat(DATE_FORMAT, Locale.GERMAN)
 	}
 
 	public val timestampString: String = formatter.format(timestamp)
@@ -115,29 +116,17 @@ private fun roll(term: DiceTerm, reason: String, toastContext: Context? = null) 
 	/* Roll the result. */
 	val rolls = term.rollList()
 	val roll = rolls.sum()
-
 	log.debug("Rolled $rolls => $roll ($reason)")
 
 	/* Add to roll history: <Timestamp, <Result, Reason>>. */
 	val result = RollResult(roll, rolls, reason) // default ts: now
 	Rollers.history = listOf(result) + Rollers.history // workaround: prepend.
 
-	if (MainActivity.isInitializedRolls()) {
-		log.debug("Show roll on MainActivity.panelRolls")
-		val panelRolls = MainActivity.panelRolls
-		val rollList = panelRolls.second.findViewById(R.id.list_rolls) as ListView
-		val rollPreview = panelRolls.first
 
-		rollPreview.text = "Miep Rolled : $roll"
+	log.debug("Show roll on MainActivity.panelRolls")
 
-		/* Poke roll history displayer. */
-		rollList.run {
-			(adapter as ArrayAdapter<RollResult>).notifyDataSetChanged()
-		}
-
-		/* Preview last roll. */
-		rollPreview.text = "Rolls and extra counters: $roll" // Last Roll
-	}
+	/* Poke roll history displayer. */
+	(MainActivity.instance as MainActivity).notifyRollsUpdated()
 
 	log.debug("Rollers.history: Last entry: ${Rollers.history.last()}")
 

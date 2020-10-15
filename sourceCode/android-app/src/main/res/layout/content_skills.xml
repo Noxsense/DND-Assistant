@@ -24,7 +24,7 @@
     android:layout_marginVertical="@dimen/vmargin"
     android:layout_weight="0.045"
     android:layout_width="match_parent"
-    android:text="Skills"
+    android:text="@string/section_skills"
     android:textSize="15sp"
     />
   <ListView
@@ -42,7 +42,7 @@
     android:layout_marginTop="10sp"
     android:layout_weight="0.045"
     android:layout_width="match_parent"
-    android:text="Proficiencies"
+    android:text="@string/section_proficiencies"
     android:textSize="15sp"
     />
   <ListView

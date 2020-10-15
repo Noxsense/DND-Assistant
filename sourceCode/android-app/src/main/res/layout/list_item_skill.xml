@@ -11,7 +11,7 @@
     android:layout_width="0sp"
     android:layout_height="wrap_content"
     android:layout_weight="0.75"
-    android:text="name"
+    android:text="skill name"
     android:textSize="@dimen/textSize"
     />
   <TextView

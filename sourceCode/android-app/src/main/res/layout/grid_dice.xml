@@ -21,7 +21,7 @@
     android:layout_margin="2sp"
     android:layout_width="0sp"
     android:padding="2sp"
-    android:text="2d4 - d2 + 2"
+    android:text="@string/dterm_example"
     android:textSize="15sp"
     />
   <TextView
@@ -34,7 +34,7 @@
     android:layout_margin="2sp"
     android:layout_width="0dp"
     android:padding="2sp"
-    android:text="D2"
+    android:text="@string/D2"
     />
   <TextView
     android:background="@drawable/framed"
@@ -45,7 +45,7 @@
     android:layout_margin="2sp"
     android:layout_width="0dp"
     android:padding="2sp"
-    android:text="D4"
+    android:text="@string/D4"
     />
   <TextView
     android:background="@drawable/framed"
@@ -56,7 +56,7 @@
     android:layout_margin="2sp"
     android:layout_width="0dp"
     android:padding="2sp"
-    android:text="D6"
+    android:text="@string/D6"
     />
   <TextView
     android:background="@drawable/framed"
@@ -67,7 +67,7 @@
     android:layout_margin="2sp"
     android:layout_width="0dp"
     android:padding="2sp"
-    android:text="D8"
+    android:text="@string/D8"
     />
   <TextView
     android:background="@drawable/framed"
@@ -78,7 +78,7 @@
     android:layout_margin="2sp"
     android:layout_width="0dp"
     android:padding="2sp"
-    android:text="D10"
+    android:text="@string/D10"
     />
   <TextView
     android:background="@drawable/framed"
@@ -89,7 +89,7 @@
     android:layout_margin="2sp"
     android:layout_width="0dp"
     android:padding="2sp"
-    android:text="D12"
+    android:text="@string/D12"
     />
   <TextView
     android:background="@drawable/framed"
@@ -100,7 +100,7 @@
     android:layout_margin="2sp"
     android:layout_width="0dp"
     android:padding="2sp"
-    android:text="D20"
+    android:text="@string/D20"
     />
   <TextView
     android:background="@drawable/framed"
@@ -111,7 +111,7 @@
     android:layout_margin="2sp"
     android:layout_width="0dp"
     android:padding="2sp"
-    android:text="D100"
+    android:text="@string/D100"
     />
 </GridLayout>
 
