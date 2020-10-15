@@ -252,41 +252,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			panelAbilities = abilities_grid
 		}
 
-		var i = 0 // starting view.
-		var v : View // current child
-
-		/* For each "ability" fill in name and the value. */
-		enumValues<Ability>().toList().forEach {
-			v = (abilities_grid as LinearLayout).getChildAt(i)
-			i += 1 // next
-
-			log.debug("Write ability '$it' into $v, next index $i.")
-
-			/* Set label. */
-			(v.findViewById<TextView>(R.id.ability_title)).apply {
-				text = "${it.fullname}"
-			}
-
-			/* Set whole score. */
-			(v.findViewById<TextView>(R.id.ability_value)).apply {
-				text = "%d".format(character.abilityScore(it))
-			}
-
-			/* Set modifier and add OnEventRoller (OnClickListener).
-			 * onClick: d20 + MOD. */
-			(v.findViewById<TextView>(R.id.ability_modifier)).apply {
-				val mod = character.abilityModifier(it)
-
-				// display
-				text = ("%+2d".format(mod))
-
-				// add listener
-				if (setListener) {
-					setOnClickListener(OnEventRoller(
-						DiceTerm(D20, SimpleDice(1, mod)),
-						"Ability ${it.name} ($text)"))
-				}
-			}
+		(panelAbilities as AbilitiesView).run {
+			this.setScores(character)
 		}
 	}
 
