@@ -2,7 +2,9 @@ package de.nox.dndassistant.core
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.fail
 import kotlin.test.assertTrue
+import kotlin.test.assertFalse
 import kotlin.math.abs
 
 class DiceTest {
@@ -83,7 +85,7 @@ class DiceTest {
 		var expectedRange: IntRange
 		var expectedSumRange: IntRange
 		var rolls: List<Int>
-		var sum: Int
+		// var sum: Int
 
 		log.info("\n>>> Test: testRollList()")
 
@@ -96,8 +98,8 @@ class DiceTest {
 
 		for (i in (1 .. repeatRolls)) {
 			rolls = dice.rollList()
-			sum = rolls.sum()
-			log.info("Rolled $dice: ($sum) $rolls")
+			// sum = rolls.sum()
+			// log.info("Rolled $dice: ($sum) $rolls")
 
 			assertEquals(expectedNum, rolls.size, "Expected Number of rolls.")
 			assertTrue(rolls.all { it in expectedRange }, "All rolls in expected range.")
@@ -113,8 +115,8 @@ class DiceTest {
 
 		for (i in (1..repeatRolls)) {
 			rolls = dice.rollList()
-			sum = rolls.sum()
-			log.info("Rolled $dice: ($sum) $rolls")
+			// sum = rolls.sum()
+			// log.info("Rolled $dice: ($sum) $rolls")
 
 			assertEquals(expectedNum, rolls.size, "Expected Number of rolls.")
 			assertTrue(rolls.all { it in expectedRange }, "All rolls in expected range.")
@@ -130,8 +132,8 @@ class DiceTest {
 
 		for (i in (1 .. repeatRolls)) {
 			rolls = dice.rollList()
-			sum = rolls.sum()
-			log.info("Rolled $dice: ($sum) $rolls")
+			// sum = rolls.sum()
+			// log.info("Rolled $dice: ($sum) $rolls")
 
 			assertEquals(expectedNum, rolls.size, "Expected Number of rolls.")
 			assertTrue(rolls.all { it in expectedRange }, "All rolls in expected range.")
@@ -147,8 +149,8 @@ class DiceTest {
 
 		for (i in (1 .. repeatRolls)) {
 			rolls = dice.rollList()
-			sum = rolls.sum()
-			log.info("Rolled $dice: ($sum) $rolls")
+			// sum = rolls.sum()
+			// log.info("Rolled $dice: ($sum) $rolls")
 
 			assertEquals(expectedNum, rolls.size, "Expected Number of rolls.")
 			assertTrue(rolls.all { it in expectedRange }, "All rolls in expected range.")
@@ -311,22 +313,90 @@ class DiceTest {
 	fun testDiceParsing() {
 		log.info("\n>>> Test testDiceParsing()")
 
-		val string = "3d8 + d12 - D21 + 3 + 3 - 3"
-		val dice = DiceTerm.parse(string)
-		val rolled = (1..repeatRolls).map { dice.roll() }
-		log.info("Roll: $dice: $rolled")
+		var string : String // the string to parse
+		var dice: DiceTerm // the parsed dice term.
+		var diceDice: DiceTerm // the parsed diceterm string to dice term
+
+		/* Easy test run. No hidden gems. */
+
+		string = "3d8 + d12 - D21 + 3 + 3 - 3"
+		dice = DiceTerm.parse(string)
 		assertTrue(SimpleDice(8, 3) in dice, "3d8 in $dice")
 		assertTrue(SimpleDice(12) in dice, "3d8 in $dice")
 		assertTrue(SimpleDice(-21) in dice, "3d8 in $dice")
-		assertTrue(Bonus(3) in dice, "3d8 in $dice")
+		assertTrue((3) in dice, "3d8 in $dice")
 
-		// 1. parse, 2. to string, 3. parse
-		val diceStr = dice.toString()
-		val diceStrDice = DiceTerm.parse(diceStr)
-		log.info("($string) \u21d2 ($diceStr)")
-		log.info("($dice) \u21d2 ($diceStrDice)")
-		// assertEquals(dice, diceStrDice, "String \u2192 Dice \u2192 String \u2192 Dice")
-		// TODO (2020-07-14)
+		diceDice = DiceTerm.parse(dice.toString())
+		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
+		assertEquals(dice, diceDice, "The dice to string to dice should be equal")
+
+		/* Incorrect parsing will throw error. */
+
+		try {
+			// not a correct term with x instead of d
+			DiceTerm.parse("x20 + -1")
+			fail("Didn't failed on parsing invalid term")
+		} catch (e: Exception) {}
+
+		/* Parsing mathematically correct terms. */
+
+		string = "-1" // typical having a bonus of (-2)
+		dice = DiceTerm.parse(string)
+		log.debug("Parsed [$string] => [$dice]")
+
+		assertTrue((-1) in dice, "(-1) correctly parsed.")
+		assertFalse(1 in dice, "No fixed one for empty terms or such..")
+
+		diceDice = DiceTerm.parse(dice.toString())
+		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
+		assertEquals(dice, diceDice, "The dice to string to dice should be equal")
+
+		dice = (dice + 1).contracted() // should be empty?
+
+		log.debug("Removed main features (-1) => $dice")
+
+		assertEquals(DiceTerm.EMPTY, dice, "The term is empty")
+
+		string = "D20 + -2" // typical having a bonus of (-2)
+		dice = DiceTerm.parse(string)
+		log.debug("Parsed [$string] => [$dice]")
+
+		assertTrue(D20 in dice, "D20 correctly parsed.")
+		assertTrue((-2) in dice, "(-2) correctly parsed.")
+
+		diceDice = DiceTerm.parse(dice.toString())
+		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
+		assertEquals(dice, diceDice, "The dice to string to dice should be equal")
+
+		dice = ((dice - D20) + 2).contracted() // should be empty?
+
+		log.debug("Removed main features (d20, -2) => $dice")
+
+		assertEquals(DiceTerm.EMPTY, dice, "The term is empty")
+
+		// TODO (2020-10-17) feature more complex terms.
+		if (true) return
+
+		/* Complexity Level 1. */
+
+		string = "12*(D6 + 3)" // typical levelling. => 12d6 + 12*CON
+		dice = DiceTerm.parse(string)
+		assertTrue(D6 in dice, "(D6) in dice $dice.")
+		assertTrue(3 in dice, "(3) in dice $dice.")
+
+		diceDice = DiceTerm.parse(dice.toString())
+		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
+		assertEquals(dice, diceDice, "The dice to string to dice should be equal")
+
+		/* Complexity Level 2. */
+		string = "12*(D6 + 3)" // typical levelling. => 12d6 + 12*CON
+		dice = DiceTerm.parse(string)
+		assertTrue(D6 in dice, "(D6) in dice $dice.")
+		assertTrue(3 in dice, "(3) in dice $dice.")
+
+		diceDice = DiceTerm.parse(dice.toString())
+		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
+		assertEquals(dice, diceDice, "The dice to string to dice should be equal")
 	}
 
 	@Test

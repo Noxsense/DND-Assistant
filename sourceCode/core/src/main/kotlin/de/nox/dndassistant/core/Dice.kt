@@ -7,11 +7,12 @@ import kotlin.math.min
 // TODO (2020-10-01) Refactor !
 
 /* A complexer dice term with different dice and constants.*/
-class DiceTerm(vararg ds: SimpleDice) {
-	val dice : Array<SimpleDice> = arrayOf(*ds)
-
+class DiceTerm {
 	companion object {
-		val log: Logger = LoggerFactory.getLogger("D&D Dice")
+		private val log: Logger = LoggerFactory.getLogger("D&D Dice")
+
+		/** An empty dice term, where no faces will be rolled and without any bony. */
+		public val EMPTY = DiceTerm(0)
 
 		/** Parse string to DiceTerm.
 		 * @param str the string to parse.
@@ -22,13 +23,23 @@ class DiceTerm(vararg ds: SimpleDice) {
 			// remove whitespaces.
 			val nowhite = Regex("\\s").replace(str, "")
 
-			// split before + or -
-			val terms = Regex("(?=[\\+-])").split(nowhite)
+			log.debug("no white: '$nowhite'")
+
+			/* substitute simple math equalisations, like +- or -+ */
+			// TODO (2020-10-17)
+			var quickFix = nowhite.replace("+-", "-").replace("-+", "-") // WORK_AROUND
+
+			log.debug("quickfix: '$quickFix'")
+
+			// split before operators (+ or -). Remove empty terms (like "+2").
+			val terms = Regex("(?=[\\+-])").split(quickFix).filter { it != "" }
+
+			log.debug("term: $terms")
 
 			val valid = Regex("([\\+-]?\\d*)([dD])?(\\d*)")
 
 			/* Check, if all terms are valid on the first view. */
-			if (! terms.all { valid.matches(it) } ) {
+			if (!terms.all { valid.matches(it) }) {
 				log.error("Throw Error: Not a valid Dice Term!")
 				throw Exception("Not a valid Dice Term")
 			}
@@ -40,13 +51,23 @@ class DiceTerm(vararg ds: SimpleDice) {
 				val match = valid.find(it)!!
 					val (numStr, d, dieStr) = match.destructured
 
+				/* Parse x in _Dy, where _ can be
+				 * -  '' => 1Dy
+				 * -  '+' => -1Dy
+				 * -  '-' => +1Dy
+				 * -  'n' => nDy
+				 */
 				val num = when (numStr) {
 					"" -> 1
 					"+" -> 1
 					"-" -> -1
 					else -> numStr.toInt(10)
 				}
-				val die = if (dieStr == "") 1 else dieStr.toInt(10)
+				val die = when {
+					numStr == dieStr && dieStr == "" -> 0 // whole term was empty
+					(dieStr == "") -> 1
+					else -> dieStr.toInt(10)
+				}
 
 				/* parsed a die without max.*/
 				if (d != "" && dieStr == "") {
@@ -58,15 +79,23 @@ class DiceTerm(vararg ds: SimpleDice) {
 		}
 	}
 
+	val dice : Array<SimpleDice> //  = arrayOf(*ds)
+
+	constructor(vararg ds: SimpleDice) { dice = arrayOf(*ds) }
+
 	// initiate with a list of faces: 6 =~ 1D6, 1 =~ 1d1, 20 =~ 1D20, ...
 	constructor(vararg fs: Int) : this(
-			*fs.groupBy { it }.entries
-			.map { SimpleDice(it.key, it.value.size) }
-			.toTypedArray())
+		*fs.groupBy { it }.entries
+		.map { SimpleDice(it.key, it.value.size) }
+		.toTypedArray())
 
 	/** Check, if a Dice Term contains given dice (simple dice term).*/
 	operator fun contains(other: SimpleDice) : Boolean
 		= other in dice
+
+	/** Check, if a Dice Term contains given dice (bonus | simpleDice(1,other)).*/
+	operator fun contains(other: Int) : Boolean
+		= SimpleDice(1, other) in dice
 
 	/** Check equality to another DiceTerm.*/
 	override fun equals(other: Any?) : Boolean
