@@ -14,12 +14,13 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 import de.nox.dndassistant.core.DiceTerm
+import de.nox.dndassistant.core.SimpleDice
 
 object Rollers {
 	var history: List<RollResult> = listOf()
 }
 
-private val log = LoggerFactory.getLogger("D&D Main")
+private val log = LoggerFactory.getLogger("D&D Roller")
 
 data class RollResult(
 	val value: Int,
@@ -50,30 +51,186 @@ data class RollResult(
 		+ " ($timestampString)")
 }
 
+/*
+	roller =
+		reason: TextView?, // view that contains the reason.
+		altReason: String, // alternative reason text.
+		baseParseView: TextView?, // term to parse the dice term from.
+		altDiceTerm: DiceTerm, // alternative term.
+		additions: List<TextView> // optional additions from other views.
+*/
+
 /**
  * OnEventRoller extends an OnEventRoller.
  * On click a prepared dice term will be rolled.
+ * If proficiencyConnected is true, add also the proficiencyBonus to the end roll.
  */
-public class OnEventRoller(
-	var baseTerm: DiceTerm,
-	var reason: String = baseTerm.toString())
-	: View.OnClickListener, View.OnLongClickListener, View.OnKeyListener {
+public class OnEventRoller
+	private constructor (
+		val rawDice: List<Any>,
+		val reasonView: TextView?,
+		val reasonStr: String?,
+		val formatStr: String = "%s"
+	) : View.OnClickListener, View.OnLongClickListener, View.OnKeyListener {
 
-	/* Roll, when a (DiceView) was clicked. */
-	override fun onClick(view: View) {
-		/* Roll the result. */
-		roll(baseTerm, reason, view.getContext())
+	public class Builder {
+		private var diceSources: List<Any> = listOf()
+		private var alternativeDiceTerm: DiceTerm? = null
+		private var reasonView: TextView? = null
+		private var reasonStr: String? = null
+		private var formatString: String = "%s"
+
+		/** Construct with first dice Term (TextView). */
+		constructor(tv: TextView) { addDiceView(tv) }
+
+		/** Construct with first dice Term (DiceTerm). */
+		constructor(dt: DiceTerm) { addDiceTerm(dt) }
+
+		/** Construct with first simple dice Term (DiceTerm). */
+		constructor(sd: SimpleDice) : this(sd.toTerm()) ;
+
+		/** Add another TextView to the list to parse. */
+		public fun addDiceView(tv: TextView) = apply {
+			this.diceSources += (tv)
+		}
+
+		/** Set the alternative dice term. */
+		public fun addDiceTerm(dt: DiceTerm) = apply {
+			this.diceSources += (dt)
+		}
+
+		/** Set the alternative simple dice. */
+		public fun addDiceTerm(sd: SimpleDice) = apply {
+			this.diceSources += (sd.toTerm())
+		}
+
+		/** Set the alternative written boni. */
+		public fun addDiceTerm(i: Int) = apply {
+			this.diceSources += (SimpleDice(1, i))
+		}
+
+		/** Set reason from a string. */
+		public fun setReasonView(tv: TextView) = apply {
+			this.reasonView = (tv)
+		}
+
+		/** Set an alternative String as fallback. */
+		public fun setReasonString(str: String) = apply {
+			this.reasonStr = str
+		}
+
+		public fun setFormatString(str: String) = apply {
+			this.formatString = str
+		}
+
+		/** Create the EventRoller.
+		 * @throws Exception if both dice views and alternative DiceTerm are empty/null. */
+		public fun create() : OnEventRoller {
+			if (reasonView == null && reasonStr == null)
+				reasonStr = "" // set it to empty in the last moment.
+
+			log.debug("Create new OnEventRoller, "
+				+ "with $diceSources, "
+				+ "[$reasonView, $reasonStr => $formatString].")
+
+			return OnEventRoller(
+				diceSources,
+				reasonView, reasonStr,
+				formatString)
+		}
+	}
+
+	// observe data changes
+	public val rawDiceTerm: DiceTerm?
+		= (rawDice.filter { it is DiceTerm } as List<DiceTerm>).run {
+			if (size < 1) {
+				null // list was empty
+			} else {
+				val head: DiceTerm = first()
+
+				if (size < 2) {
+					head
+				} else {
+					this.drop(1).fold(head) {acc, next ->
+						acc + next
+					}
+				}
+			}
+		}
+
+	public val rawDiceTexts: List<TextView>
+		= rawDice.filter { it is TextView } as List<TextView>
+
+	private var parsedDiceText: String = ""
+	private var parsedUpdated: Boolean = false // if the resulting term changed => recalculate.
+	private lateinit var parsedDiceTerm: DiceTerm
+	private fun parsedDiceTermIsInitialized() = this::parsedDiceTerm.isInitialized
+
+	private var finalDiceTerm: DiceTerm = rawDiceTerm ?: SimpleDice(0, 0).toTerm()
+
+	/** Parse the given parseDiceTermViews or use alternative term. */
+	private fun collectDiceTexts() : String
+		= rawDiceTexts.joinToString("+") {
+			it.text.toString().replace("\\s", "") // trim of white space.
+		}.also {
+			log.debug("Just parsed dice term text: $it")
+		}
+
+	/** Collect current string of all text views and parse the resulting dice term.
+	 * @return DiceTerm which with the latest updates (may be old though).
+	 * @throws DiceTermFormatException if the parsed terms are invalid dice terms.*/
+	private fun updateFromDiceTexts() : DiceTerm {
+		val freshlyParsed = collectDiceTexts()
+
+		/* Update `parsedDiceText` on changes, or if not yet initialled. */
+		if (freshlyParsed != parsedDiceText || !parsedDiceTermIsInitialized()) {
+			parsedDiceTerm = DiceTerm.parse(freshlyParsed)
+			parsedUpdated = true
+			log.debug("Parsed (updated) dice term text")
+		}
+
+		parsedDiceText = freshlyParsed // update.
+
+		return parsedDiceTerm // contains the latest updates.
+			.also { log.debug("Latest TextViews' dice term: $it") }
+	}
+
+	/** Parse the given parseDiceTermViews or use alternative term. */
+	public val reason: String
+		get() = formatStr.format(reasonView?.text?.toString() ?: reasonStr)
+
+	/** Get the final dice term of the raw dice terms and the parsed dice terms.
+	  * @return latest DiceTerm
+	  * @throws DiceTermFormatException if the parsed dice texts are incorrectly formatted. */
+	private fun rawDiceBaked() : DiceTerm {
+		updateFromDiceTexts() // get parsed dice term.
+
+		if (parsedUpdated) {
+			// we want fixed first, if available.
+			finalDiceTerm = if (rawDiceTerm != null) (rawDiceTerm + parsedDiceTerm) else (parsedDiceTerm)
+			parsedUpdated = false // reset the "new" state
+		}
+
+		return finalDiceTerm. also {
+			log.debug("Raw Dice Sources to Final DiceTerm: $it")
+		}
 	}
 
 	/* Roll, when a (DiceView) was clicked. */
-	override fun onLongClick(view: View) : Boolean {
+	override public fun onClick(view: View) {
 		/* Roll the result. */
-		roll(baseTerm, reason, view.getContext())
+		roll(rawDiceBaked(), reason, view.getContext())
+	}
+
+	/* Roll, when a (DiceView) was clicked. */
+	override public fun onLongClick(view: View) : Boolean {
+		/* Roll the result. */
+		roll(rawDiceBaked(), reason, view.getContext())
 		return true
 	}
 
 	/** Parse TextView text to DiceTerm and return rolled result. */
-	override fun onKey(view: View, code: Int, event: KeyEvent) : Boolean {
+	override public fun onKey(view: View, code: Int, event: KeyEvent) : Boolean {
 		/* Don't do anything, if this wasn't a TextView (or Heritance). */
 		if (view !is TextView) {
 			return false
@@ -84,59 +241,48 @@ public class OnEventRoller(
 			return false
 		}
 
-		/* On enter, parse and roll the term inserted. */
-
-		/* Parse the current dice term. */
-		val term = view.text.toString().trim()
-
-		// TODO (2020-10-15)
-		val profTerm = "+\\s*prof"
-		val parsedAdditions: List<Any> = emptyList()
-
-		val parsedTerm = DiceTerm.parse(term.replace(profTerm, ""))
-
 		/* Roll the result, toast it.
 		 * Reason: the custom term written. */
-		roll(parsedTerm, term, view.getContext())
+		roll(rawDiceBaked(), reason, view.getContext())
 
 		return true
 	}
 
 	private fun isConfirmedEnter(event: KeyEvent, code: Int) : Boolean
 		= event.action == KeyEvent.ACTION_DOWN && code == KeyEvent.KEYCODE_ENTER
-}
 
-/** Make the actual roll and add the result to the history (with current timestamp).
- * @param term DiceTerm to be rolled.
- * @param reason why the roll was thrown
- * @param toastContext if given, toast the result there. (default: null)
- * @return the value (as int).
- */
-private fun roll(term: DiceTerm, reason: String, toastContext: Context? = null) : Int {
-	/* Roll the result. */
-	val rolls = term.rollList()
-	val roll = rolls.sum()
-	log.debug("Rolled $rolls => $roll ($reason)")
+	/** Make the actual roll and add the result to the history (with current timestamp).
+	 * @param term DiceTerm to be rolled.
+	 * @param reason why the roll was thrown
+	 * @param toastContext if given, toast the result there. (default: null)
+	 * @return the value (as int).
+	 */
+	private fun roll(term: DiceTerm, reason: String, toastContext: Context? = null) : Int {
+		/* Roll the result. */
+		val rolls = term.rollList()
+		val roll = rolls.sum()
+		log.debug("Rolled $rolls => $roll ($reason)")
 
-	/* Add to roll history: <Timestamp, <Result, Reason>>. */
-	val result = RollResult(roll, rolls, reason) // default ts: now
-	Rollers.history = listOf(result) + Rollers.history // workaround: prepend.
+		/* Add to roll history: <Timestamp, <Result, Reason>>. */
+		val result = RollResult(roll, rolls, reason) // default ts: now
 
+		Rollers.history = listOf(result) + Rollers.history // workaround: prepend.
 
-	log.debug("Show roll on MainActivity.panelRolls")
+		log.debug("Show roll on MainActivity.panelRolls")
 
-	/* Poke roll history displayer. */
-	(MainActivity.instance as MainActivity).notifyRollsUpdated()
+		/* Poke roll history displayer. */
+		(MainActivity.instance as MainActivity).notifyRollsUpdated()
 
-	log.debug("Rollers.history: Last entry: ${Rollers.history.last()}")
+		log.debug("Rollers.history: Last entry: ${Rollers.history.last()}")
 
-	/* Show the result. */
-	if (toastContext != null) toastRoll(toastContext, result)
+		/* Show the result. */
+		if (toastContext != null) toastRoll(toastContext, result)
 
-	return roll
-}
+		return roll
+	}
 
-/** Show a number with reason in a toast. */
-fun toastRoll(context: Context, result: RollResult) {
-	Toast.makeText(context, "Rolled $result", Toast.LENGTH_LONG).show()
+	/** Show a number with reason in a toast. */
+	fun toastRoll(context: Context, result: RollResult) {
+		Toast.makeText(context, "Rolled $result", Toast.LENGTH_LONG).show()
+	}
 }

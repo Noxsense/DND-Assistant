@@ -115,7 +115,7 @@ public class AbilitiesView : LinearLayout {
 		private var abilityCheckRoller: OnEventRoller? = null
 			set(value) {
 				log.info("Set onClickListener: $value, $title")
-				value?.reason = title + " Check"
+				// value?.reason = title + " Check"
 				modView.setOnClickListener(value)
 			}
 
@@ -124,7 +124,7 @@ public class AbilitiesView : LinearLayout {
 		private var savingThrowRoller: OnEventRoller? = null
 			set(value) {
 				log.info("Set onLongClickListener: $value, $title")
-				value?.reason = title + " Save"
+				// value?.reason = title + " Save"
 				modView.setOnLongClickListener(value)
 			}
 
@@ -137,8 +137,8 @@ public class AbilitiesView : LinearLayout {
 				titleView.text = value
 
 				// XXX (2020-10-15) this does not update the base term.
-				getCheckRoller()?.reason = "$value Check"
-				getSaveRoller()?.reason = "$value Save"
+				// getCheckRoller()?.reason = "$value Check"
+				// getSaveRoller()?.reason = "$value Save"
 
 				log.debug(" > roller.reason: $value: ${getCheckRoller()?.reason}")
 				log.debug(" > roller.reason: $value: ${getSaveRoller()?.reason}")
@@ -155,8 +155,8 @@ public class AbilitiesView : LinearLayout {
 				modView.text = "%+d".format(mod)
 
 				// XXX (2020-10-15) this does not update the base term.
-				getCheckRoller()?.baseTerm = D20.toTerm() + mod
-				getSaveRoller()?.baseTerm = D20.toTerm() + mod
+				// getCheckRoller()?.baseTerm = D20.toTerm() + mod
+				// getSaveRoller()?.baseTerm = D20.toTerm() + mod
 
 				AbilitiesView.log.debug("Set score $value: into $scoreView")
 				AbilitiesView.log.debug(" \u21d2 proof: ${scoreView.text}")
@@ -179,11 +179,12 @@ public class AbilitiesView : LinearLayout {
 			}
 
 		private fun createOnEventRoller(type: String) : OnEventRoller
-			= OnEventRoller(D20.toTerm() + try {
-					modView.text.toString().toInt()
-				} catch (e: NumberFormatException) {
-					0
-				}, "$title Check")
+			= OnEventRoller
+				.Builder(D20)
+				.addDiceView(modView)
+				.setReasonView(titleView)
+				.setFormatString("%s $type")
+				.create()
 
 		companion object {
 			val TITLE_ID = R.id.ability_title

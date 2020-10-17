@@ -493,9 +493,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 						text = "%+d".format(smod)
 
 						/* Add skill check roll. */
-						setOnClickListener(OnEventRoller(
-							D20.toTerm() + smod,
-							"Skill Check ($skill)"))
+						setOnClickListener(OnEventRoller.Builder(D20)
+							.addDiceView(this) // Boni by given view
+							.setReasonString("Skill Check ($skill)")
+							.create())
 					}
 
 					/* Highlight the item according to it's proficiency level. */
@@ -569,11 +570,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 						// setOnClickListener() // TODO (2020-10-11) // show notes.
 					}
 
+					// TODO (2020-10-16) clean up OnEventRoller.
 					(v.findViewById<TextView>(R.id.attack_roll)).run {
 						text = "%+d".format(attack.attackBonus)
-						setOnClickListener(OnEventRoller(
-							D20.toTerm() + attack.attackBonus,
-							"Attack with ${attack.name}"))
+						setOnClickListener(OnEventRoller.Builder(D20)
+							.addDiceView(this)
+							.setReasonString("Attack with ${attack.name}")
+							.create())
 					}
 
 					(v.findViewById<TextView>(R.id.attack_range))
@@ -581,12 +584,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 					// TODO (2020-10-11) refactor: attack.ranged, add actual range for disadvantage rolls, etc?
 
+					// TODO (2020-10-16) clean up OnEventRoller.
 					(v.findViewById<TextView>(R.id.damage_dice)).run {
 						val dmgRoll = attack.damageRoll
 						text = dmgRoll.toString()
 						// TODO (2020-10-11) make depended on attack roll ? => 20 -> Crit?
-						setOnClickListener(OnEventRoller(
-							dmgRoll, "Damage with ${attack.name}"))
+						setOnClickListener(OnEventRoller.Builder(this)
+							.setReasonString("Damage with ${attack.name}")
+							.create())
 					}
 
 					(v.findViewById<TextView>(R.id.damage_type)).run {
@@ -1065,14 +1070,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			extraDice.getChildAt(it).apply {
 				if (this is EditText) {
 					// insert term and roll it. (keep text)
-					setOnKeyListener(OnEventRoller(DiceTerm(0)))
+					// XXX (2020-10-17) Fixme
+					setOnKeyListener(OnEventRoller.Builder(this)
+						.setReasonView(this)
+						.create())
 
 				} else if (this is TextView) {
 					// simply roll the die
 					val term = this.text.toString()
 					val faces: Int = term.substring(1).toInt()
-					setOnClickListener(
-						OnEventRoller(DiceTerm(faces), term))
+					// XXX (2020-10-17) Fixme: Is always 1 + 1
+					setOnClickListener(OnEventRoller.Builder(this)
+						.setReasonView(this)
+						.create())
 				}
 			}
 		}
