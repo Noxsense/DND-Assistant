@@ -1,6 +1,4 @@
-<LinearLayout
-  android:layout_height="match_parent"
-  android:layout_width="match_parent"
+<de.nox.dndassistant.app.StoryView
   android:orientation="vertical"
   xmlns:android="http://schemas.android.com/apk/res/android"
   >
@@ -48,4 +46,4 @@
     android:layout_width="match_parent"
     android:text="history"
     />
-</LinearLayout>
+</de.nox.dndassistant.app.StoryView>

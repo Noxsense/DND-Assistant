@@ -1002,59 +1002,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				content_race_background as ViewGroup)
 		}
 
-		// XXX (2020-10-07) implement story view.
-		val findView = { id: Int ->
-			content_race_background.findViewById<View>(id)
+		val preview = (content_race_background as StoryView).run {
+			showCharacter(character)
 		}
-
-		(findView(R.id.the_species) as TextView)
-			.text = "${character.race} (${character.subrace})"
-
-		(findView(R.id.about_species) as TextView)
-			.text = """
-				Darkvision: ${character.race.darkvision}
-				Base-Speed: ${character.race.speed}
-				Languages: ${character.race.languages}
-				Features: ${character.race.features}
-				Description: ${character.race.description}
-				""".trimIndent()
-
-		(findView(R.id.the_background) as TextView)
-			.text = "${character.background} (${character.backgroundFlavour})"
-
-		(findView(R.id.about_background) as TextView)
-			.text = """
-				Alignment: ${character.alignment}
-				Trait: ${character.trait}
-				Ideal: ${character.ideal}
-				Bonds: ${character.bonds}
-				Flaws: ${character.flaws}
-				""".trimIndent()
-
-		(findView(R.id.about_appearance) as TextView)
-			.text = """
-				Age: ${character.ageString}
-				Size: ${character.size}
-				Weight: ${character.weight} lb
-				Height: ${character.height} ft
-				Appearance: ${character.appearance}
-				Form: ${character.form}
-				""".trimIndent()
-
-		(findView(R.id.history) as TextView)
-			.text = character.history.joinToString("\n")
-
-		var string = "${character.race}:${character.subrace} ("
-
-		if (character.race.darkvision > 29) {
-			// unicode: first quarter moon symbol
-			string += "\uD83C\uDF13 ${character.race.darkvision} ft, "
-		}
-
-		string += "${character.size}) - "
-		string += "${character.background}:${character.backgroundFlavour}"
-
-		label_race_background.text = formatLabel("About Me", string)
+		label_race_background.text = formatLabel("About Me", preview)
 	}
 
 	/** Initiate the panel with extra dice.
