@@ -9,6 +9,8 @@ import android.widget.TextView
 
 import kotlinx.android.synthetic.main.abilities.*
 
+import kotlin.properties.Delegates
+
 import de.nox.dndassistant.core.Logger
 import de.nox.dndassistant.core.D20
 import de.nox.dndassistant.core.SimpleDice
@@ -23,13 +25,19 @@ public class AbilitiesView : LinearLayout {
 		protected val log : Logger = LoggerFactory.getLogger("D&D AbilitiesView")
 
 		private val abilityList: List<Ability> = enumValues<Ability>().toList()
-
-		public fun fromView(view: LinearLayout) : AbilitiesView?
-			= null
 	}
 
 	private val ABILITY_LAYOUT = R.layout.ability
 	private var views: Map<Ability, AbilityPanel> = mapOf()
+
+	/** Hidden view with proficiency bonus.
+	 * This supports a view, that is detached from any character. */
+	protected val saveProfText by lazy {
+		val v = TextView(getContext())
+		v.visibility = View.GONE
+		addView(v)
+		v
+	}
 
 	private val li = LayoutInflater.from(this.getContext())
 
@@ -48,6 +56,10 @@ public class AbilitiesView : LinearLayout {
 
 	/** Get all known abilities for the requesting player character. */
 	public fun setScores(pc: PlayerCharacter) {
+		/* Own Proficiency bonus, a bit hacked as hidden text view?. */
+		setProficiency(pc.proficiencyBonus)
+
+		/* Add values for ability scores. */
 		abilityList.forEach { a ->
 			val score = pc.abilityScore(a)
 			val save = pc.getProficiencyFor(a)
@@ -59,11 +71,13 @@ public class AbilitiesView : LinearLayout {
 			// set saving throw.
 			setSavingThrow(a, save.first != Proficiency.NONE)
 			log.debug("Set saving throw PC ${pc.name}: $a?")
-
-			// add ability check.
-
-			// add saving throws.
 		}
+	}
+
+	/** Set the (hidden) proficiency bonus, used for the saving throws. */
+	public fun setProficiency(p: Int) {
+		saveProfText.text = p.toString()
+		AbilitiesView.log.debug("Set proficiency: $p")
 	}
 
 	/** Set the score for the given ability.
@@ -112,10 +126,13 @@ public class AbilitiesView : LinearLayout {
 		private val scoreView: TextView,
 		private val modView: TextView)
 	{
+		private val SAVE_WORD: String = "Save"
+		private val CHECK_WORD: String = "Check"
+
 		private var abilityCheckRoller: OnEventRoller? = null
 			set(value) {
 				log.info("Set onClickListener: $value, $title")
-				// value?.reason = title + " Check"
+				// value?.reason = title + " $CHECK_WORD"
 				modView.setOnClickListener(value)
 			}
 
@@ -124,7 +141,7 @@ public class AbilitiesView : LinearLayout {
 		private var savingThrowRoller: OnEventRoller? = null
 			set(value) {
 				log.info("Set onLongClickListener: $value, $title")
-				// value?.reason = title + " Save"
+				// value?.reason = title + " $SAVE_WORD"
 				modView.setOnLongClickListener(value)
 			}
 
@@ -135,13 +152,6 @@ public class AbilitiesView : LinearLayout {
 			set(value) {
 				log.debug("Set titleView.text to title: $value")
 				titleView.text = value
-
-				// XXX (2020-10-15) this does not update the base term.
-				// getCheckRoller()?.reason = "$value Check"
-				// getSaveRoller()?.reason = "$value Save"
-
-				log.debug(" > roller.reason: $value: ${getCheckRoller()?.reason}")
-				log.debug(" > roller.reason: $value: ${getSaveRoller()?.reason}")
 			}
 
 		/** Set and display ability score. */
@@ -154,10 +164,6 @@ public class AbilitiesView : LinearLayout {
 				scoreView.text = value.toString()
 				modView.text = "%+d".format(mod)
 
-				// XXX (2020-10-15) this does not update the base term.
-				// getCheckRoller()?.baseTerm = D20.toTerm() + mod
-				// getSaveRoller()?.baseTerm = D20.toTerm() + mod
-
 				AbilitiesView.log.debug("Set score $value: into $scoreView")
 				AbilitiesView.log.debug(" \u21d2 proof: ${scoreView.text}")
 				AbilitiesView.log.debug(" \u21d2 proof: ${modView.text}")
@@ -168,25 +174,42 @@ public class AbilitiesView : LinearLayout {
 			get() = Ability.scoreToModifier(score)
 
 		/** Set and display, if it has proficiency for saving throws. */
-		public var isSavingThrow: Boolean = false
-			set(value) {
-				/* Displays the updated value. */
-				wrapView.setBackground(getContext().getDrawable(when (value) {
-					true -> R.drawable.bg_proficient
-					else -> R.drawable.framed
-				}))
+		public var isSavingThrow: Boolean by Delegates.observable(false) {
+			_, old, value ->
 
-				AbilitiesView.log.debug("Set ability as proficient ($value) in Saving Throws")
+			wrapView.setBackground(getDrawable(value))
+
+			if (old != value || savingThrowRoller == null) {
+				savingThrowRoller = createOnEventRoller(SAVE_WORD, value)
 			}
+
+			AbilitiesView.log.debug("Set ability as proficient ($value) in Saving Throws")
+		}
+
+		private fun getDrawable(proficient: Boolean)
+			= getContext().getDrawable(when(proficient) {
+				true -> R.drawable.bg_proficient
+				else -> R.drawable.framed
+			})
 
 		public fun getContext() = wrapView.getContext()
 
-		private fun createOnEventRoller(type: String) : OnEventRoller
+		private val abilitiesSaveProfText: TextView by lazy {
+			(wrapView.getParent() as AbilitiesView).saveProfText
+		}
+
+		private fun createOnEventRoller(type: String, proficient: Boolean = false)
+			: OnEventRoller
 			= OnEventRoller
 				.Builder(D20)
 				.addDiceView(modView)
 				.setReasonView(titleView)
 				.setFormatString("%s $type")
+				.apply {
+					if (proficient && type == SAVE_WORD) {
+						addDiceView(abilitiesSaveProfText)
+					}
+				}
 				.create()
 
 		companion object {
@@ -204,10 +227,10 @@ public class AbilitiesView : LinearLayout {
 						modView = wrap.findViewById(MOD_ID)!!
 					).apply {
 						/* Add ability check roller. */
-						abilityCheckRoller = createOnEventRoller("Check")
+						abilityCheckRoller = createOnEventRoller(CHECK_WORD)
 
 						/* Add saving throw roller, maybe connect to proficiency value. */
-						savingThrowRoller = createOnEventRoller("Save")
+						savingThrowRoller = createOnEventRoller(SAVE_WORD)
 
 						log.debug("Added default roller.")
 					}
