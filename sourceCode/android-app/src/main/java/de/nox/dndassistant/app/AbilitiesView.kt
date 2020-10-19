@@ -170,13 +170,16 @@ public class AbilitiesView : LinearLayout {
 		/** Set and display, if it has proficiency for saving throws. */
 		public var isSavingThrow: Boolean = false
 			set(value) {
-				// displays the updated value.
-				wrapView.setBackgroundColor(
-					if (value) 0x00ff00 else 0x00000000
-				)
+				/* Displays the updated value. */
+				wrapView.setBackground(getContext().getDrawable(when (value) {
+					true -> R.drawable.bg_proficient
+					else -> R.drawable.framed
+				}))
 
 				AbilitiesView.log.debug("Set ability as proficient ($value) in Saving Throws")
 			}
+
+		public fun getContext() = wrapView.getContext()
 
 		private fun createOnEventRoller(type: String) : OnEventRoller
 			= OnEventRoller
