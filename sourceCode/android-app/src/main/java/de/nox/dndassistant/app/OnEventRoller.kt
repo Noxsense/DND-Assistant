@@ -51,15 +51,6 @@ data class RollResult(
 		+ " ($timestampString)")
 }
 
-/*
-	roller =
-		reason: TextView?, // view that contains the reason.
-		altReason: String, // alternative reason text.
-		baseParseView: TextView?, // term to parse the dice term from.
-		altDiceTerm: DiceTerm, // alternative term.
-		additions: List<TextView> // optional additions from other views.
-*/
-
 /**
  * OnEventRoller extends an OnEventRoller.
  * On click a prepared dice term will be rolled.
@@ -163,8 +154,7 @@ public class OnEventRoller
 
 	private var parsedDiceText: String = ""
 	private var parsedUpdated: Boolean = false // if the resulting term changed => recalculate.
-	private lateinit var parsedDiceTerm: DiceTerm
-	private fun parsedDiceTermIsInitialized() = this::parsedDiceTerm.isInitialized
+	private var parsedDiceTerm: DiceTerm? = null
 
 	private var finalDiceTerm: DiceTerm = rawDiceTerm ?: SimpleDice(0, 0).toTerm()
 
@@ -179,20 +169,25 @@ public class OnEventRoller
 	/** Collect current string of all text views and parse the resulting dice term.
 	 * @return DiceTerm which with the latest updates (may be old though).
 	 * @throws DiceTermFormatException if the parsed terms are invalid dice terms.*/
-	private fun updateFromDiceTexts() : DiceTerm {
+	private fun updateFromDiceTexts() : DiceTerm? {
 		val freshlyParsed = collectDiceTexts()
 
 		/* Update `parsedDiceText` on changes, or if not yet initialled. */
-		if (freshlyParsed != parsedDiceText || !parsedDiceTermIsInitialized()) {
-			parsedDiceTerm = DiceTerm.parse(freshlyParsed)
-			parsedUpdated = true
-			log.debug("Parsed (updated) dice term text")
+		if (freshlyParsed != parsedDiceText) {
+			try {
+				parsedDiceTerm = DiceTerm.parse(freshlyParsed)
+				parsedUpdated = true
+				log.debug("Parsed (updated) dice term text")
+			} catch (e: Exception) {
+				log.error("DiceTerm parsing error: $e")
+			}
 		}
 
 		parsedDiceText = freshlyParsed // update.
 
+		log.debug("Latest TextViews' dice term: $parsedDiceTerm")
+
 		return parsedDiceTerm // contains the latest updates.
-			.also { log.debug("Latest TextViews' dice term: $it") }
 	}
 
 	/** Parse the given parseDiceTermViews or use alternative term. */
@@ -205,9 +200,12 @@ public class OnEventRoller
 	private fun rawDiceBaked() : DiceTerm {
 		updateFromDiceTexts() // get parsed dice term.
 
-		if (parsedUpdated) {
+		if (parsedUpdated && parsedDiceTerm != null) {
 			// we want fixed first, if available.
-			finalDiceTerm = if (rawDiceTerm != null) (rawDiceTerm + parsedDiceTerm) else (parsedDiceTerm)
+			finalDiceTerm = when {
+				rawDiceTerm != null -> (rawDiceTerm + parsedDiceTerm!!)
+				else -> (parsedDiceTerm!!)
+			}
 			parsedUpdated = false // reset the "new" state
 		}
 
@@ -251,6 +249,9 @@ public class OnEventRoller
 	private fun isConfirmedEnter(event: KeyEvent, code: Int) : Boolean
 		= event.action == KeyEvent.ACTION_DOWN && code == KeyEvent.KEYCODE_ENTER
 
+	public var lastRoll: Int = 0
+		private set
+
 	/** Make the actual roll and add the result to the history (with current timestamp).
 	 * @param term DiceTerm to be rolled.
 	 * @param reason why the roll was thrown
@@ -260,11 +261,11 @@ public class OnEventRoller
 	private fun roll(term: DiceTerm, reason: String, toastContext: Context? = null) : Int {
 		/* Roll the result. */
 		val rolls = term.rollList()
-		val roll = rolls.sum()
-		log.debug("Rolled $rolls => $roll ($reason)")
+		lastRoll = rolls.sum()
 
 		/* Add to roll history: <Timestamp, <Result, Reason>>. */
-		val result = RollResult(roll, rolls, reason) // default ts: now
+		val result = RollResult(lastRoll, rolls, reason) // default ts: now
+		log.debug("$result")
 
 		Rollers.history = listOf(result) + Rollers.history // workaround: prepend.
 
@@ -278,7 +279,7 @@ public class OnEventRoller
 		/* Show the result. */
 		if (toastContext != null) toastRoll(toastContext, result)
 
-		return roll
+		return lastRoll
 	}
 
 	/** Show a number with reason in a toast. */
