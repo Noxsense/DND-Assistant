@@ -41,8 +41,9 @@ data class State(val pc: PlayerCharacter) {
 		private set
 
 	/** Left Spell slots. */
-	private var spellSlots: IntArray
-		= pc.spellSlots.toMutableList().toIntArray() // copied to a new list ?
+	public var spellSlots: List<Int>
+		= pc.spellSlots.toMutableList().toIntArray().toList() // copied to a new list ?
+		private set
 
 	/** Getter for a available, left spell slot. */
 	fun spellSlot(slot: Int) : Int
@@ -145,6 +146,7 @@ data class State(val pc: PlayerCharacter) {
 		stabilized = true
 		deathsaveFail = 0
 		deathsaveSuccess = 0
+		pc.log.info("Stabilized")
 	}
 
 	/** Heal the character, this also stabilizes the character.
@@ -157,6 +159,7 @@ data class State(val pc: PlayerCharacter) {
 		/* heal if heal is bigger than 0. */
 		if (hp > 0) {
 			hitpoints = Math.min(hitpoints + hp, pc.hitpoints)
+			pc.log.info("Healed (+$hp HP) => $hitpoints HP")
 		}
 	}
 
@@ -168,10 +171,10 @@ data class State(val pc: PlayerCharacter) {
 			return
 		}
 
-		pc.log.info("Short Rest, heal $heal HP, spent dice: $spentDice")
-
 		/* Remove the spent dice from available hit die. */
-		hitdice -= spentDice
+		spentDice.forEach { d -> hitdice = hitdice.minusElement(d) }
+
+		pc.log.info("Short Rest, heal $heal HP, spent dice: $spentDice => left dice $hitdice")
 
 		/* Apply the heal. */
 		heal(heal)
@@ -192,13 +195,34 @@ data class State(val pc: PlayerCharacter) {
 
 		/* Free temporary hitpoints. */
 		hitpointsTMP = 0
+		pc.log.info("Temporary hitpoints resetted.")
 
 		/* Restore half of the spent hitdice, rounded down. */
-		val missing = pc.hitdice - hitdice
-		hitdice += missing.dropLast(Math.ceil(missing.size / 2.0).toInt()) // add first missing/2
+		var missing: List<Int> = pc.hitdice.toMutableList()
+		val max: Int = missing.size
+		hitdice.forEach { missing = missing.minusElement(it) }
 
-		/* Restore spell slots. */
-		// TODO (2020-10-02) spellSlots -> mapping back to fit pc.spellslots without copying to a new object
+		var toRestore = missing.take(Math.max(1, max / 2))
+
+		val tmp = hitdice.toMutableList().toIntArray().toList()
+
+		hitdice += toRestore
+
+		pc.log.info("Add hit dice: $tmp +/2 -> $toRestore => $hitdice.")
+
+		/* Restore all spell slots. */
+		spellSlots = spellSlots.mapIndexed { i, _ -> pc.spellSlots[i] }
+		pc.log.info("Restored spell slpts: $spellSlots.")
+	}
+
+	/** Rest depending on the hours: shorter than 1 => no rest at all, at least 8h => long rest. */
+	fun rest(hour: Int = 1) {
+		when {
+			hour < 1 -> pc.log.info("Could not get rest for $hour hour.")
+			hour < 8 -> restShort(heal = 0) // short rest (not using any hit die).
+			hour < 12 -> restLong() // normal long rest.
+			else -> { hitpoints = 1; restLong() } // long rest with restoration of the missing hp, if needed.
+		}
 	}
 
 	/** Walk {ft} feet.

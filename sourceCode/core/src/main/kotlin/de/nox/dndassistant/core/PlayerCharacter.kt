@@ -155,8 +155,8 @@ public class PlayerCharacter private constructor(
 		private set
 
 	/** Hit dice as a list of faces, gained by every class level up. */
-	val hitdice : List<Int> get()
-		= klasses.toList().flatMap { (klass, lvlSpec) ->
+	val hitdice : List<Int>
+		get() = klasses.toList().flatMap { (klass, lvlSpec) ->
 			/* Add level times the hitdie face to the hitdice list. */
 			(1 .. (lvlSpec.first)).map { klass.hitdie.faces }
 		}
@@ -193,8 +193,9 @@ public class PlayerCharacter private constructor(
 
 	/** Spell slots the character has available and used.
 	 * Ordered list of max and available spell slots. */
-	internal var spellSlots: IntArray
+	public var spellSlots: IntArray
 		= IntArray(9) { 0 } // maximal available, 1 to 9 as [0 .. 8]
+		private set
 
 	/** Getter for a available, left spell slot. */
 	fun spellSlot(slot: Int) : Int
@@ -469,26 +470,6 @@ public class PlayerCharacter private constructor(
 		val newSpecial = if (old.second == "") specialisation else old.second
 
 		klasses += klass to Pair(newLevel, newSpecial)
-	}
-
-	/* Take a short rest. Recover hitpoints, maybe magic points, etc. */
-	fun rest(shortRest: Boolean = true) {
-		if (shortRest) {
-			// use up to all hit dice and add rolled hit points up to full HP.
-			// do other reloading(s).
-			log.info("Short rest")
-		} else {
-			log.info("Long rest")
-
-			/* Back to full hp. */
-			// TODO (2020-10-01)
-
-			/* Restore half of used hit dice. */
-			// hitdice.mapValues { it / 2 }
-
-			/* Restore spell slots and other features. */
-			// TODO (2020-09-03) implement magic points restoration [ RULES needed ]
-		}
 	}
 
 	/** Learn a new spell with the given source, this character has.
