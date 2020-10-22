@@ -1,9 +1,7 @@
 package de.nox.dndassistant.app
 
-import android.content.Intent
 import android.os.Bundle
 import android.text.Html
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.OnClickListener
@@ -32,8 +30,6 @@ import de.nox.dndassistant.core.Skillable
 import de.nox.dndassistant.core.Weapon
 import de.nox.dndassistant.core.Attack
 import de.nox.dndassistant.core.playgroundWithOnyx
-import de.nox.dndassistant.core.DiceTerm
-import de.nox.dndassistant.core.SimpleDice
 import de.nox.dndassistant.core.D20
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -279,150 +275,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		if (!isInitializedPanelHealth()) {
 			panelHealth = Pair(
 				content_health.findViewById(R.id.healthbar),
-				content_health.findViewById(R.id.ac_speed_death_rest))
-
+				content_health.findViewById(R.id.content_health))
 		}
 
-		/* Show speed (map). */
-		(panelHealth.second.findViewById<TextView>(R.id.speed)).apply {
-			// text = "${character.speed}" // maps: reason --> speed
-			text = "${character.current.feetLeft}" // maps: reason --> speed
-			if (setListener) {
-				setOnClickListener(this@MainActivity)
-
-				// TODO (2020-10-08) set on long click: change taken steps.
-			}
-		}
-
-		/* Set up heatlh bar (progressbar) */
-		(panelHealth.first as ProgressBar).run {
-			max = character.hitpoints
-			progress = character.current.hitpoints
-			setOnClickListener(this@MainActivity)
-			setOnLongClickListener {
-				// TODO (2020-10-08) implement hit / heal dialog.
-				Toast.makeText(
-					this@MainActivity,
-					"HIT/HEAL Dialog.",
-					Toast.LENGTH_LONG
-				).show()
-				true
-			}
-		}
-
-		/* Show final armor class. */
-		(panelHealth.second.findViewById<TextView>(R.id.armorclass)).apply {
-			text = getString(R.string.armorclass).format(character.armorClass)
-			if (setListener) {
-				// on click open "dresser"
-				setOnClickListener(this@MainActivity)
-			}
-		}
-
-		/* Update. */
-		// showRestingPanel(setListener)
-		showRestingPanel()
-
-		// TODO (2020-10-08) setup heal / damage dialog.
-	}
-
-	// replacement and tests. // FIXME (2020-09-28) implement me right and remove me.
-	private var hitdiceViews: Set<TextView> = setOf() // [hit die: available/used ]
-
-	/** Update the resting panel.
-	 * Differentiate spent and available hit die.
-	 * On click apply resting results.
-	 * Hitdie: Spent it (as short rest) and mark as used.
-	 * Long Rest: Long Rest (also visibly restore hitdie accordingly). */
-	private fun showRestingPanel(initiate: Boolean = false) {
-		log.debug("Set up hit dice.")
-
-		val hitdiceCount = character.hitdice.size
-
-		// count displayed hit dice.
-		val resting = panelHealth.second.findViewById<LinearLayout>(R.id.resting)
-		var restCount = resting.getChildCount()
-
-		val longrest = resting.findViewById<TextView>(R.id.longrest)
-
-		// TODO (2020-10-07) consider gridview or listview for hitdice.
-
-		/* There are missing hit dice. */
-		if ((restCount - 1) < hitdiceCount) {
-			var displayed: List<String> = listOf() // eg. [d8, d8, d6, d8, ...]
-
-			(1 until restCount).forEach { resting.getChildAt(it).run {
-				if (this !is TextView) return
-
-				hitdiceViews += this
-
-				displayed += this.text.toString()
-			}}
-
-			val hitdieDisplayed: Map<Int, Int> = displayed
-				.groupingBy { it.substring(1).toInt() }
-				.eachCount()
-
-			log.debug("Displayed hitdie: {$displayed} => $hitdieDisplayed")
-
-			// add missing hitdice.
-
-			/* Long rest. */
-			if (!longrest.hasOnClickListeners()) {
-				longrest.setOnClickListener {
-					val max = Math.max(hitdiceCount / 2, 1) // at least 1
-					var restored = 0
-
-					// TODO (2020-10-07) avoid deep nesting.
-					log.debug("Restore $max hitdice")
-
-					hitdiceViews.forEach {
-						if (restored < max && !it.isClickable()) {
-							restored += 1 // restore one more hitdie.
-							it.setTextColor(android.graphics.Color.BLACK)
-							it.setClickable(true)
-							log.debug("Restored $it, ${it.text}")
-							log.debug("Restored $restored/$max hitdice")
-						}
-					}
-				}
-			}
-
-			// TODO (2020-10-07) refactor: Update only needed / missing hitdice.
-			character.hitdice.forEach { face ->
-				val view: TextView = TextView(this@MainActivity)
-
-				view.text = "d$face"
-				view.setTextSize(20.toFloat())
-				view.setPadding(10, 0, 10, 0)
-
-				view.setOnClickListener { v ->
-					// roll the healing.
-					val roll: Int = (1..face).random()
-
-					Rollers.history = listOf(RollResult(
-						value = roll,
-						reason = "Short Rest (d$face)")) + Rollers.history
-
-					this@MainActivity.notifyRollsUpdated()
-
-					// disables this hitdie.
-					if (v is TextView) {
-						v.setTextColor(0x33000000)
-						v.setClickable(false)
-					}
-
-					Toast.makeText(this@MainActivity,
-						"Short Rest [$roll (d$face)]",
-						Toast.LENGTH_LONG).show()
-				}
-
-				resting.addView(view)
-				hitdiceViews += (view)
-
-				log.debug("Display a new hitdie [d$face[: $view")
-			}
-		}
+		val hitpointView: HitpointView = content_health as HitpointView
+		hitpointView.displayNow()
 	}
 
 	/** Update the "content_skills" panel.
@@ -1049,11 +906,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		var (long, short) = Toast.LENGTH_LONG to Toast.LENGTH_SHORT
 
 		when (view.getId()) {
-			R.id.healthbar -> {
-				// open content panel.
-				panelHealth.second.toggleVisibility()
-			}
-
 			R.id.label_skills -> {
 				closeContentsBut(R.id.content_skills)
 			}
@@ -1083,19 +935,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				listRolls.refreshDrawableState()
 			}
 
-			R.id.speed -> {
-			  // XXX (2020-09-29) implement walk steps. (gui)
-			  if (character.current.walk(ft = 5)) {
-				  Toast.makeText(context, "Went 5ft", short).show()
-				  (panelHealth.second.findViewById<TextView>(R.id.text))
-					.text = "${character.current.feetLeft} ft"
-			  }
-
-			}
-			R.id.armorclass -> {
-			  Toast.makeText(context, "Open Dresser", long).show()
-			  // XXX (2020-09-29) implement equip armor, hands, etc.
-			}
 			else -> {
 			  Toast.makeText(context, "Clicked on ${view}", long).show()
 			  // TODO (2020-09-29) rest case? any click without purpose?

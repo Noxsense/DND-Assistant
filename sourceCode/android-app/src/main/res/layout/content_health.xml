@@ -1,4 +1,4 @@
-<LinearLayout
+<de.nox.dndassistant.app.HitpointView
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:background="@drawable/framed"
   android:orientation="vertical"
@@ -13,9 +13,11 @@
     android:progressDrawable="@drawable/healthbar"
     style="@android:style/Widget.ProgressBar.Horizontal"
     />
+
+  <!-- content -->
   <LinearLayout
     android:background="@drawable/framed"
-    android:id="@+id/ac_speed_death_rest"
+    android:id="@+id/content_health_foldable"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="@dimen/hmargin"
     android:layout_marginVertical="@dimen/vmargin"
@@ -31,20 +33,10 @@
       android:layout_height="wrap_content"
       android:layout_marginHorizontal="@dimen/hmargin"
       android:layout_marginVertical="@dimen/vmargin"
-      android:layout_width="wrap_content"
+      android:layout_width="0sp"
+      android:layout_weight="1"
       android:padding="6sp"
       android:text="@string/armorclass"
-      />
-    <!-- Speed -->
-    <TextView
-      android:background="@drawable/framed"
-      android:id="@+id/speed"
-      android:layout_height="wrap_content"
-      android:layout_marginHorizontal="@dimen/hmargin"
-      android:layout_marginVertical="@dimen/vmargin"
-      android:layout_width="wrap_content"
-      android:padding="6sp"
-      android:text="@string/speed"
       />
     <!-- Deathsaves -->
     <TextView
@@ -53,34 +45,41 @@
       android:layout_height="wrap_content"
       android:layout_marginHorizontal="@dimen/hmargin"
       android:layout_marginVertical="@dimen/vmargin"
-      android:layout_width="wrap_content"
+      android:layout_width="0sp"
+      android:layout_weight="2"
       android:padding="6sp"
       android:text="XoXXoX"
       />
+
     <!-- Resting -->
-    <LinearLayout
+    <GridLayout
       android:background="@drawable/framed"
       android:gravity="center"
       android:id="@+id/resting"
       android:layout_height="wrap_content"
       android:layout_marginHorizontal="@dimen/hmargin"
       android:layout_marginVertical="@dimen/vmargin"
-      android:layout_width="wrap_content"
+      android:layout_width="0sp"
+      android:layout_weight="4"
       android:orientation="horizontal"
-      android:padding="6sp"
+      android:columnCount="6"
       >
       <TextView
         android:background="@drawable/framed"
+        android:gravity="center"
         android:id="@+id/longrest"
+        android:layout_columnWeight="2"
+        android:layout_gravity="fill_vertical"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="@dimen/hmargin"
-        android:layout_marginVertical="@dimen/vmargin"
-        android:layout_width="wrap_content"
+        android:layout_rowSpan="5"
+        android:layout_width="0sp"
         android:padding="6sp"
         android:text="@string/longrest"
         />
-    </LinearLayout> <!-- resting -->
-  </LinearLayout> <!-- AC/ Speed / Saves / Resting -->
+    </GridLayout> <!-- resting END -->
+  </LinearLayout> <!-- content END -->
+
+  <!-- extra conditions -->
   <TextView
     android:background="@drawable/framed"
     android:id="@+id/conditions"
@@ -90,7 +89,7 @@
     android:layout_width="match_parent"
     android:padding="6sp"
     android:text="Conditions"
+    style="@style/NoteText"
     />
   <!-- health panel end -->
-</LinearLayout>
-
+</de.nox.dndassistant.app.HitpointView>
