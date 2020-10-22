@@ -53,6 +53,37 @@ class PlayerCharacterTest {
 		// add klass levels => gain more traits and HP.
 		// TODO (2020-10-02) add tests.
 
+		/* Test state, hitpoints/health, hit dice. */
+
+		log.debug("Expected XP to Level.")
+		for (i in 1 .. 20) log.debug("Level $i: ${PlayerCharacter.levelToXP(i)} xp")
+
+		log.info("Set Expierience points. => new level, klass level up possible.")
+		pc.experiencePoints = 3000 // at least level 4
+		pc.experiencePoints = PlayerCharacter.levelToXP(20) // at least level 20
+		log.info("Charachter $pc current level: ${pc.level} \u21d0 ${pc.experiencePoints}")
+
+		log.info("Set new level, klass level up possible => new hitdie, new hitpoint.")
+		for (i in 1 .. 20) pc.addKlassLevel(klass)
+
+		pc.hitpoints = 23
+		pc.hitpoints = DiceTerm(SimpleDice(8,20)).roll() // random hitpoints
+		pc.current.heal(1) // at least one
+
+		log.info("Charachter $pc with new HP: ${pc.hitpoints}")
+
+		pc.current.restLong()
+		pc.current.restLong()
+
+		log.info("Charachter $pc with current HP: ${pc.current.hitpoints}")
+
+		// spent 3 hd
+		pc.current.restShort(listOf(8,8,8), 0)
+		pc.current.takeHit(pc.hitpoints / 3) // remove current HP
+
+		log.info("Charachter $pc with current HP: ${pc.current.hitpoints}")
+
+
 		// TODO (2020-10-02) inventory tests.
 		pc.pickupItem(backpack, "BAG:Backpack")
 		assertTrue(true, "Backpack is picked up.") // TODO

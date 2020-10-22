@@ -944,7 +944,7 @@ public class PlayerCharacter private constructor(
 
 		/** Get the experience points which need to be reached to get the level. */
 		fun levelToXP(lvl: Int) : Int {
-			return nextLevel.getOrElse(lvl - 1, { 0 })
+			return nextLevel.getOrElse(20 - lvl, { 0 })
 		}
 
 		/** A simple mapping from level to proficiency bonus.

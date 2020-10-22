@@ -86,10 +86,21 @@ data class State(val pc: PlayerCharacter) {
 	 */
 	fun takeHit(hp: Int, critical: Boolean = false) {
 		/* buffer the damage taken. */
+		pc.log.info("Take hit of $hp damage, current HP: $hitpoints (${"%+d".format(hitpointsTMP)}).")
 
 		val hpRest = hp - hitpointsTMP
 		hitpointsTMP -= hp
-		pc.log.info("Buffer/tmp HP reduced damage from $hp to $hpRest")
+
+		if (hitpointsTMP < 0) {
+			hitpoints += hitpointsTMP // removed buffered rest damage.
+			pc.log.info(
+				"Buffer/Temporary HP used up, Remove from normal HP."
+				+ "Rest damage left: $hpRest.")
+		} else if (hitpointsTMP > 0) {
+			pc.log.info(
+				"Buffer/Temporary HP reduced."
+				+ "Rest damage left: $hpRest.")
+		}
 
 		if (hitpoints - hpRest <= -pc.hitpoints) {
 			/* Immediate death. */
@@ -111,7 +122,7 @@ data class State(val pc: PlayerCharacter) {
 			stabilized = false
 
 		} else {
-			pc.log.info("The character takes damage")
+			pc.log.info("The character just takes damage")
 			hitpoints = Math.max(hitpoints - hpRest, 0)
 
 			/* Check if now unconscious. */
@@ -122,6 +133,7 @@ data class State(val pc: PlayerCharacter) {
 				deathsaveFail = 0
 			}
 		}
+		pc.log.info("Hit taken, rest HP: $hitpoints (${"%+d".format(hitpointsTMP)})")
 	}
 
 	/** Add another death save result (fail, true)
@@ -208,7 +220,7 @@ data class State(val pc: PlayerCharacter) {
 
 		hitdice += toRestore
 
-		pc.log.info("Add hit dice: $tmp +/2 -> $toRestore => $hitdice.")
+		pc.log.info("Added hit dice: +${toRestore.size} => $hitdice.")
 
 		/* Restore all spell slots. */
 		spellSlots = spellSlots.mapIndexed { i, _ -> pc.spellSlots[i] }
@@ -216,7 +228,7 @@ data class State(val pc: PlayerCharacter) {
 	}
 
 	/** Rest depending on the hours: shorter than 1 => no rest at all, at least 8h => long rest. */
-	fun rest(hour: Int = 1) {
+	public fun restHours(hour: Int = 1) {
 		when {
 			hour < 1 -> pc.log.info("Could not get rest for $hour hour.")
 			hour < 8 -> restShort(heal = 0) // short rest (not using any hit die).
