@@ -45,10 +45,14 @@ data class RollResult(
 	override fun compareTo(other: RollResult) : Int
 		= this.timestamp.compareTo(other.timestamp)
 
+	/** String representation. */
 	override fun toString() : String
+		= (brief() + " ($timestampString)")
+
+	/** Brief string representation (without date). */
+	fun brief() : String
 		= ("$value ${single.joinToString("+", " = ", "")}"
-		+ (if (reason.length > 0) ": $reason" else "")
-		+ " ($timestampString)")
+		+ (if (reason.length > 0) ": $reason" else ""))
 }
 
 /**
@@ -284,6 +288,6 @@ public class OnEventRoller
 
 	/** Show a number with reason in a toast. */
 	fun toastRoll(context: Context, result: RollResult) {
-		Toast.makeText(context, "Rolled $result", Toast.LENGTH_LONG).show()
+		Toast.makeText(context, "Rolled ${result.brief()}", Toast.LENGTH_LONG).show()
 	}
 }

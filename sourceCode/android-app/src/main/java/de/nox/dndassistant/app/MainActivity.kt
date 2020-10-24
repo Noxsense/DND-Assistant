@@ -222,26 +222,26 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		log.debug("Lvl (XP) displayed.")
 
 		/* Fill ability panel. */
-		showabilities(initiation) // if initiation.: set OnClickListener
+		showabilities() // if initiation.: set OnClickListener
 
 		log.debug("Abilities displayed.")
 
 		/* Update the healthbar, conditions, death saves and also speed and AC. */
-		updateLifestate(initiation) // if initiation: set OnClickListener
+		updateLifestate() // if initiation: set OnClickListener
 
 		// TODO (2020-09-27) previews and content. (less hacked, pls)
 
 		updateSkills(initiation)
 
-		updateAttacks(clearBefore = initiation)
+		updateAttacks()
 
-		updateSpells(initiation)
+		updateSpells()
 
-		updateInventory(initiation)
+		updateInventory()
 
-		updateKlasses(initiation)
+		updateKlasses()
 
-		updateStory(initiation) // story, species, background
+		updateStory() // story, species, background
 
 		label_rolls.text = formatLabel(
 			"Rolls and extra counters",
@@ -257,7 +257,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * Add roller to each ability and saving throw.
 	 * @param setListener if true, also set the listener.
 	 */
-	private fun showabilities(setListener: Boolean = false) {
+	private fun showabilities() {
 		if (!isInitializedPanelAbilities()) {
 			panelAbilities = abilities_grid
 		}
@@ -271,7 +271,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * and also speed and AC.
 	 * @param setListener if true, also initiate the listener.
 	 */
-	private fun updateLifestate(setListener: Boolean = false) {
+	private fun updateLifestate() {
 		if (!isInitializedPanelHealth()) {
 			panelHealth = Pair(
 				content_health.findViewById(R.id.healthbar),
@@ -383,7 +383,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * Clicking on an attack activate further options: Try to hit -> Damage dealt.
 	 * Here also new shortcuts be added, otherwise it's for overview.
 	 */
-	private fun updateAttacks(clearBefore: Boolean = false) {
+	private fun updateAttacks() {
 		if (!isInitializedAttacks()) {
 			/* Set companion object's panelAttacks label and Content. */
 			panelAttacks = Pair(
@@ -427,7 +427,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 						// setOnClickListener() // TODO (2020-10-11) // show notes.
 					}
 
-					// TODO (2020-10-16) clean up OnEventRoller.
+					// TODO (2020-10-16) clean up attack_roll.OnEventRoller.
 					(v.findViewById<TextView>(R.id.attack_roll)).run {
 						text = "%+d".format(attack.attackBonus)
 						setOnClickListener(OnEventRoller.Builder(D20)
@@ -437,11 +437,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 					}
 
 					(v.findViewById<TextView>(R.id.attack_range))
-						.text = "TODO"
+						.text = "TODO attack_range display"
 
 					// TODO (2020-10-11) refactor: attack.ranged, add actual range for disadvantage rolls, etc?
 
-					// TODO (2020-10-16) clean up OnEventRoller.
+					// TODO (2020-10-16) clean up damage_dice.OnEventRoller.
 					(v.findViewById<TextView>(R.id.damage_dice)).run {
 						val dmgRoll = attack.damageRoll
 						text = dmgRoll.toString()
@@ -494,7 +494,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * Show data of each learned spell and click to cast them.
 	 * Here new spells which may be learnt can be added, or known spells can be prepared.
 	 */
-	private fun updateSpells(setListener: Boolean = false) {
+	private fun updateSpells() {
 		if (!isInitializedSpells()) {
 			panelSpells = Pair(
 				label_spells,
@@ -611,7 +611,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * Click a bag item, to get more options, what to do with it [equip, drop, sell].
 	 * Also new items or money can be added, and equipped items can be dropped or stored.
 	 */
-	private fun updateInventory(setListener: Boolean = false) {
+	private fun updateInventory() {
 		if (!isInitializedInventory()) {
 			panelInventory = Pair(
 				label_inventory,
@@ -787,7 +787,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * Clicking on a feast will show more information about the feast.
 	 * Also limited feasts can be activated.
 	 * Here a new klass level can also be added. */
-	private fun updateKlasses(setListener: Boolean = false) {
+	private fun updateKlasses() {
 		if (!isInitializedKlasses()) {
 			panelKlasses = Pair(
 				label_classes,
@@ -852,7 +852,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * Here are information about the race, the background and also pure story focussed notes.
 	 * New notes can be added and also race or background features reviewed or activated.
 	 */
-	private fun updateStory(stnetListener: Boolean = false) {
+	private fun updateStory() {
 		if (!isInitializedStory()) {
 			panelStory = Pair(
 				label_race_background,
@@ -877,17 +877,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		(0 until extraDice.getChildCount()).forEach {
 			extraDice.getChildAt(it).apply {
 				if (this is EditText) {
-					// insert term and roll it. (keep text)
-					// XXX (2020-10-17) Fixme
-					setOnKeyListener(OnEventRoller.Builder(this)
+					/* Parse the text and return the rolled text. */
+					val editRoller = OnEventRoller.Builder(this)
 						.setReasonView(this)
-						.create())
+						.create()
+
+					/* Insert term and roll it. (keep text) */
+					setOnKeyListener(editRoller)
+
+					/* On Long click: Parse last term. */
+					setOnLongClickListener(editRoller)
 
 				} else if (this is TextView) {
-					// simply roll the die
-					val term = this.text.toString()
-					val faces: Int = term.substring(1).toInt()
-					// XXX (2020-10-17) Fixme: Is always 1 + 1
+					/* simply roll the die */
 					setOnClickListener(OnEventRoller.Builder(this)
 						.setReasonView(this)
 						.create())
@@ -901,9 +903,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	// TODO (2020-10-06) separate single logics. (onClick(view))
 	override fun onClick(view: View) {
 		log.debug("Clicked on $view")
-
-		var context = this@MainActivity
-		var (long, short) = Toast.LENGTH_LONG to Toast.LENGTH_SHORT
 
 		when (view.getId()) {
 			R.id.label_skills -> {
@@ -929,14 +928,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				closeContentsBut(R.id.content_rolls)
 
 				/* Update roll shower. */
-				val listRolls = content_rolls.findViewById<ListView>(R.id.list_rolls)
-				(listRolls.adapter as ArrayAdapter<RollResult>).notifyDataSetChanged()
-				listRolls.invalidateViews()
-				listRolls.refreshDrawableState()
+				notifyRollsUpdated()
 			}
 
 			else -> {
-			  Toast.makeText(context, "Clicked on ${view}", long).show()
+				Toast.makeText(this@MainActivity,
+					"Clicked on ${view}",
+					Toast.LENGTH_SHORT
+				).show()
 			  // TODO (2020-09-29) rest case? any click without purpose?
 			}
 		}
