@@ -80,6 +80,15 @@ data class State(val pc: PlayerCharacter) {
 		= mapOf()
 		private set
 
+	/** String representation to of the current state. */
+	override public fun toString()
+		= ("Connected to ${pc}"
+		+ ": HP: %d/%d (%+d)".format(hitpoints, pc.hitpoints, hitpointsTMP)
+		+ ", Condition: [%s]".format(conditions.toList().joinToString(", "))
+		+ ", Spells: [%s] ".format(spellSlots.joinToString(","))
+		+ (spellConcentration?.first?.name ?: "")
+		)
+
 	/** Add damage to the character.
 	 * If the hit causes damage, which causes more than the negative max hp,
 	 * the character dies immediately.
@@ -96,7 +105,7 @@ data class State(val pc: PlayerCharacter) {
 		hitpointsTMP -= hp
 
 		if (hitpointsTMP < 0) {
-			hitpoints += hitpointsTMP // removed buffered rest damage.
+			hitpointsTMP = 0 // reset to null.
 			pc.log.info(
 				"Buffer/Temporary HP used up, Remove from normal HP."
 				+ "Rest damage left: $hpRest.")
@@ -137,6 +146,11 @@ data class State(val pc: PlayerCharacter) {
 				deathsaveFail = 0
 			}
 		}
+
+		/* Finally, if below 0, reset to zero */
+		hitpoints = Math.max(hitpoints, 0)
+		hitpointsTMP = Math.max(hitpointsTMP, 0)
+
 		pc.log.info("Hit taken, rest HP: $hitpoints (${"%+d".format(hitpointsTMP)})")
 	}
 
@@ -219,8 +233,6 @@ data class State(val pc: PlayerCharacter) {
 		hitdice.forEach { missing = missing.minusElement(it) }
 
 		var toRestore = missing.take(Math.max(1, max / 2))
-
-		val tmp = hitdice.toMutableList().toIntArray().toList()
 
 		hitdice += toRestore
 
