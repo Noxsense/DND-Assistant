@@ -37,26 +37,11 @@ public class HitpointView : LinearLayout {
 
 	private val li = LayoutInflater.from(this.getContext())
 
-	constructor(c: Context, attrs: AttributeSet? = null) : super(c, attrs) {
-	}
+	constructor(c: Context, attrs: AttributeSet? = null) : super(c, attrs);
 
-	public fun displayNow() {
-		log.debug("Loaded $preview")
-		log.debug("Loaded $content")
-		log.debug("Loaded $condition")
-
-		/* Filter the first matching hitdie, which match the backend. */
-		displayHitdice(character.hitdice, character.current.hitdice)
-
-		/* Update health bar. */
-		displayCurrentHealth()
-
-		/* Display death fight state. */
-		displayDeathFightResults()
-
-		/* Display current conditions. */
-		displayConditions()
-	}
+	// TODO (2020-10-20) detach from this class and move to shared lib.
+	/** Attached character. */
+	private val character: PlayerCharacter = playgroundWithOnyx()
 
 	/** Hit point preview.
 	 * Also click handler top open content,
@@ -64,14 +49,11 @@ public class HitpointView : LinearLayout {
 	private val preview: ProgressBar by lazy {
 		findViewById<ProgressBar>(R.id.healthbar).also { bar ->
 			/* On bar click: Show/Hide content. */
-			bar.setOnClickListener { toggleFold() }
+			bar.setOnClickListener { toggleContent() }
 
 			/* On bar long-click: More details of HP and options to change. */
 			bar.setOnLongClickListener {
 				displayCurrentHealth()
-
-				Toast.makeText(getContext(), "HP Dialog? ${bar.progress}/${bar.max}", Toast.LENGTH_LONG).show()
-				log.debug("Open Heal/Hit Dialog.")
 
 				true
 			}
@@ -99,7 +81,30 @@ public class HitpointView : LinearLayout {
 			/* show current death fight and update health bar. */
 			displayDeathFightResults()
 			displayCurrentHealth()
+
+			/* Load also hp controller view (lazy initialisation). */
+			damageView;
+			healView;
 		}
+	}
+
+	/** Show the current character state. */
+	public fun displayNow() {
+		log.debug("Loaded $preview")
+		log.debug("Loaded $content")
+		log.debug("Loaded $condition")
+
+		/* Filter the first matching hitdie, which match the backend. */
+		displayHitdice(character.hitdice, character.current.hitdice)
+
+		/* Update health bar. */
+		displayCurrentHealth()
+
+		/* Display death fight state. */
+		displayDeathFightResults()
+
+		/* Display current conditions. */
+		displayConditions()
 	}
 
 	/** Condition preview.
@@ -126,37 +131,102 @@ public class HitpointView : LinearLayout {
 		condition.text = character.current.conditions.toList().joinToString("\n")
 	}
 
-	/** Attached character.
-	 * TODO (2020-10-20) detach from this class and move to shared lib. */
-	private val character: PlayerCharacter = playgroundWithOnyx()
-
 	/** Fold content (state) with effect on set. */
 	public val folded: Boolean
 		get() = content.visibility != View.VISIBLE
+
+	/** View to show the hitpoints in text format. */
+	private val hitpointView by lazy {
+		findViewById<TextView>(R.id.hitpoints)
+	}
+
+	/** View where you can add or remove hitpoints. */
+	private val hitpointControlView by lazy {
+		findViewById<TextView>(R.id.hp_controller)
+	}
+
+	/** View where the hit points will be confirmed as damage. */
+	private val damageView by lazy {
+		findViewById<TextView>(R.id.take_hit).also { view ->
+			/** OnClick: Add hpModifierView as damage. */
+			view.setOnClickListener(hpModifying)
+		}
+	}
+
+	/** View where the hit points will be confirmed as healing. */
+	private val healView by lazy {
+		findViewById<TextView>(R.id.heal).also { view ->
+			/** OnClick: Add hpModifierView as heal. */
+			view.setOnClickListener(hpModifying)
+		}
+	}
+
+	/** OnClickListener: Modify the hitpoints by the hitpoint_modifier. */
+	private val hpModifying: View.OnClickListener
+		= View.OnClickListener { view ->
+			log.debug("Heal or damage the character.")
+
+			/* Values and parameters. */
+			val hp = hpModifyingNum
+			val state = character.current
+			val crit = false
+
+			Toast.makeText(getContext(),
+				"Heal/Damage: $hp",
+				Toast.LENGTH_SHORT).show()
+
+			/* Heal or damage depends on view */
+			when (view.id) {
+				healView.id -> {
+					log.info("Heal by $hp")
+					state.heal(hp)
+				}
+				damageView.id -> {
+					log.info("Hurt with $hp")
+					state.takeHit(hp, crit)
+				}
+			}
+
+			/* Display updates. */
+			displayNow()
+		}
+
+	/** View the amount of hit point change is controlled. */
+	private val hpModifierView by lazy {
+		findViewById<TextView>(R.id.hitpoint_modifier).also {
+			it.setOnClickListener(hpModifying)
+		}
+	}
+
+	/** Read out the parsed number of the hpModifierView. */
+	private val hpModifyingNum: Int get()
+		= try { hpModifierView.text.toString().toInt() } catch (e: NumberFormatException) { 0 }
 
 	/** Get remaining life proportionally. */
 	public val lifePercentage: Double
 		get() = preview.progress * 100.0 / preview.max
 
-	/** temporary hit points. */
-	public var tmpHP: Int = 0
-
 	/** On Healthbar Click: Unfold, if folded or fold if unfolded. */
-	public fun toggleFold() = apply {
+	public fun toggleContent() = apply {
 		content.visibility = if (folded) View.VISIBLE else View.GONE
 		log.debug("Toggle Fold, now: $folded")
 	}
 
 	/** Show attached character's current health in health bar. */
 	fun displayCurrentHealth() {
-		/* Display the healing. */
+		/* Display the hitpoints in bar format. */
 		preview.apply {
 			progress = character.current.hitpoints
-			max = character.hitpoints
+			max = character.current.hitpointsMax
 			log.info("Healthbar shows $progress/$max")
 		}
+
+		/* Display the hitpoints in text format. */
+		hitpointView.text = "%d / %d (%+d)".format(
+			character.current.hitpoints,
+			character.hitpoints,
+			character.current.hitpointsTMP)
 	}
-	// TODO (2020-10-21) show heal / damage dialog.
 
 	/** Display and control for death saves. */
 	private val deathFightView: TextView by lazy {
@@ -211,27 +281,19 @@ public class HitpointView : LinearLayout {
 				displayNow()
 			}
 
-			/* OnLongClick,
-			 * Rest 1d4 longer, to regain at least one hit point,
-			 * when the character wasn't stabilized.  */
-			restL.setOnLongClickListener {
-				log.info("Long rest, (1d4 + 8) h.")
-
-				Toast.makeText(getContext(),
-					"Stabalizing Long rest, 1d4 + 8h.",
-					Toast.LENGTH_SHORT
-				).show()
-
-				/* Backend healing: Restoration. */
-				character.current.restHours(12 /*h*/)
-
-				displayNow()
-
-				/* long click is used up. */
-				true
-			}
+			/* OnLongClick:
+			 * Toggle visibility of other resting views / hit "dice". */
+			restL.setOnLongClickListener { toggleShortRest(); true }
 
 			log.debug("Longrest view initated.")
+		}
+	}
+
+	/** Show or hide the view for the short rest / hit die views.*/
+	public fun toggleShortRest() {
+		restView.visibility = when (restView.visibility) {
+			View.GONE -> View.VISIBLE.also { log.debug("Show short rest views.") }
+			else -> View.GONE.also { log.debug("Hide short rest views.") }
 		}
 	}
 

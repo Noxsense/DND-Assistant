@@ -17,6 +17,10 @@ data class State(val pc: PlayerCharacter) {
 	var hitpointsTMP: Int = 0 // extra buffer for the hit points
 		private set
 
+	/** Current maximal hitpoints: Maximal hitpoints plus maybe temporary hitpoints. */
+	val hitpointsMax: Int
+		get() = pc.hitpoints + hitpointsTMP
+
 	var hitdice: List<Int> = pc.hitdice.toMutableList() // to new list.
 		private set
 
