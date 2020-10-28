@@ -153,7 +153,7 @@
           android:layout_marginVertical="@dimen/vmargin"
           android:layout_width="match_parent"
           android:padding="6sp"
-          android:text="Rolls (most recent roll)"
+          android:text="@string/title_rolls"
           android:textSize="@dimen/textSizeOverviewLabel"
           />
       </LinearLayout>
@@ -242,8 +242,8 @@
         android:hint="Search"
         android:id="@+id/search_content"
         android:inputType="text"
-        android:layout_height="0sp"
-        android:layout_weight="0.1"
+        android:layout_height="@dimen/textSize"
+        android:textSize="@dimen/textSize"
         android:layout_width="match_parent"
         />
     </LinearLayout>

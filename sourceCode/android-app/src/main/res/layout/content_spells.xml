@@ -7,7 +7,7 @@
   <TextView
     android:id="@+id/spell_title"
     android:layout_height="0sp"
-    android:layout_weight="0.05"
+    android:layout_weight="1"
     android:layout_width="match_parent"
     android:text="@string/title_spells"
     android:textSize="20sp"
@@ -17,7 +17,7 @@
     android:id="@+id/spell_slots"
     android:layout_height="0sp"
     android:layout_marginVertical="@dimen/vmargin"
-    android:layout_weight="0.25"
+    android:layout_weight="2"
     android:layout_width="match_parent"
     android:text="[1111] [222] [333] [444] [555] [66] [77] [8] [9]"
     android:textSize="12sp"
@@ -27,7 +27,7 @@
     android:id="@+id/list_spells"
     android:layout_height="0sp"
     android:layout_marginVertical="@dimen/vmargin"
-    android:layout_weight="0.7"
+    android:layout_weight="11"
     android:layout_width="match_parent"
     />
     <!-- list_item_spells.xml -->

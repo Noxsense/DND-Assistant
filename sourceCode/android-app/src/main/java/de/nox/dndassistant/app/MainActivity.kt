@@ -197,13 +197,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * Also display the most recent result in the preview. */
 	public fun notifyRollsUpdated() {
 		if (!isInitializedRolls()) return
+
 		val (preview, content) = panelRolls
 		content.findViewById<ListView>(R.id.list_rolls).run {
 			(adapter as ArrayAdapter<RollResult>).notifyDataSetChanged()
 
+			/* Show last rolls, if available. */
 			preview.text = formatLabel(
-				"Rolls & Counters",
-				"Latest: ${(adapter.getItem(0) as RollResult?)?.value}")
+				getString(R.string.title_rolls),
+				try { "Latest: ${(adapter.getItem(0) as RollResult?)?.value}" }
+				catch (e: IndexOutOfBoundsException) { "No rolls yet." }
+				)
 		}
 	}
 
@@ -243,9 +247,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		updateStory() // story, species, background
 
-		label_rolls.text = formatLabel(
-			"Rolls and extra counters",
-			"0") // Last Roll
+		notifyRollsUpdated()
 	}
 
 	/** Format the preview label. */
@@ -672,7 +674,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		/* List of bags. And their content. */
 		bags.run {
-			// XXX placeholder.
+			// XXX (2020-10-10) bags placeholder.
 
 			/* Check for changes. Update. */
 			// TODO (2020-10-11) implement: inventory Check for changes. Update.

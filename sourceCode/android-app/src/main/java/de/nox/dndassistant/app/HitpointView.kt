@@ -16,6 +16,7 @@ import androidx.appcompat.widget.AppCompatTextView
 
 import de.nox.dndassistant.core.Ability
 import de.nox.dndassistant.core.Logger
+import de.nox.dndassistant.core.Condition
 import de.nox.dndassistant.core.PlayerCharacter
 import de.nox.dndassistant.core.SimpleDice
 import de.nox.dndassistant.core.playgroundWithOnyx
@@ -42,6 +43,25 @@ public class HitpointView : LinearLayout {
 	// TODO (2020-10-20) detach from this class and move to shared lib.
 	/** Attached character. */
 	private val character: PlayerCharacter = playgroundWithOnyx()
+
+	/* Quick shorcut: Hit Points. */
+	private val hpBase: Int get() = character.hitpoints
+	private val hpCurrent: Int get() = character.current.hitpoints
+	private val hpTemporary: Int get() = character.current.hitpointsTMP
+	private val hpMaximal: Int get() = character.current.hitpointsMax
+
+	/* Quick shorcut: Hit dice. */
+	private val hitdiceAll: List<Int> get() = character.hitdice
+	private val hitdiceCurrent: List<Int> get() = character.current.hitdice
+
+	/* Quick shorcut: Conditions dice. */
+	private val conditions: Map<Condition, Int> get() = character.current.conditions
+
+	/* Quick rest functions. */
+	private fun restLong() = character.current.restLong()
+	private fun restShort(d: Int, heal: Int) = character.current.restShort(listOf(d), heal)
+	private fun heal(hp: Int) = character.current.heal(hp)
+	private fun takeHit(hp: Int, crit: Boolean) = character.current.takeHit(hp, crit)
 
 	/** Hit point preview.
 	 * Also click handler top open content,
@@ -76,7 +96,7 @@ public class HitpointView : LinearLayout {
 			/* initiate hit dice. */
 			restView // lazy initiate
 			longrestView // lazy initiate
-			displayHitdice(character.hitdice, character.current.hitdice)
+			displayHitdice(hitdiceAll, hitdiceCurrent)
 
 			/* show current death fight and update health bar. */
 			displayDeathFightResults()
@@ -95,7 +115,7 @@ public class HitpointView : LinearLayout {
 		log.debug("Loaded $condition")
 
 		/* Filter the first matching hitdie, which match the backend. */
-		displayHitdice(character.hitdice, character.current.hitdice)
+		displayHitdice(hitdiceAll, hitdiceCurrent)
 
 		/* Update health bar. */
 		displayCurrentHealth()
@@ -128,7 +148,7 @@ public class HitpointView : LinearLayout {
 	/** Show the current conditions. */
 	public fun displayConditions() {
 		// TODO (2020-10-22) condition preview.
-		condition.text = character.current.conditions.toList().joinToString("\n")
+		condition.text = conditions.toList().joinToString("\n")
 	}
 
 	/** Fold content (state) with effect on set. */
@@ -168,7 +188,6 @@ public class HitpointView : LinearLayout {
 
 			/* Values and parameters. */
 			val hp = hpModifyingNum
-			val state = character.current
 			val crit = false
 
 			Toast.makeText(getContext(),
@@ -179,11 +198,11 @@ public class HitpointView : LinearLayout {
 			when (view.id) {
 				healView.id -> {
 					log.info("Heal by $hp")
-					state.heal(hp)
+					heal(hp)
 				}
 				damageView.id -> {
 					log.info("Hurt with $hp")
-					state.takeHit(hp, crit)
+					takeHit(hp, crit)
 				}
 			}
 
@@ -216,16 +235,13 @@ public class HitpointView : LinearLayout {
 	fun displayCurrentHealth() {
 		/* Display the hitpoints in bar format. */
 		preview.apply {
-			progress = character.current.hitpoints
-			max = character.current.hitpointsMax
+			progress = hpCurrent
+			max = hpMaximal
 			log.info("Healthbar shows $progress/$max")
 		}
 
 		/* Display the hitpoints in text format. */
-		hitpointView.text = "%d / %d (%+d)".format(
-			character.current.hitpoints,
-			character.hitpoints,
-			character.current.hitpointsTMP)
+		hitpointView.text = "%d / %d (%+d)".format(hpCurrent, hpBase, hpTemporary)
 	}
 
 	/** Display and control for death saves. */
@@ -276,7 +292,7 @@ public class HitpointView : LinearLayout {
 				).show()
 
 				/* Backend healing: Restoration. */
-				character.current.restLong()
+				restLong()
 
 				displayNow()
 			}
@@ -305,8 +321,8 @@ public class HitpointView : LinearLayout {
 	 * Set their available status according to the available list.
 	 * By default: the current character's hitdice. */
 	public fun displayHitdice(
-		hitdice: List<Int> = character.hitdice,
-		available: List<Int> = character.current.hitdice
+		hitdice: List<Int> = hitdiceAll,
+		available: List<Int> = hitdiceCurrent
 	) {
 		/* Measure the differences. */
 
@@ -439,7 +455,7 @@ public class HitpointView : LinearLayout {
 				available = false
 
 				/* Apply the hitdie usage and healing. */
-				character.current.restShort(listOf(face), heal)
+				restShort(face, heal)
 
 				/* Update health bar. */
 				displayCurrentHealth()
