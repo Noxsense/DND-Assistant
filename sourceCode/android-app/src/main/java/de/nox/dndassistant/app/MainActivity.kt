@@ -29,7 +29,6 @@ import de.nox.dndassistant.core.Skill
 import de.nox.dndassistant.core.Skillable
 import de.nox.dndassistant.core.Weapon
 import de.nox.dndassistant.core.Attack
-import de.nox.dndassistant.core.playgroundWithOnyx
 import de.nox.dndassistant.core.D20
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -37,7 +36,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	private val log = LoggerFactory.getLogger("D&D Main")
 
 	/* The player character. */
-	private lateinit var character : PlayerCharacter
+	private val character : PlayerCharacter get() = CharacterManager.INSTANCE.character
 
 	companion object {
 		lateinit var instance: AppCompatActivity
@@ -119,11 +118,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		instance = this
 
 		log.debug("Initiated Activity.")
-
-		// XXX (2020-09-27) load character, create character.
-		character = playgroundWithOnyx()
-
-		log.debug("Player Character is loaded.")
 
 		/* Update the character specific panels:
 		 * Fill them with current character's data. */

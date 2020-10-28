@@ -19,7 +19,6 @@ import de.nox.dndassistant.core.Logger
 import de.nox.dndassistant.core.Condition
 import de.nox.dndassistant.core.PlayerCharacter
 import de.nox.dndassistant.core.SimpleDice
-import de.nox.dndassistant.core.playgroundWithOnyx
 
 /**
  * HitpointView.
@@ -42,7 +41,7 @@ public class HitpointView : LinearLayout {
 
 	// TODO (2020-10-20) detach from this class and move to shared lib.
 	/** Attached character. */
-	private val character: PlayerCharacter = playgroundWithOnyx()
+	private val character: PlayerCharacter get() = CharacterManager.INSTANCE.character
 
 	/* Quick shorcut: Hit Points. */
 	private val hpBase: Int get() = character.hitpoints
