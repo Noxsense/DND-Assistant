@@ -147,17 +147,17 @@ class PlayerCharacterTest {
 
 		spells.forEach { pc.learnSpell(it, "Wizard") }
 
-		pc.castSpell(spells.find{ it == guidance }!!)
+		pc.current.castSpell(spells.find{ it == guidance }!!)
 		assertTrue(true, "Casted Guidance => Active & Concentration") // TODO
 		assertTrue(true, "Used no Spell slot (Cantrip)") // TODO
 
-		pc.prepareSpell(spells.find{ it.name == "Spell 4" }!!)
+		pc.current.prepareSpell(spells.find{ it.name == "Spell 4" }!!)
 
-		pc.castSpell(spells.find{ it.name == "Spell 4" }!!)
+		pc.current.castSpell(spells.find{ it.name == "Spell 4" }!!)
 		assertTrue(true, "Casted Spell 4 => (Also) Active") // TODO
 		assertTrue(true, "Used a Spell slot") // TODO
 
-		pc.prepareSpell(spells.find{ it.name == "Spell 7" }!!)
+		pc.current.prepareSpell(spells.find{ it.name == "Spell 7" }!!)
 
 		// TODO (2020-10-02) test changing conditions and session stuff.
 		// pc.current.conditions += Condition.UNCONSCIOUS to -1
@@ -198,7 +198,7 @@ class PlayerCharacterTest {
 		invocationVerbal = true, invocationSomatic = true, invocationMatierial = false, // "V,S",
 		castingTime = "1 action",
 		distance = 0 /*ft*/, area = Spell.Area.CUBE, // ???
-		duration = 60, // 1 minute
+		duration = 60, // , duration = "1 minute",
 		concentration = false, // casting time, range, components, duration, concentration
 		ritual = false,
 		attackSave = null, // no attack
@@ -217,7 +217,7 @@ class PlayerCharacterTest {
 		castingTime = "1 action",
 		distance = 0,
 		area = Spell.Area.TOUCH, // ???
-		duration = 60, // 1 minute
+		duration = 60, // , duration = "1 minute",
 		concentration = true,
 		ritual = false, // is ritual
 		attackSave = null, // no attack

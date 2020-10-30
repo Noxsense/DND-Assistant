@@ -163,7 +163,7 @@ public class PlayerCharacter private constructor(
 
 	/** Maximal hit points of the character.
 	 * If dropped to 0, the character becomes unconscious.
-	 * If dropped to negative max HP in one hit, the character dies at once. */
+	 * If dropped to negative max HP in One hit, the character dies at once. */
 	var hitpoints: Int
 		= klassFirst.hitdie.faces + abilityModifier(Ability.CON) // first HP
 
@@ -203,7 +203,7 @@ public class PlayerCharacter private constructor(
 
 	/** List of spells, this character has learnt, and the source, where it was learnt.
 	 * The source may influence the spell casting ability and strength of a cast spell. */
-	private var spellsLearnt : Map<Spell, String> = mapOf()
+	var spellsLearnt : Map<Spell, String> = mapOf()
 		private set
 
 	/** List the spells, the character has learnt. */
@@ -350,19 +350,6 @@ public class PlayerCharacter private constructor(
 		}
 	*/
 
-	/** A subset of the known spells.
-	 * Some classes need to prepare a spell to cast it. */
-	var spellsPrepared: Map<Spell, Int> = mapOf()
-		private set // changes in prepareSpell(Spell,Int)
-
-	/** A map of activated spells with their left duration (seconds). */
-	var spellsActive: Map<Spell, Int> = mapOf()
-		private set // changes on spellCast(Spell,Int) and spellEnd(Spell)
-
-	/** Get the (first) active spell, which needs concentration. */
-	val spellConcentration: Spell? get()
-		= spellsActive.keys.find { it.concentration }
-
 	/* ------------------------------------------------------------------------
 	 * Override basic class methods.
 	 */
@@ -491,80 +478,6 @@ public class PlayerCharacter private constructor(
 		/* If all checked, add new spell to learnt spells. */
 		spellsLearnt += spell to spellSource
 		log.info("Learnt spell ${spell}  (as ${spellSource})")
-
-		/* Always prepared cantrip.*/
-		if (spell.level < 1) {
-			prepareSpell(spell)
-		}
-	}
-
-	/** Prepare a (learnt) spell.
-	 * Prepare a spell for a spell slot.
-	 * @param spell the spell to prepare
-	 * @param slot the spell level, to prepare the spell for,
-	 *     if not given or zero, the preparation level is set to the spell level,
-	 *     if less than zero, a prepared spell will be unprepared.
-	 * @see prepareSpell(Int, Int).
-	 */
-	fun prepareSpell(spell: Spell, slot: Int = 0) {
-		/* Do not prepare unknown spell. */
-		if (!spellsLearnt.containsKey(spell)) {
-			return
-		}
-
-		if (slot < 0 && spell.level > 0) {
-			/* Unprepare (except of cantrips, which cannot be unprepared). */
-			spellsPrepared -= spell
-			log.info("Not prepared anymore: ${spell.name}")
-		} else {
-			/* Prepare spell, at least spell level. */
-			spellsPrepared += spell to Math.max(slot, spell.level)
-			log.info("Prepared: ${spell.name}")
-		}
-	}
-
-	/** Cast a learnt spell.
-	 * If necessary, the spell must also be prepared to be cast.
-	 * If the new spell holds concentration, and another spell is already
-	 * holding concentration, replace/deactivate that old spell.
-	 * Also use up the used spell slot.
-	 * If there is no spell slot left, abort the spell cast.
-	 * If spell is unknown, abort the spell cast.
-	 * If preparation was a requirement, but not done, abort the spell cast.
-	 * @param index index of the spell in the current spell list.
-	 * @param slot intended spell slot to use, minimum spell.level.
-	 */
-	fun castSpell(spell: Spell, slot: Int = 0) {
-		/* If the spell is unknown, it cannot be cast (abort). */
-		if (!spellsLearnt.containsKey(spell)) {
-			return
-		}
-
-		// TODO (2020-07-25)
-		/* If the spell caster needs to prepare,
-		 * check if the spell is prepared, otherwise abort casting.*/
-		if (false && !spellsPrepared.containsKey(spell)) {
-			return
-		}
-
-		/* If the new spell needs concentration,
-		 * but another spell also holds concentration, replace the old spell. */
-
-		if (spell.concentration) {
-			spellConcentration ?. let {
-				spellsActive -= it // remove old concentration spell
-			}
-		}
-
-		// TODO (2020-07-27) SLOT power?
-		if (slot > spell.level) {
-			println("More power for this spell.")
-		}
-
-		/* Cast spell for at least 1 second (instantaneous). */
-		spellsActive += spell to Math.max(1, spell.duration)
-
-		log.info("Casts ${spell.name}, left duration ${spell.duration} seconds")
 	}
 
 	/** The number of free hands. */

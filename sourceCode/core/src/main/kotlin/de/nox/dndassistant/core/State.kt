@@ -45,17 +45,40 @@ data class State(val pc: PlayerCharacter) {
 		private set
 
 	/** Left Spell slots. */
-	public var spellSlots: List<Int>
-		= pc.spellSlots.toMutableList().toIntArray().toList() // copied to a new list ?
+	public var spellSlots: IntArray
+		= pc.spellSlots.toMutableList().toIntArray() // copied to a new list ?
 		private set
+
+	private fun slotIndex(slot: Int) : Int
+		= Math.min(Math.max(slot - 1, 0), 8)
 
 	/** Getter for a available, left spell slot. */
 	fun spellSlot(slot: Int) : Int
-		= spellSlots[Math.min(Math.max(slot - 1, 0), 8)]
+		= when {
+			slot == 0 -> 1 // cantrip can be always cast.
+			else -> spellSlots[slotIndex(slot)]
+		}
 
-	/** Prepared spells */
-	var spellsPrepared: Map<Spell, Int>
-		= mapOf()
+	/** Try to use a spell slot and return reduction was successful. */
+	fun spellSlotUse(slot: Int) : Boolean
+		= when {
+			spellSlot(slot) < 1 -> false
+			slot < 1 -> true . also {
+				pc.log.debug("Cantrip hasn't used up a spell slot.")
+			}
+			else -> true.also{
+				// the actual reduction.
+				spellSlots[slotIndex(slot)] -= 1
+				pc.log.debug("Redcued spell slots of $slot to ${spellSlot(slot)}")
+			}
+		}
+
+	/** Prepared spells (or equipped/learnt).
+	 * For prepares, they can change each long rest.
+	 * For non-prepares, it depends on the rules,  but they may be able to change
+	 * one per long rest or on each level up. */
+	var spellsPrepared: Set<Spell>
+		= setOf()
 		private set
 
 	/** Spells cast by the PlayerCharacter, mapped with countdown in seconds. */
@@ -65,9 +88,7 @@ data class State(val pc: PlayerCharacter) {
 
 	/** Cast spell that needs concentration, mapped with countdown in seconds. */
 	val spellConcentration: Pair<Spell, Int>?
-		= spellsCast
-		.filterValues { false /*it.concentration*/ }
-		.toList().elementAtOrNull(0) // get the possible pair or null
+		= spellsCast.toList().find { (spell, _) -> spell.concentration }
 
 	/** Spells influencing this Character, mapped with countdown in seconds. */
 	var spellbounded: Map<Spell, Int>
@@ -105,6 +126,7 @@ data class State(val pc: PlayerCharacter) {
 		hitpointsTMP -= hp
 
 		if (hitpointsTMP < 0) {
+			// hitpoints += hitpointsTMP // removed buffered rest damage.
 			hitpointsTMP = 0 // reset to null.
 			pc.log.info(
 				"Buffer/Temporary HP used up, Remove from normal HP."
@@ -239,8 +261,12 @@ data class State(val pc: PlayerCharacter) {
 		pc.log.info("Added hit dice: +${toRestore.size} => $hitdice.")
 
 		/* Restore all spell slots. */
-		spellSlots = spellSlots.mapIndexed { i, _ -> pc.spellSlots[i] }
-		pc.log.info("Restored spell slpts: $spellSlots.")
+		for (i in spellSlots.indices) spellSlots[i] = pc.spellSlots[i]
+
+		pc.log.info("Restored spell slots: ${spellSlots.joinToString()}.")
+
+		/* Reset number of prepared spells during this long rest. */
+		preparedSpellsCount = 0
 	}
 
 	/** Rest depending on the hours: shorter than 1 => no rest at all, at least 8h => long rest. */
@@ -283,18 +309,74 @@ data class State(val pc: PlayerCharacter) {
 	 */
 	fun castSpell(spell: Spell, unlearned: Boolean = false) : Boolean
 		= when {
+			/* Not learnt, but cast with an item (like scroll or item. */
 			unlearned -> {
-				spellsCast += spell to -1
+				spellsCast += spell to -1 // TODO (2020-10-30) duration of item magic.
 				true
 			}
+			/* Not enough spell slots left, to cast this spell. */
 			spellSlot(spell.level) < 1 -> {
 				pc.log.info("Not enough spell slots left to cast $spell")
 				false
 			}
+			/* Spell can be cast. */
 			else -> {
-				false
+				if (spell.concentration) {
+					/* If new spell needs concentration, replace possible other
+					 * concentration holding spells. */
+					spellsCast = spellsCast.filterKeys { !it.concentration }
+					pc.log.info("Lost Concentration for other spells, in order to cast a new concentration spell!")
+				}
+
+				// TODO (2020-10-30) focuS | resource used on spell cast.
+
+				pc.log.info("Cast '$spell' for ${spell.duration} secs")
+				spellSlotUse(spell.level) // use spell slot.
+				spellsCast += spell to Math.max(1, spell.duration) // add with duration (at least 1).
+				true
 			}
 		}
+
+	/** STop or cancel a cast spell. */
+	fun cancelSpell(spell: Spell) {
+		spellsCast -= spell
+	}
+
+	/* Number of prepared spells since last longrest. */
+	public var preparedSpellsCount: Int = 0
+		private set
+
+	/** Try to prepare a spell after a long rest.
+	 * A preparation can fail, if the spell is unknown, or prepartion limits were reached.
+	 * @return true, if the preparation was successful. */
+	fun prepareSpell(spell: Spell) : Boolean {
+		return when {
+			/* Spell is unknown. */
+			spell !in pc.spellsLearnt.keys -> false.also {
+				pc.log.info("Spell '$spell' cannot be prepared, it is unknown.")
+			}
+			/* Number of preparable spells per long rest ist met. */
+			false -> false.also {
+				pc.log.info("Spell '$spell' cannot be prepared, it is unknown.")
+			}
+			/* Spell cannot be prepared due to level limitations. */
+			// TODO (2020-10-30) implement.
+			spell.level > 9 -> false. also {
+				pc.log.info("Spell '$spell' cannot be prepared due to level limitations.")
+			}
+			/* PREPARE THE SPELL. */
+			else -> true. also {
+				pc.log.info("Spell '$spell' is prepared.")
+				preparedSpellsCount += 1
+				spellsPrepared += spell
+			}
+		}
+	}
+
+	/** Unprepare a spell (after a long rest). */
+	fun unprepareSpell(spell: Spell) {
+		spellsPrepared -= spell
+	}
 
 	/** Decrease left duration of all activated spells.
 	 * Remove spells, with left duration below 1 seconds.
@@ -302,7 +384,17 @@ data class State(val pc: PlayerCharacter) {
 	fun tick(sec: Int = 6) {
 		pc.log.info("Tick all status effects for $sec seconds.")
 		// reduce condition rest time
-		// reduce spells own rest time
+
+		/* reduce spells own rest time */
+		val spellsCastLeft = spellsCast
+			.mapValues { it.value - sec } // reduce time
+			.toList().partition { it.second > 0 } // split to ongoing | done
+
+		pc.log.info("Spells which are over: ${spellsCastLeft.second}")
+
+		/* Take spells with removed left, but still active time. */
+		spellsCast = spellsCastLeft.first.toMap()
+
 		// reduce spells effect rest time
 	}
 }
