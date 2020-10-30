@@ -41,7 +41,10 @@ data class Spell(
 	private val LOG_TAG = "D&D Spell"
 
 	override fun compareTo(other: Spell) : Int
-		= level - other.level
+		= when {
+			level != other.level -> level - other.level // first level sort
+			else -> name.compareTo(other.name) // second level sort
+		}
 
 	override fun toString()
 		= "$name (" + when (level) {
