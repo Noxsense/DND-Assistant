@@ -497,108 +497,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				contents.findViewById<ViewGroup>(R.id.content_spells))
 		}
 
-		val spellPanel = panelSpells.second
+		val spellPanel: SpellView = panelSpells.second as SpellView
 
-		/* Spell slots. */
-		val spellSlots = spellPanel.findViewById<TextView>(R.id.spell_slots)
+		/* Set preview view. */
+		spellPanel.previewView = findViewById<TextView>(R.id.label_spells)
 
-		/* Known spells. */
-		val spellList = spellPanel.findViewById<ListView>(R.id.list_spells)
-
-		/* Show left spell slots. */
-		// TODO (2020-10-10) show left spell slots.
-		// TODO (2020-10-10) and show left other magics sources ...
-
-		// TODO (2020-10-10) display (different) spell casting modifier, DCs (for each casting class)
-
-		/* Set spell list adapter (display).
-		 * On click, activate spell.
-		 * On longclick, replace, forget, prepare, other options...
-		 */
-		if (spellList.adapter == null) {
-			log.debug("Set up te spellList.adapter")
-			// XXX (2020-10-06) REFACTOR, proper classes. (spells)
-
-			spellSlots.text = (0 .. 9).joinToString("") {
-				it.toString()
-			}
-
-			// TODO (2020-10-11) replace with real code instead of placeholder
-			spellList.adapter = object: ArrayAdapter<Spell>(
-				this@MainActivity,
-				R.layout.list_item_spell,
-				R.id.name,
-				character.spellsKnown
-			){
-				override fun getView(i: Int, v: View?, p: ViewGroup): View {
-					if (v == null) {
-						val newView = li.inflate(R.layout.list_item_spell, p, false)
-						return getView(i, newView, p)
-					}
-
-					if (i >= getCount()) return v // make sure, spell is not null
-
-					val spell = getItem(i)!!
-
-					/* Show spell and make clickable / interactive. */
-
-					(v.findViewById<TextView>(R.id.name)).run {
-						text = spell.name
-						// setOnClickListener() // TODO (unfold info and options /replace/(un)prepare)
-					}
-
-					// TODO (2020-10-11) pretty stats.
-
-					(v.findViewById<TextView>(R.id.stats)).run {
-						var vsm = ""
-
-						if (spell.invocationVerbal) vsm += "V"
-						if (spell.invocationSomatic) vsm += "S"
-						if (spell.invocationMatierial) vsm += "M (the material?)"
-
-						text = """
-							${spell.school}, ${spell.level}
-							${spell.castingTime} / ${spell.ritual}, $vsm
-							${spell.distance} ft (${spell.area})
-							${spell.duration} sec (${spell.concentration})
-
-							${spell.attackSave} \u21d2 ${spell.damageEffect}
-							""".trimIndent()
-					}
-
-					(v.findViewById<TextView>(R.id.note)).run {
-						text = spell.note
-					}
-
-					(v.findViewById<TextView>(R.id.spell_cast)).run {
-						setOnClickListener {
-							// XXX (2020-10-11) needs to be implemented. (normal cast on level)
-							// TODO (2020-10-11) consider accidentally casted
-							Toast.makeText(
-								this@MainActivity,
-								"Cast spell ${spell}",
-								Toast.LENGTH_SHORT)
-								.show()
-						}
-						setOnLongClickListener {
-							// XXX (2020-10-11) needs to be implemented. (cast with higher level)
-							Toast.makeText(
-								this@MainActivity,
-								"Attempt to cast spell ${spell} with higher spell slot.",
-								Toast.LENGTH_SHORT)
-								.show()
-							true
-						}
-					}
-
-					return v
-				}
-			}
-		}
-
-		/* Update preview. */
-		label_spells.text = formatLabel(
-			"Spells", "*Concentration*, ${character.current.spellSlot(1)}")
+		/* Reload content of the content. */
+		spellPanel.reload()
 	}
 
 	/** Update the "content_inventory" panel.
@@ -908,6 +813,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				closeContentsBut(R.id.content_attacks)
 			}
 			R.id.label_spells -> {
+				updateSpells()
 				closeContentsBut(R.id.content_spells)
 			}
 			R.id.label_inventory -> {
