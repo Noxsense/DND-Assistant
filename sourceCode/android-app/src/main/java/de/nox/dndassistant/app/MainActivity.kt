@@ -179,6 +179,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		panelRolls = Pair(label_rolls, content_rolls as ViewGroup)
 
 		/* Open content panels on click. */
+		inspiration.setOnClickListener(this)
 		label_skills.setOnClickListener(this)
 		label_attacks.setOnClickListener(this@MainActivity)
 		label_spells.setOnClickListener(this)
@@ -242,6 +243,22 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		updateStory() // story, species, background
 
 		notifyRollsUpdated()
+
+		// XXX (2020-11-10) Proper ticker.
+		findViewById<TextView>(R.id.tick).run {
+			text = "\u23f3 Spend 6 seconds"
+			setOnClickListener {
+				character.current.tick()
+
+				if (isInitializedSpells()) {
+					(panelSpells.second as SpellView).reload()
+				}
+
+				Toast.makeText(this@MainActivity,
+					"6 sec later...",
+					Toast.LENGTH_SHORT).show()
+			}
+		}
 	}
 
 	/** Format the preview label. */
@@ -806,6 +823,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		log.debug("Clicked on $view")
 
 		when (view.getId()) {
+			R.id.inspiration -> {
+				/* toggle inspiration. */
+				findViewById<View>(R.id.inspiration).run {
+					alpha = when {
+						alpha > 0.33f -> 0.3f
+						else -> 1.0f
+					}
+				}
+			}
 			R.id.label_skills -> {
 				closeContentsBut(R.id.content_skills)
 			}
