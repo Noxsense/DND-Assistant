@@ -91,15 +91,13 @@ class SpellView : LinearLayout {
 			nameView.text = spell?.name ?: "Spell"
 
 			statsView.text = (
-				"${spell?.school ?: "School"} ${when (spell?.level) {
-					null -> "level"
-					0 -> "cantrip"
-					else -> "${spell!!.level}"
+				"${spell?.school ?: "School"}, ${when (spell?.level) {
+					null -> "Level ?"
+					0 -> "Cantrip"
+					else -> "Level ${spell!!.level}"
 				}}\n" +
-				"Duration: ${spell?.duration ?: "Duration"}" +
-				"${if (spell?.concentration ?: false) " (C)" else ""} \n" +
-				"Area: ${spell?.area ?: "Area"}\n" +
-				"Effect: EFFECT")
+				"Duration: ${spell?.showDuration() ?: "? seconds"}\n" +
+				"${spell?.briefEffect()}")
 
 			noteView.run {
 				text = spell?.note ?: ""
@@ -108,7 +106,7 @@ class SpellView : LinearLayout {
 
 			sourceView.text = if (spell == null) "" else spellsLearnt[spell]
 
-			castView.text = "$cast\n(VMS)\n 1 action"
+			castView.text = "$cast\n${spell?.showCasting()}"
 
 			/* Highlight spells learnt, "hide" unprepared/not active. */
 			v0.alpha = when (spell == null || spell !in spellsPrepared) {
@@ -117,9 +115,10 @@ class SpellView : LinearLayout {
 			}
 
 			/* Highlight spells which are currently cast. */
-			v0.setBackgroundColor(when (spell == null || spell !in spellsCast) {
-				true -> 0x00000000 // transparent
-				else -> 0x33006666 // highlight
+			v0.setBackgroundColor(when {
+				spell == null || spell !in spellsCast -> 0x00000000 // transparent (uncast)
+				spell.concentration -> 0x3300FF00 // highlight (cast and concentration)
+				else -> 0x33FFFF00 // highlight (just cast)
 			})
 
 			nameView.setOnClickListener(showClick) // hide | show source.
@@ -144,6 +143,25 @@ class SpellView : LinearLayout {
 			true -> Toast.LENGTH_LONG
 			else -> Toast.LENGTH_SHORT
 		}).show()
+
+	private fun Spell.showCasting() : String
+		= "%s%s (%s%s%s)".format(
+			if (ritual) "<R>" else "",
+			castingTime,
+			if (invocationVerbal) "V" else "",
+			if (invocationSomatic) "S" else "",
+			if (invocationMatierial) "M" else "",
+		)
+
+	private fun Spell.showDuration() : String
+		= "${if (concentration) "<C> " else ""}$duration ($durationSeconds s)"
+
+	private fun Spell.briefEffect() : String
+		= ("""
+		Area: $area
+		Save: $attackSave
+		Effect: $effect
+		""".trimIndent())
 
 	/** Show source on click. */
 	private val showClick: View.OnClickListener = View.OnClickListener { v ->

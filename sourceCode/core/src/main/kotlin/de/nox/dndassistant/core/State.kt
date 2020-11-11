@@ -228,6 +228,8 @@ data class State(val pc: PlayerCharacter) {
 
 		pc.log.info("Short Rest, heal $heal HP, spent dice: $spentDice => left dice $hitdice")
 
+		tick(1800)
+
 		/* Apply the heal. */
 		heal(heal)
 	}
@@ -262,6 +264,7 @@ data class State(val pc: PlayerCharacter) {
 
 		/* Restore all spell slots. */
 		for (i in spellSlots.indices) spellSlots[i] = pc.spellSlots[i]
+		tick(28800) // spent 8 hours of time, at least.
 
 		pc.log.info("Restored spell slots: ${spellSlots.joinToString()}.")
 
@@ -305,9 +308,10 @@ data class State(val pc: PlayerCharacter) {
 	 * and also don't uses a spell slot.
 	 * @param spell the spell which is then active.
 	 * @param unlearned a spell which is not learnt, but cast with help of a magic item.
+	 * @param higherSpellSlots extra spent spell slot to cast this spell (default: 0, positive number starting at 0)
 	 * @return true, if the spell is cast, otherwise false.
 	 */
-	fun castSpell(spell: Spell, unlearned: Boolean = false) : Boolean
+	fun castSpell(spell: Spell, unlearned: Boolean = false, higherSpellSlots: Int = 0) : Boolean
 		= when {
 			/* Not learnt, but cast with an item (like scroll or item. */
 			unlearned -> {
@@ -315,7 +319,7 @@ data class State(val pc: PlayerCharacter) {
 				true
 			}
 			/* Not enough spell slots left, to cast this spell. */
-			spellSlot(spell.level) < 1 -> {
+			spellSlot(spell.level + higherSpellSlots) < 1 -> {
 				pc.log.info("Not enough spell slots left to cast $spell")
 				false
 			}
@@ -330,14 +334,17 @@ data class State(val pc: PlayerCharacter) {
 
 				// TODO (2020-10-30) focuS | resource used on spell cast.
 
-				pc.log.info("Cast '$spell' for ${spell.duration} secs")
-				spellSlotUse(spell.level) // use spell slot.
-				spellsCast += spell to Math.max(1, spell.duration) // add with duration (at least 1).
+				var duration = spell.durationSeconds
+				// TODO (2020-11-06) higher spell slot which influences the duration
+
+				pc.log.info("Cast '$spell', spell slot ${spell.level + higherSpellSlots} for ${duration} secs (${spell.duration})")
+				spellSlotUse(spell.level + higherSpellSlots) // use spell slot.
+				spellsCast += spell to Math.max(1, duration) // add with duration (at least 1).
 				true
 			}
 		}
 
-	/** STop or cancel a cast spell. */
+	/** Stop, dispell or cancel a cast spell. */
 	fun cancelSpell(spell: Spell) {
 		spellsCast -= spell
 	}
@@ -351,6 +358,9 @@ data class State(val pc: PlayerCharacter) {
 	 * @return true, if the preparation was successful. */
 	fun prepareSpell(spell: Spell) : Boolean {
 		return when {
+			spell in spellsPrepared -> true.also {
+				pc.log.info("Spell '$spell' is already prepared, so .. the spell is prepared.")
+			}
 			/* Spell is unknown. */
 			spell !in pc.spellsLearnt.keys -> false.also {
 				pc.log.info("Spell '$spell' cannot be prepared, it is unknown.")
@@ -377,6 +387,18 @@ data class State(val pc: PlayerCharacter) {
 	fun unprepareSpell(spell: Spell) {
 		spellsPrepared -= spell
 	}
+
+	/** Toggle the spell preparation.
+	 * @return true, if spell is now prepared, otherwise false. */
+	fun toggleSpellPreparation(spell: Spell): Boolean
+		= when (spell in spellsPrepared) {
+			true -> false. also {
+				pc.log.info("Toggle Spell prepation: Unprepare. ($spell)")
+			}
+			else -> prepareSpell(spell).also {
+				pc.log.info("Toggle Spell prepation: Try to prepare. ($spell)")
+			}
+		}
 
 	/** Decrease left duration of all activated spells.
 	 * Remove spells, with left duration below 1 seconds.

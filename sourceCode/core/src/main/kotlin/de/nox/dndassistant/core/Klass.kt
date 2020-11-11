@@ -5,7 +5,7 @@ import kotlin.math.floor
 // TODO (2020-07-31) connect spellcasting with klass.
 
 /** A class of the characters. */
-data class Klass(
+public class Klass(
 	val name: String,
 	val hitdie: SimpleDice = SimpleDice(0),
 	val savingThrows: List<Ability> = listOf(),

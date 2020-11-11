@@ -139,11 +139,11 @@ public fun playgroundWithOnyx() : PlayerCharacter {
 		invocationVerbal = true, invocationSomatic = true, invocationMatierial = false, // "V,S",
 		castingTime = "1 action",
 		distance = 0 /*ft*/, area = Spell.Area.CUBE, // ???
-		duration = 60, // 1 minute
+		durationSeconds = 60, duration = "1 minute",
 		concentration = false, // casting time, range, components, duration, concentration
 		ritual = false,
 		attackSave = null, // no attack
-		damageEffect = "", // no effect
+		effect = "", // no effect
 		note = """
 		Minor Illusion Description!!!! Make an illusion.
 		""")
