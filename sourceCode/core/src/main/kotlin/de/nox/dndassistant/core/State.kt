@@ -81,14 +81,15 @@ data class State(val pc: PlayerCharacter) {
 		= setOf()
 		private set
 
-	/** Spells cast by the PlayerCharacter, mapped with countdown in seconds. */
-	var spellsCast: Map<Spell, Int>
+	/** Spells cast by the PlayerCharacter,
+	  * mapped with spell slot used and countdown in seconds. */
+	var spellsCast: Map<Spell, Pair<Int,Int>>
 		= mapOf()
 		private set
 
-	/** Cast spell that needs concentration, mapped with countdown in seconds. */
-	val spellConcentration: Pair<Spell, Int>?
-		= spellsCast.toList().find { (spell, _) -> spell.concentration }
+	/** Cast spell that needs concentration, mapped with cast spell. */
+	var spellConcentration: Pair<Spell, Int>? = null
+		private set
 
 	/** Spells influencing this Character, mapped with countdown in seconds. */
 	var spellbounded: Map<Spell, Int>
@@ -312,41 +313,58 @@ data class State(val pc: PlayerCharacter) {
 	 * @return true, if the spell is cast, otherwise false.
 	 */
 	fun castSpell(spell: Spell, unlearned: Boolean = false, higherSpellSlots: Int = 0) : Boolean
-		= when {
+		= (spell.level + higherSpellSlots).let { lvl -> when {
 			/* Not learnt, but cast with an item (like scroll or item. */
 			unlearned -> {
-				spellsCast += spell to -1 // TODO (2020-10-30) duration of item magic.
+				spellsCast += spell to (-1 to -1) // TODO (2020-10-30) duration of item magic.
 				true
 			}
 			/* Not enough spell slots left, to cast this spell. */
-			spellSlot(spell.level + higherSpellSlots) < 1 -> {
+			spellSlot(lvl) < 1 -> {
 				pc.log.info("Not enough spell slots left to cast $spell")
 				false
 			}
 			/* Spell can be cast. */
 			else -> {
-				if (spell.concentration) {
-					/* If new spell needs concentration, replace possible other
-					 * concentration holding spells. */
-					spellsCast = spellsCast.filterKeys { !it.concentration }
-					pc.log.info("Lost Concentration for other spells, in order to cast a new concentration spell!")
+				val concentration = spell.needsConcentration(lvl)
+
+				/* New spell is spell with concentration. */
+				if (concentration) {
+					/* If new spell needs concentration, replace other
+					 * concentration holding spell. */
+					if (spellConcentration != null) {
+						spellsCast = spellsCast - spellConcentration!!.first
+
+						pc.log.info("Lost Concentration for other spells, in order to cast a new concentration spell!")
+					}
+					spellConcentration = spell to lvl
 				}
 
 				// TODO (2020-10-30) focuS | resource used on spell cast.
 
-				var duration = spell.durationSeconds
-				// TODO (2020-11-06) higher spell slot which influences the duration
+				var duration = spell.getDuration(lvl)
+				var seconds = 1
 
-				pc.log.info("Cast '$spell', spell slot ${spell.level + higherSpellSlots} for ${duration} secs (${spell.duration})")
-				spellSlotUse(spell.level + higherSpellSlots) // use spell slot.
-				spellsCast += spell to Math.max(1, duration) // add with duration (at least 1).
+				// XXX (2020-11-12) spell.getDuration(lvl) => spell.durationSeconds
+
+				pc.log.info("Cast '$spell', spell slot ${lvl} for ${seconds} secs (${duration})")
+				spellSlotUse(lvl) // use spell slot.
+				spellsCast += spell to (lvl to Math.max(1, seconds)) // add with duration (at least 1).
+				pc.log.debug("Cast spells: $spellsCast")
 				true
 			}
-		}
+		}}
 
 	/** Stop, dispell or cancel a cast spell. */
 	fun cancelSpell(spell: Spell) {
 		spellsCast -= spell
+
+		/* If cancelled spell holds concentration, then cancel concetration. */
+		if (spellConcentration != null && spell == spellConcentration!!.first) {
+			spellConcentration = null
+		}
+
+		pc.log.info("Dispelled '${spell}' => spells cast: $spellsCast")
 	}
 
 	/* Number of prepared spells since last longrest. */
@@ -408,15 +426,28 @@ data class State(val pc: PlayerCharacter) {
 		// reduce condition rest time
 
 		/* reduce spells own rest time */
-		val spellsCastLeft = spellsCast
-			.mapValues { it.value - sec } // reduce time
-			.toList().partition { it.second > 0 } // split to ongoing | done
+		val (running, expired) = spellsCast // Map<Spell, Pair<Int,Int>>
+			.toList()
+			.map { (spell, cast) ->
+				val (slot, seconds) = cast
+				spell to (slot to (seconds - sec)) // reduce left duration.
+			}.partition { it.second.second > 0 } // split to ongoing | done
 
-		pc.log.info("Spells which are over: ${spellsCastLeft.second}")
+		/** If spell with concentration is expired, remove it from focus.
+		  * Also check,, if the spells that holds concentration is still active. */
+		val noConcentration: Boolean = (spellConcentration != null
+			&& ((spellConcentration?.first in expired.map { (s,_) -> s }) // expired
+			|| (spellConcentration?.first !in running.map { (s,_) -> s }))) // not active
+
+		if (noConcentration) {
+			spellConcentration = null
+		}
+
+		pc.log.info( "Tick: Expired Spells: ${expired}")
+		pc.log.debug("Tick: Running Spells: ${running}")
+		pc.log.debug("Tick: Focused Spell:  ${spellConcentration}")
 
 		/* Take spells with removed left, but still active time. */
-		spellsCast = spellsCastLeft.first.toMap()
-
-		// reduce spells effect rest time
+		spellsCast = running.toMap()
 	}
 }

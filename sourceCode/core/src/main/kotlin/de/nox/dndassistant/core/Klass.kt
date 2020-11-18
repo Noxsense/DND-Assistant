@@ -4,6 +4,13 @@ import kotlin.math.floor
 
 // TODO (2020-07-31) connect spellcasting with klass.
 
+// /** A Class (derived from Klass) that can cast spells. */
+// public class SpellcasterKlass(
+// 	val spellcastingAbility: Ability,
+// 	val spellcasterRitual: Boolean = false,
+// 	val spellcastingLevel: Int = 1) : Klass {
+// }
+
 /** A class of the characters. */
 public class Klass(
 	val name: String,

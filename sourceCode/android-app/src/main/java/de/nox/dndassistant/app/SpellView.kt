@@ -33,7 +33,8 @@ class SpellView : LinearLayout {
 	private val spellsLearnt: Map<Spell, String> get() = ch.spellsLearnt
 	private val spellsKnown: List<Spell> get() = ch.spellsKnown
 	private val spellsPrepared: Set<Spell> get() = ch.current.spellsPrepared
-	private val spellsCast: Map<Spell, Int> get() = ch.current.spellsCast
+	private val spellsCast: Map<Spell, Pair<Int, Int>> get() = ch.current.spellsCast
+	private val spellConcentration: Pair<Spell, Int>? get() = ch.current.spellConcentration
 
 	/* Casting string from resource. */
 	private val cast: String get() = getContext().getString(R.string.cast)
@@ -100,7 +101,7 @@ class SpellView : LinearLayout {
 				"${spell?.briefEffect()}")
 
 			noteView.run {
-				text = spell?.note ?: ""
+				text = spell?.description ?: ""
 				visibility = View.GONE // start hidden.
 			}
 
@@ -117,7 +118,7 @@ class SpellView : LinearLayout {
 			/* Highlight spells which are currently cast. */
 			v0.setBackgroundColor(when {
 				spell == null || spell !in spellsCast -> 0x00000000 // transparent (uncast)
-				spell.concentration -> 0x3300FF00 // highlight (cast and concentration)
+				spell == (spellConcentration?.first ?: null) -> 0x3300FF00 // highlight (cast and concentration)
 				else -> 0x33FFFF00 // highlight (just cast)
 			})
 
@@ -144,23 +145,12 @@ class SpellView : LinearLayout {
 			else -> Toast.LENGTH_SHORT
 		}).show()
 
-	private fun Spell.showCasting() : String
-		= "%s%s (%s%s%s)".format(
-			if (ritual) "<R>" else "",
-			castingTime,
-			if (invocationVerbal) "V" else "",
-			if (invocationSomatic) "S" else "",
-			if (invocationMatierial) "M" else "",
-		)
-
-	private fun Spell.showDuration() : String
-		= "${if (concentration) "<C> " else ""}$duration ($durationSeconds s)"
-
+	// TODO (2020-11-12) refactor to effects -> show next effect?
 	private fun Spell.briefEffect() : String
 		= ("""
-		Area: $area
-		Save: $attackSave
-		Effect: $effect
+		Area: area
+		Save: attackSave
+		Effect: effect
 		""".trimIndent())
 
 	/** Show source on click. */
@@ -235,9 +225,11 @@ class SpellView : LinearLayout {
 			.filter { slot(it) > 0 } // spell slots available.
 			.joinToString("|", "[", "]") // [1|2|3|]
 
-		val concentration = ch.current.spellConcentration?.first?.name ?: ""
+		val concentration = spellConcentration?.first.let { c ->
+			when { c == null -> ""; else -> " ${187.toChar()}${c!!.name}${171.toChar()}" }
+		}
 
-		return "$spellSlotsAvailable${if (concentration != "") "*$concentration*" else ""}"
+		return "$spellSlotsAvailable${concentration}"
 	}
 
 	/** Fill the spell slot view with the current spell slot sitation. */
@@ -254,8 +246,13 @@ class SpellView : LinearLayout {
 		val spellAttackMod = ch.proficiencyBonus + spellcastingMod
 		val spellDC = spellAttackMod + 9
 
+
 		spellSlotView.text = (
-			(1..9).joinToString(" ") { "$it".repeat(slot(it)) } + "\n\n" +
+			(1..9).joinToString(" ") {
+				/* Available spell slots (not yet spent) as circled numbers. */
+				/* \u2776 (10102) ... \u277e (10110) */
+				(10101 + it).toChar().toString().repeat(slot(it))
+			} + "\n\n" +
 			"Prepared Cantrips: ${spellsPrepared.filter { it.level < 1 }.size}\n" +
 			"Prepared Spells:   ${spellsPrepared.filter { it.level > 0 }.size}\n\n" +
 			"Spellcasting Ability: $spellcastingAbility ($spellcastingMod)\n" +

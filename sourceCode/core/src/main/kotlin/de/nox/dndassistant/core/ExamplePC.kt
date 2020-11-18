@@ -59,7 +59,6 @@ public fun playgroundWithOnyx() : PlayerCharacter {
 		A scoundrel who uses stealth and trickery to overcome obstacles and enemies.
 		""".trimIndent())
 
-
 	val pc : PlayerCharacter = PlayerCharacter.Creator("Nox")
 		.race(gnome, "Forest")
 		.background(sage, "Liberian")
@@ -135,18 +134,26 @@ public fun playgroundWithOnyx() : PlayerCharacter {
 
 	val illusion = Spell(
 		name = "Minor Illusion", // name
-		school = Spell.School.ILLUSION, level = 0, // school, level
-		invocationVerbal = true, invocationSomatic = true, invocationMatierial = false, // "V,S",
-		castingTime = "1 action",
-		distance = 0 /*ft*/, area = Spell.Area.CUBE, // ???
-		durationSeconds = 60, duration = "1 minute",
-		concentration = false, // casting time, range, components, duration, concentration
-		ritual = false,
-		attackSave = null, // no attack
-		effect = "", // no effect
-		note = """
-		Minor Illusion Description!!!! Make an illusion.
-		""")
+		school = Spell.School.ILLUSION,
+
+		casting = Spell.Casting(
+			duration = "1 action",
+			ritual = false,
+			verbal = true, somatic = true, materials = mapOf(), // "V,S",
+		),
+
+		effects = listOf(
+			Spell.Effect(
+				level = 0, // school, level
+				concentration = false, duration = "1 minute", //, durationSeconds = 60,
+				distance = 0 /*ft*/, area = "Spell.Area.CUBE",
+				savingThrow = null, // no attack
+				result = "Create small visual image",
+			)
+		),
+		casterKlasses = listOf("Sorcerer", "Cleric"),
+		description = "Minor Illusion Description!!!! Make an illusion.")
+
 	pc.learnSpell(illusion, "Gnome (Forest)")
 
 	pc.wear(clothes)

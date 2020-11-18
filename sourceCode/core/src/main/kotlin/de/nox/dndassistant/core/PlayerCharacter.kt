@@ -243,9 +243,10 @@ public class PlayerCharacter private constructor(
 				else -> {
 					/* Both spells are prepared, both are cast.
 					 * Get each rest time; sort concentration to head. */
+					val spellContr = current.spellConcentration?.first ?: null
 
-					val aRestTime = if (a.concentration) 0 else current.spellsCast[a]!!
-					val bRestTime = if (b.concentration) 0 else current.spellsCast[b]!!
+					val aRestTime = if (a == spellContr) 0 else current.spellsCast[a]!!.second
+					val bRestTime = if (b == spellContr) 0 else current.spellsCast[b]!!.second
 
 					aRestTime.compareTo(bRestTime)
 				}

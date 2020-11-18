@@ -194,16 +194,26 @@ class PlayerCharacterTest {
 
 	val mageHand = Spell(
 		name = "Mage Hand", // name
-		school = Spell.School.CONJURATION, level = 0, // school, level
-		invocationVerbal = true, invocationSomatic = true, invocationMatierial = false, // "V,S",
-		castingTime = "1 action",
-		distance = 0 /*ft*/, area = Spell.Area.CUBE, // ???
-		durationSeconds = 60 , duration = "1 minute",
-		concentration = false, // casting time, range, components, duration, concentration
-		ritual = false,
-		attackSave = null, // no attack
-		effect = "", // no effect
-		note = """
+		school = Spell.School.CONJURATION,
+
+		casting = Spell.Casting(
+			duration = "1 action",
+			ritual = false,
+			verbal = true, somatic = true, materials = mapOf(), // "V,S",
+		),
+
+		effects = listOf(
+			Spell.Effect(
+				level = 0, // school, level
+				concentration = false, duration = "1 minute", // durationSeconds = 60,
+				distance = 0 /*ft*/, area = "Spell.Area.CUBE", // ???
+				savingThrow = null, // no attack
+				result = "", // no effect
+			)
+		),
+
+		casterKlasses = listOf("Klass1"),
+		description = """
 		Vansishes over 30ft range, or re-cast;
 		manipulate objects, open / unlock container, stow / retrive item, pour contents;
 		cannot attack, cannot activate magic items, cannot carry more than 10 pounds
@@ -212,17 +222,25 @@ class PlayerCharacterTest {
 	val guidance = Spell(
 		name = "Guidance",
 		school = Spell.School.DIVINATION,
-		level = 0,
-		invocationVerbal = true, invocationSomatic = true, invocationMatierial = false, // "V,S",
-		castingTime = "1 action",
-		distance = 0,
-		area = Spell.Area.TOUCH, // ???
-		durationSeconds = 60, duration = "1 minute",
-		concentration = true,
-		ritual = false, // is ritual
-		attackSave = null, // no attack
-		effect = "", // no effect
-		note = """
+
+		casting = Spell.Casting(
+			duration = "1 action",
+			ritual = false, // is ritual
+			verbal = true, somatic = true, materials = mapOf(), // "V,S",
+		),
+
+		effects = listOf(
+			Spell.Effect(
+				level = 0,
+				distance = 0, area = "Spell.Area.TOUCH", // ???
+				concentration = true,
+				duration = "1 minute", // durationSeconds = 60,
+				savingThrow = null, // no attack
+				result = "", // no effect
+			)),
+
+		casterKlasses = listOf("Klass1"),
+		description = """
 		1. Touch a willing creature.
 		2. Roll d4, add to one ability check of choice (pre/post). End.
 		""".trimIndent() // description
@@ -230,14 +248,14 @@ class PlayerCharacterTest {
 
 	val spells: List<Spell> = listOf(
 		  //   "Name",     SCHOOL,                 level,    V,     S,     M,  "Casting", distance,  AREA,             conce, duration (s), "Duration",      ritual, SAVE, "effect",  "note")
-		  Spell(name = "Spell 5", school = Spell.School.ILLUSION,      level = 5,  invocationVerbal = true, invocationSomatic = false, invocationMatierial = false, castingTime = "1 action", distance = 5 /*ft*/, area = Spell.Area.CUBE,  concentration = true,  durationSeconds = 1,     duration = "Instantaneous", ritual = true , attackSave = null, effect = "effect?", note = "...")
-		, Spell(name = "Spell 1", school = Spell.School.CONJURATION,   level = 1,  invocationVerbal = true, invocationSomatic = false, invocationMatierial = false, castingTime = "1 action", distance = 0 /*ft*/, area = Spell.Area.TOUCH, concentration = true,  durationSeconds = 60,    duration = "1 minute",      ritual = false, attackSave = null, effect = "effect?", note = "...")
-		, Spell(name = "Spell 0", school = Spell.School.ABJURATION,    level = 0,  invocationVerbal = true, invocationSomatic = false, invocationMatierial = false, castingTime = "1 action", distance = 0 /*ft*/, area = Spell.Area.TOUCH, concentration = false, durationSeconds = 60,    duration = "1 minute",      ritual = false, attackSave = null, effect = "effect?", note = "...")
-		, Spell(name = "Spell 6", school = Spell.School.NECROMANCY,    level = 6,  invocationVerbal = true, invocationSomatic = false, invocationMatierial = false, castingTime = "1 action", distance = 6 /*ft*/, area = Spell.Area.CUBE,  concentration = false, durationSeconds = 1,     duration = "Instantaneous", ritual = false, attackSave = null, effect = "effect?", note = "...")
-		, Spell(name = "Spell 2", school = Spell.School.DIVINATION,    level = 2,  invocationVerbal = true, invocationSomatic = false, invocationMatierial = false, castingTime = "1 action", distance = 1 /*ft*/, area = Spell.Area.CUBE,  concentration = false, durationSeconds = 1,     duration = "Instantaneous", ritual = false, attackSave = null, effect = "effect?", note = "...")
-		, Spell(name = "Spell 4", school = Spell.School.EVOCATION,     level = 4,  invocationVerbal = true, invocationSomatic = false, invocationMatierial = false, castingTime = "1 action", distance = 4 /*ft*/, area = Spell.Area.CUBE,  concentration = false, durationSeconds = 86400, duration = "1 day",         ritual = true , attackSave = null, effect = "effect?", note = "...")
-		, Spell(name = "Spell 7", school = Spell.School.TRANSMUTATION, level = 7,  invocationVerbal = true, invocationSomatic = false, invocationMatierial = false, castingTime = "1 action", distance = 7 /*ft*/, area = Spell.Area.CUBE,  concentration = false, durationSeconds = 60,    duration = "1 minute",      ritual = false, attackSave = null, effect = "effect?", note = "...")
-		, Spell(name = "Spell 3", school = Spell.School.ENCHANTMENT,   level = 3,  invocationVerbal = true, invocationSomatic = false, invocationMatierial = false, castingTime = "1 action", distance = 3 /*ft*/, area = Spell.Area.CUBE,  concentration = false, durationSeconds = 1,     duration = "Instantaneous", ritual = false, attackSave = null, effect = "effect?", note = "...")
+		  Spell(name = "Spell 5", school = Spell.School.ILLUSION,      casting = Spell.Casting(duration = "1 action", ritual = true , verbal = true, somatic = false, materials = mapOf()), effects = listOf(Spell.Effect(level = 5,  distance = 5 /*ft*/, area = "Spell.Area.CUBE, ", concentration = true,  duration = "Instantaneous", savingThrow = null, result = "effect?")), casterKlasses = listOf(), description = "...")
+		, Spell(name = "Spell 1", school = Spell.School.CONJURATION,   casting = Spell.Casting(duration = "1 action", ritual = false, verbal = true, somatic = false, materials = mapOf()), effects = listOf(Spell.Effect(level = 1,  distance = 0 /*ft*/, area = "Spell.Area.TOUCH,", concentration = true,  duration = "1 minute",      savingThrow = null, result = "effect?")), casterKlasses = listOf(), description = "...")
+		, Spell(name = "Spell 0", school = Spell.School.ABJURATION,    casting = Spell.Casting(duration = "1 action", ritual = false, verbal = true, somatic = false, materials = mapOf()), effects = listOf(Spell.Effect(level = 0,  distance = 0 /*ft*/, area = "Spell.Area.TOUCH,", concentration = false, duration = "1 minute",      savingThrow = null, result = "effect?")), casterKlasses = listOf(), description = "...")
+		, Spell(name = "Spell 6", school = Spell.School.NECROMANCY,    casting = Spell.Casting(duration = "1 action", ritual = false, verbal = true, somatic = false, materials = mapOf()), effects = listOf(Spell.Effect(level = 6,  distance = 6 /*ft*/, area = "Spell.Area.CUBE, ", concentration = false, duration = "Instantaneous", savingThrow = null, result = "effect?")), casterKlasses = listOf(), description = "...")
+		, Spell(name = "Spell 2", school = Spell.School.DIVINATION,    casting = Spell.Casting(duration = "1 action", ritual = false, verbal = true, somatic = false, materials = mapOf()), effects = listOf(Spell.Effect(level = 2,  distance = 1 /*ft*/, area = "Spell.Area.CUBE, ", concentration = false, duration = "Instantaneous", savingThrow = null, result = "effect?")), casterKlasses = listOf(), description = "...")
+		, Spell(name = "Spell 4", school = Spell.School.EVOCATION,     casting = Spell.Casting(duration = "1 action", ritual = true , verbal = true, somatic = false, materials = mapOf()), effects = listOf(Spell.Effect(level = 4,  distance = 4 /*ft*/, area = "Spell.Area.CUBE, ", concentration = false, duration = "1 day",         savingThrow = null, result = "effect?")), casterKlasses = listOf(), description = "...")
+		, Spell(name = "Spell 7", school = Spell.School.TRANSMUTATION, casting = Spell.Casting(duration = "1 action", ritual = false, verbal = true, somatic = false, materials = mapOf()), effects = listOf(Spell.Effect(level = 7,  distance = 7 /*ft*/, area = "Spell.Area.CUBE, ", concentration = false, duration = "1 minute",      savingThrow = null, result = "effect?")), casterKlasses = listOf(), description = "...")
+		, Spell(name = "Spell 3", school = Spell.School.ENCHANTMENT,   casting = Spell.Casting(duration = "1 action", ritual = false, verbal = true, somatic = false, materials = mapOf()), effects = listOf(Spell.Effect(level = 3,  distance = 3 /*ft*/, area = "Spell.Area.CUBE, ", concentration = false, duration = "Instantaneous", savingThrow = null, result = "effect?")), casterKlasses = listOf(), description = "...")
 		, guidance
 		, mageHand
 		)
