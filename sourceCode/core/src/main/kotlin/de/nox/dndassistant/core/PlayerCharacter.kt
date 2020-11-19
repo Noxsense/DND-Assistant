@@ -279,7 +279,7 @@ public class PlayerCharacter private constructor(
 
 	/** Supporting value to build an attack with the current STR and DEX modifiers. */
 	private val modsStrDex: Pair<Int, Int> get()
-		= abilityModifier(Ability.STR) to abilityModifier(Ability.CON)
+		= abilityModifier(Ability.STR) to abilityModifier(Ability.DEX)
 
 	/** Get the attack damage for an unarmed strike. */
 	val attackUnarmed: Attack get()
@@ -317,13 +317,19 @@ public class PlayerCharacter private constructor(
 	val attackEquipped: Attack? get()
 		= null // TODO (2020-10-10) equipped attack getter()
 
-	/** Get the attack damage for the known spells. */
-	val attackSpells: List<Attack> get()
-		= listOf() // TODO (2020-10-10) as spell caster with damage spells, cast them.
-
 	/** Get the attack damage for the weapons (or items) which needs to be drawn. */
 	val attackDrawNew: List<Attack> get()
-		= listOf()
+		= bags.values.flatMap { it.inside }.distinct()
+			.filter { it is Weapon /* && it !=  equippedStuff */}
+			.map{ (it as Weapon).let { wpn -> Attack(
+				name = "Draw and Attack with '${wpn.name}'",
+				note = wpn.note,
+				ranged = wpn.weaponType == Weapon.Type.SIMPLE_RANGED,
+				finesse = wpn.isFinesse,
+				damage = wpn.damage to setOf(),
+				proficientValue = proficiencyBonus,
+				modifierStrDex = modsStrDex
+			)}}
 
 	/* ------------------------------------------------------------------------
 	 * Personality and character, roleplaying.

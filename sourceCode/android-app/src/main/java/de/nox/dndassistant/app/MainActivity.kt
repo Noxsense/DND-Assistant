@@ -104,7 +104,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	/** Check if preview and context (rolls) are initiated. */
 	private fun isInitializedRolls() : Boolean = ::panelRolls.isInitialized
 
-	private var attacks: List<Attack> = listOf()
 
 	private lateinit var li: LayoutInflater
 
@@ -404,9 +403,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				content_attacks.findViewById<ViewGroup>(R.id.list_attacks))
 		}
 
+		var attacks: List<Attack> = listOf()
 		attacks += character.attackUnarmed // unarmed strike
 		attacks += character.attackImprovised // melee improvised (1d4)
-		attacks += character.attackSpells // spells to attacks
 		attacks += character.attackDrawNew // "inventory" to attacks
 
 		if (character.attackEquipped != null) {
@@ -836,6 +835,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				closeContentsBut(R.id.content_skills)
 			}
 			R.id.label_attacks -> {
+				updateAttacks()
 				closeContentsBut(R.id.content_attacks)
 			}
 			R.id.label_spells -> {
