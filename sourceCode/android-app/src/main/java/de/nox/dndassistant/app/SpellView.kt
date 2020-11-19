@@ -30,8 +30,8 @@ class SpellView : LinearLayout {
 	/** The loaded character. */
 	private val ch: PlayerCharacter get() = CharacterManager.INSTANCE.character
 
-	private val spellsLearnt: Map<Spell, String> get() = ch.spellsLearnt
-	private val spellsKnown: List<Spell> get() = ch.spellsKnown
+	private val spellsLearntWith: Map<Spell, String> get() = ch.spellsLearntWith
+	private val spellsLearnt: List<Spell> get() = ch.spellsLearnt
 	private val spellsPrepared: Set<Spell> get() = ch.current.spellsPrepared
 	private val spellsCast: Map<Spell, Pair<Int, Int>> get() = ch.current.spellsCast
 	private val spellConcentration: Pair<Spell, Int>? get() = ch.current.spellConcentration
@@ -56,11 +56,11 @@ class SpellView : LinearLayout {
 	private val spellListAdapter: ArrayAdapter<Spell> = object: ArrayAdapter<Spell>(
 		getContext(), R.layout.list_item_spell, R.id.name
 	){
-		/** getCount() as spellsKnown.size. */
-		override public fun getCount() : Int = spellsKnown.size
+		/** getCount() as spellsLearnt.size. */
+		override public fun getCount() : Int = spellsLearnt.size
 
-		/** getItem(p0) as spellsKnown(p0). */
-		override public fun getItem(p0: Int) : Spell? = spellsKnown.get(p0)
+		/** getItem(p0) as spellsLearnt(p0). */
+		override public fun getItem(p0: Int) : Spell? = spellsLearnt.get(p0)
 
 		/** True if the item is not a separator. */
 		override public fun isEnabled(p0: Int) : Boolean = false
@@ -97,7 +97,7 @@ class SpellView : LinearLayout {
 					0 -> "Cantrip"
 					else -> "Level ${spell!!.level}"
 				}}\n" +
-				"Duration: ${spell?.showDuration() ?: "? seconds"}\n" +
+				"Duration: ${spell?.showEffectDuration() ?: "? seconds"}\n" +
 				"${spell?.briefEffect()}")
 
 			noteView.run {
@@ -105,7 +105,7 @@ class SpellView : LinearLayout {
 				visibility = View.GONE // start hidden.
 			}
 
-			sourceView.text = if (spell == null) "" else spellsLearnt[spell]
+			sourceView.text = if (spell == null) "" else spellsLearntWith[spell]
 
 			castView.text = "$cast\n${spell?.showCasting()}"
 
@@ -135,7 +135,7 @@ class SpellView : LinearLayout {
 
 	/** Translate view to spell. */
 	private fun viewToSpell(v: View) : Spell?
-		= spellsKnown.get(
+		= spellsLearnt.get(
 			spellListView.getFirstVisiblePosition()
 			+ spellListView.indexOfChild(v.getParent() as View))
 
@@ -198,8 +198,6 @@ class SpellView : LinearLayout {
 		/* Prepare the spell of the connected spell view. */
 		val spell = viewToSpell(v)
 
-
-
 		if (spell != null && ch.current.prepareSpell(spell)) {
 			reload()
 			toast("Prepared $spell")
@@ -245,7 +243,6 @@ class SpellView : LinearLayout {
 		val spellcastingMod = ch.abilityModifier(spellcastingAbility)
 		val spellAttackMod = ch.proficiencyBonus + spellcastingMod
 		val spellDC = spellAttackMod + 9
-
 
 		spellSlotView.text = (
 			(1..9).joinToString(" ") {

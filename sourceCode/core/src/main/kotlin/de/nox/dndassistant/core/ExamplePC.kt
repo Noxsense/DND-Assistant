@@ -148,13 +148,14 @@ public fun playgroundWithOnyx() : PlayerCharacter {
 				concentration = false, duration = "1 minute", //, durationSeconds = 60,
 				distance = 0 /*ft*/, area = "Spell.Area.CUBE",
 				savingThrow = null, // no attack
-				result = "Create small visual image",
+				onSuccess = "Create small visual image",
 			)
 		),
 		casterKlasses = listOf("Sorcerer", "Cleric"),
 		description = "Minor Illusion Description!!!! Make an illusion.")
 
 	pc.learnSpell(illusion, "Gnome (Forest)")
+	pc.current.prepareSpell(illusion)
 
 	pc.wear(clothes)
 	pc.wear(leather)

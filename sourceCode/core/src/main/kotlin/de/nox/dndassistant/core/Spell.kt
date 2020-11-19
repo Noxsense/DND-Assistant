@@ -9,6 +9,11 @@ data class Spell(
 	val casterKlasses: List<String>
 ) : Comparable<Spell> {
 
+	companion object {
+		val INDICATOR_CONCENTRATION: String = 9400.toChar().toString() // circled C (C)
+		val INDICATOR_RITUAL: String = 9415.toChar().toString() // squared R (R)
+	}
+
 	enum class Area {
 		SELF,
 		TOUCH,
@@ -119,23 +124,57 @@ data class Spell(
 
 	/** Information bundle about one effect of the spell. */
 	public class Effect(
-		val level: Int = 1,
+		/** The level this spell is cast with.
+		 * On higher level, more powerful effects cold happen. */
+		val level: Int,
 
-		val area: String = "Touch", // self (30ft radius) // 8 willing // attack target // area by beam
+		/** Area the spell effects.
+		 * This area is described by distance and one/multiple target, or even a space.
+		 * Such targets can be: willing or unwilling targets, touched or attacked,
+		 * just yourself and maybe an area around you,
+		 * or a whole area inside a line, sphere, cube, cylinder or cone
+		 * (with radius or reach). */
+		val area: String = "Touch",
 		val distance: Int = 0, // ft
+
 		// TODO (2020-11-12) what is about multiple targets?
 		// [ ] 3 darts (targets) + 1 each higher slot level
 		// [ ] higher slots: copy with higher value or add (cumulative) ?
 
+		/** The duration time of the spell effect.
+		 * By default: The duration is instantaneous (maximally 1 second or less). */
+		val duration: String = "Instantaneous",
+
+		/** If the spell needs concentration, to hold on, this is indicated here.
+		 * By default: No concentration is needed (false). */
 		val concentration: Boolean = false,
-		val duration: String = "1 round",
-		val result: String = "",
 
-		val savingThrow: Ability? = Ability.DEX,
-		val onSuccess: String = "No harm", // half harm
-		val onFail: String = "12d6 (fire)" // paralized
+		/** Describe the successful spell result (caster has full success). */
+		val onSuccess: String = "",
 
-		// enum class Tag { Heal, Attack+Dmg, Savable, Charm; };
+		/** The spell may be targeting and may need an attack roll to hit.
+		 * By default: No targeting and attacking is needed (false). */
+		val needsAttack: Boolean = false,
+
+		/** Optional rolls, for like damage, duration, or heal, etc.
+		 * By default: No extra roll needed (null).
+		 * What can embody the outcome of a Spell Effect, what can a spell?
+		 * - can lead do a condition. (Blinded|charmed|...|Unconscious) | being controlled | Alive again?
+		 * - can lead to damage, maybe multiple types (like bludgeoning and ice damage on ice storm)
+		 * - can lead to healing (like heal)
+		 * - can lead to creating something (create a wall, create a cage) | summoning something up
+		 * - can influence the area or targets => higher armor class, molded around, make some wings and fly around
+		 */
+		val optionalRolls: DiceTerm? = null,
+		// ALT: val resulsWithNote: Map<String, Any> = mapOf("ATTACK" to Damage(DamageType.FIRE to DiceTerm(6)), "Knock out" to Condition.PRONE),
+
+		/** The target can make optional saving throws to avoid the spell's full power.
+		 * By default: The spell effect cannot be avoided (null). */
+		val savingThrow: Ability? = null,
+
+		/** Describe what happens, if the target could be successfully saved.
+		 * By default: There is no special mention for a saved target. */
+		val forSaved: String? = null,
 
 		// override fun toString(): String = result
 	);
@@ -176,7 +215,7 @@ data class Spell(
 	fun showCasting(): String
 		= casting.let { c ->
 			/* Maybe tag ritual spell. */
-			val R = when { c.ritual -> "<R> "; else -> "" }
+			val R = when { c.ritual -> INDICATOR_RITUAL; else -> "" }
 
 			/* Show invocation components. */
 			val vsm = showInvocationComponents()
@@ -185,32 +224,42 @@ data class Spell(
 			"${R}${c.duration} ($vsm)"
 		}
 
-	fun needsConcentration(lvl: Int = level) : Boolean
-		= effects.let {
-			val ofLevel = it.filter { it.level == lvl }
-
-			if (ofLevel.size < 1) {
-				needsConcentration(level) // minimum effect's concentration.
-			} else {
-				/* Return concentration. */
-				ofLevel[0].concentration
-			}
+	/** Get the effects, which match the effect.
+	 * If no effect has the certain level, get the next lesser level. */
+	private fun getEffect(lvl:Int = level) : Effect
+		= effects.filter { it.level == lvl }.let { ofLevel ->
+			if (ofLevel.size < 1) getEffect(level) else ofLevel[0]
 		}
 
-	fun getDuration(lvl: Int = level) : String
-		= effects.let {
-			val ofLevel = it.filter { it.level == lvl }
+	/** Get duration for spell cast on a certain level. */
+	fun getEffectDuration(lvl: Int = level) : Pair<String, Boolean>
+		= getEffect(lvl).let { e -> e.duration to e.concentration }
 
-			if (ofLevel.size < 1) {
-				/* No effect on given level, use smallest known:
-				 * eg. If cast on level 5, without special effects: It's just like 3, or etc. */
-				getDuration(level)
-			} else {
-				/* Return duration. */
-				ofLevel[0].duration
-			}
+	/** Show duration for spell cast on a certain level. */
+	fun showEffectDuration(lvl: Int = level) : String
+		= getEffectDuration(lvl).let { (dur, conc) ->
+			"${when (conc) { true -> INDICATOR_CONCENTRATION; else -> ""}} ${dur}"
 		}
 
-	fun showDuration(lvl: Int = level) : String
-		= getDuration(lvl) // TODO (2020-11-12) currently the same.
+	/** Show area of the spell effect, when cast with a certain level. */
+	fun showEffectArea(lvl: Int = level) : Pair<String, Int>
+		= getEffect(lvl).let { e -> e.area to e.distance }
+
+	/** Show all effects as Map of Level to String. */
+	fun showEffects() : List<Pair<Int, String>> = effects.map { e ->
+		val duration = "${if (e.concentration) "${INDICATOR_CONCENTRATION} " else ""}${e.duration}"
+		val distance = "${e.area} (${e.distance}ft)"
+
+		val save = when (e.savingThrow) {
+			null -> ""
+			else -> " (Saving Throw: ${e.savingThrow})"
+		}
+
+		val term = when (e.optionalRolls) {
+			null -> ""
+			else -> " (${e.optionalRolls})"
+		}
+
+		e.level to "[$duration | $distance] -- ${e.onSuccess}${save}${term}"
+	}
 }

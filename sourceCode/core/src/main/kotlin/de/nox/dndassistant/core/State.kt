@@ -326,7 +326,7 @@ data class State(val pc: PlayerCharacter) {
 			}
 			/* Spell can be cast. */
 			else -> {
-				val concentration = spell.needsConcentration(lvl)
+				val (duration, concentration) = spell.getEffectDuration(lvl)
 
 				/* New spell is spell with concentration. */
 				if (concentration) {
@@ -342,10 +342,9 @@ data class State(val pc: PlayerCharacter) {
 
 				// TODO (2020-10-30) focuS | resource used on spell cast.
 
-				var duration = spell.getDuration(lvl)
 				var seconds = 1
 
-				// XXX (2020-11-12) spell.getDuration(lvl) => spell.durationSeconds
+				// XXX (2020-11-12) duration => spell.durationSeconds
 
 				pc.log.info("Cast '$spell', spell slot ${lvl} for ${seconds} secs (${duration})")
 				spellSlotUse(lvl) // use spell slot.
