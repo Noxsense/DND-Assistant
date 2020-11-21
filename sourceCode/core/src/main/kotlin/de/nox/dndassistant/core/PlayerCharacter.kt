@@ -201,16 +201,20 @@ public class PlayerCharacter private constructor(
 	fun spellSlot(slot: Int) : Int
 		= spellSlots[Math.min(Math.max(slot - 1, 0), 8)]
 
+	/** Get the highest available spell slot. */
+	fun highestSpellSlot() : Int
+		= spellSlots.dropLastWhile { it < 1 }.size // count spell slots that are still available.
+
 	/** List of spells, this character has learnt, and the source, where it was learnt.
-	 * The source may influence the spell casting ability and strength of a cast spell. */
-	var spellsLearnt : Map<Spell, String> = mapOf()
+	 * The source may influence the spell casting ability and strength of a cast spell.
+	 * TODO (WIP: 2020-11-19) learnt spells with Spell Ability (Ability) and if spell slots are the sources (Boolean)*/
+	var spellsLearntWith : Map<Spell, Pair<Ability, Boolean>> = mapOf()
 		private set
 
 	/** List the spells, the character has learnt
 	 * They are sorted by: Cocnentration > Cast > Prepared > Rest. */
-	val spellsKnown: List<Spell> get() = spellsLearnt.keys.toList()
+	val spellsLearnt: List<Spell> get() = spellsLearntWith.keys.toList()
 		.sortedWith{ a, b ->
-
 			/* Check, if both spells are prepared. */
 			val aPrep = a in current.spellsPrepared
 			val bPrep = b in current.spellsPrepared
@@ -515,11 +519,12 @@ public class PlayerCharacter private constructor(
 	 * If the spell source is unfitting for the spell or the spell caster (this),
 	 * the spell is also not learnt.
 	 * @param spell the new spell to learn.
-	 * @param spellSource the source and spellcasting ability, the spell is learnt on the first place.
+	 * @param spellAbility the spellcasting ability the character uses to cast this certain spell
+	 * @param usesSpellSlots if false, the spell counter/resource are not the slots, otherwise use normally from slot.
 	 */
-	fun learnSpell(spell: Spell, spellSource: String) {
+	fun learnSpell(spell: Spell, spellAbility: Ability, usesSpellSlots: Boolean) {
 		/* Abort, if the spell is already known. */
-		if (spellsLearnt.containsKey(spell))
+		if (spellsLearntWith.containsKey(spell))
 			return
 
 		/* Abort, if the spell cannot be learnt with the current classes and race. */
@@ -527,9 +532,19 @@ public class PlayerCharacter private constructor(
 			return
 
 		/* If all checked, add new spell to learnt spells. */
-		spellsLearnt += spell to spellSource
-		log.info("Learnt spell ${spell}  (as ${spellSource})")
+		spellsLearntWith += spell to (spellAbility to usesSpellSlots)
+		log.info("Learnt spell ${spell}  (with ${spellAbility})")
 	}
+
+	/** Learn a new spell with the given source, this character has.
+	 * If the spell is already learnt, do no update.
+	 * If the spell source is unfitting for the spell or the spell caster (this),
+	 * the spell is also not learnt.
+	 * @param spell the new spell to learn.
+	 * @param spellSource spellcasting ability and if the slots are used (as tuple).
+	 */
+	fun learnSpell(spell: Spell, spellSource: Pair<Ability, Boolean>)
+		= learnSpell(spell, spellSource.first, spellSource.second)
 
 	/** The number of free hands. */
 	val countFreeHands: Int get()

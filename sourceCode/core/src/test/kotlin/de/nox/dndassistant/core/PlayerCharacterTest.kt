@@ -145,7 +145,7 @@ class PlayerCharacterTest {
 
 		// TODO (2020-10-02) test spell learning and casting.
 
-		spells.forEach { pc.learnSpell(it, "Wizard") }
+		spells.forEach { pc.learnSpell(it, Ability.INT to true) }
 
 		pc.current.castSpell(spells.find{ it == guidance }!!)
 		assertTrue(true, "Casted Guidance => Active & Concentration") // TODO
@@ -217,7 +217,7 @@ class PlayerCharacterTest {
 			)
 		),
 
-		casterKlasses = listOf("Klass1"),
+		casterKlasses = listOf(), // listOf("Klass1"),
 		description = """
 		Vansishes over 30ft range, or re-cast;
 		manipulate objects, open / unlock container, stow / retrive item, pour contents;
@@ -248,7 +248,7 @@ class PlayerCharacterTest {
 				forSaved = null, // no special saved effect
 			)),
 
-		casterKlasses = listOf("Klass1"),
+		casterKlasses = listOf(), //listOf("Klass1"),
 		description = """
 		1. Touch a willing creature.
 		2. Roll d4, add to one ability check of choice (pre/post). End.

@@ -4,15 +4,38 @@ import kotlin.math.floor
 
 // TODO (2020-07-31) connect spellcasting with klass.
 
-// /** A Class (derived from Klass) that can cast spells. */
-// public class SpellcasterKlass(
-// 	val spellcastingAbility: Ability,
-// 	val spellcasterRitual: Boolean = false,
-// 	val spellcastingLevel: Int = 1) : Klass {
-// }
+/** A Class (derived from Klass) that can cast spells. */
+public class SpellcasterKlass(
+	name: String,
+	hitdie: SimpleDice,
+	savingThrows: List<Ability>,
+	klassLevelTable: Set<Feature>,
+	specialisations: Map<String, Set<Feature>>,
+	description: String,
+
+	val spellcastingAbility: Ability,
+	val formulaSpellDC: String,
+	val formulaSpellAttack: String,
+	val spellRitual: Boolean = false,
+	val spellPreparationPerLevel: List<Pair<Int, Int>> = listOf(-1 to -1), // known at all, -1 as unlimited
+	val spellSwap: Int = 1, // per long rest
+	val castingLevel: Power = Power.FULL_CASTER,
+) : Klass(
+	name, hitdie, savingThrows, klassLevelTable, specialisations, description) {
+
+	/** Return the number of cantrips and spells, which can be learnt at the given level. */
+	fun spellsKnownAt(lvl: Int) : Pair<Int, Int>
+		= when {
+			lvl < 0 -> (0 to 0)
+			lvl >= spellPreparationPerLevel.size -> spellsKnownAt(spellPreparationPerLevel.size - 1)
+			else -> spellPreparationPerLevel[lvl]
+		}
+
+	enum class Power { FULL_CASTER, HALF_CASTER, THIRD_CASTER, };
+}
 
 /** A class of the characters. */
-public class Klass(
+open public class Klass(
 	val name: String,
 	val hitdie: SimpleDice = SimpleDice(0),
 	val savingThrows: List<Ability> = listOf(),

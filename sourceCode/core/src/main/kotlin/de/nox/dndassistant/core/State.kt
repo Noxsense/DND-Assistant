@@ -59,6 +59,10 @@ data class State(val pc: PlayerCharacter) {
 			else -> spellSlots[slotIndex(slot)]
 		}
 
+	/** Get the highest available spell slot. */
+	fun highestSpellSlot() : Int
+		= spellSlots.dropLastWhile { it < 1 }.size // count spell slots that are still available.
+
 	/** Try to use a spell slot and return reduction was successful. */
 	fun spellSlotUse(slot: Int) : Boolean
 		= when {
@@ -346,10 +350,15 @@ data class State(val pc: PlayerCharacter) {
 
 				// XXX (2020-11-12) duration => spell.durationSeconds
 
-				pc.log.info("Cast '$spell', spell slot ${lvl} for ${seconds} secs (${duration})")
-				spellSlotUse(lvl) // use spell slot.
-				spellsCast += spell to (lvl to Math.max(1, seconds)) // add with duration (at least 1).
-				pc.log.debug("Cast spells: $spellsCast")
+				/* Check spell source. */
+				val (_, usesSpellSlots) = pc.spellsLearntWith.getOrElse(spell) { Ability.WIS to true }
+
+				if (usesSpellSlots) {
+					pc.log.info("Cast '$spell', spell slot ${lvl} for ${seconds} secs (${duration})")
+					spellSlotUse(lvl) // use spell slot.
+					spellsCast += spell to (lvl to Math.max(1, seconds)) // add with duration (at least 1).
+					pc.log.debug("Cast spells: $spellsCast")
+				}
 				true
 			}
 		}}
@@ -379,7 +388,7 @@ data class State(val pc: PlayerCharacter) {
 				pc.log.info("Spell '$spell' is already prepared, so .. the spell is prepared.")
 			}
 			/* Spell is unknown. */
-			spell !in pc.spellsLearnt.keys -> false.also {
+			spell !in pc.spellsLearntWith.keys -> false.also {
 				pc.log.info("Spell '$spell' cannot be prepared, it is unknown.")
 			}
 			/* Number of preparable spells per long rest ist met. */

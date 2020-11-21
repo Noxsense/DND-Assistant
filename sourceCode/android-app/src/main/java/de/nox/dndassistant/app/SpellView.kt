@@ -15,6 +15,7 @@ import android.widget.Toast
 import de.nox.dndassistant.core.Logger
 import de.nox.dndassistant.core.PlayerCharacter
 import de.nox.dndassistant.core.Spell
+import de.nox.dndassistant.core.SpellcasterKlass
 import de.nox.dndassistant.core.Ability
 
 class SpellView : LinearLayout {
@@ -30,7 +31,7 @@ class SpellView : LinearLayout {
 	/** The loaded character. */
 	private val ch: PlayerCharacter get() = CharacterManager.INSTANCE.character
 
-	private val spellsLearntWith: Map<Spell, String> get() = ch.spellsLearntWith
+	private val spellsLearntWith: Map<Spell, Pair<Ability, Boolean>> get() = ch.spellsLearntWith
 	private val spellsLearnt: List<Spell> get() = ch.spellsLearnt
 	private val spellsPrepared: Set<Spell> get() = ch.current.spellsPrepared
 	private val spellsCast: Map<Spell, Pair<Int, Int>> get() = ch.current.spellsCast
@@ -105,7 +106,10 @@ class SpellView : LinearLayout {
 				visibility = View.GONE // start hidden.
 			}
 
-			sourceView.text = if (spell == null) "" else spellsLearntWith[spell]
+			/* Show Spell casting ability and maybe hint other spell sources. */
+			sourceView.text = spellsLearntWith[spell]?.let { (ability, slot) ->
+				(ability.fullname + (if (slot) "" else " from another Source"))
+			} ?: ""
 
 			castView.text = "$cast\n${spell?.showCasting()}"
 
@@ -232,17 +236,42 @@ class SpellView : LinearLayout {
 
 	/** Fill the spell slot view with the current spell slot sitation. */
 	public fun showSpellSlots() {
-
 		// TODO (2020-11-04) refactor, more beautiful "Show All about this Spell Caster"
 
 		// TODO (2020-11-04) spell casting ability (depend by the klasses, on multiclass list all of them.)
 		// for all spellcassting classes
 
-		val spellcastingAbility = Ability.CHA
+		val profBonus = ch.proficiencyBonus
 
-		val spellcastingMod = ch.abilityModifier(spellcastingAbility)
-		val spellAttackMod = ch.proficiencyBonus + spellcastingMod
-		val spellDC = spellAttackMod + 9
+		val spellcasterNote = ch.klasses
+			.filterKeys { it is SpellcasterKlass }
+			.toList()
+			.joinToString("\n") { (k, more) ->
+				val ability = (k as SpellcasterKlass).spellcastingAbility
+				val mod = ch.abilityModifier(ability)
+				val atk = profBonus + mod
+				val dc = mod + 9
+
+				/* long version.
+				( "Spellcasting Ability: $spellcastingAbility ($spellcastingMod)\n"
+				+ "Spellcasting Attack Mod: (+$spellAttackMod)\n"
+				+ "Spellcasting DC: ($spellDC)\n\n" +
+				+ "Can cast rituals: false\n\n"
+				)
+				*/
+
+				val (lvl, special) = more
+
+				/* Brief version. */
+				("Caster $k: (${ability}) "
+				+ "=> %+d / Atk %+d / DC %d ".format(mod, atk, dc)
+				+ "/ Has: ${k.spellsKnownAt(lvl)}"
+				+ "/ Prepares: ${k.spellSwap} per LR"
+				+ (if (k.spellRitual) "/ Rituals" else ""))
+			}
+
+		val prepSpellsCnt = spellsPrepared.size
+		val prepCantripsCnt = spellsPrepared.filter { it.level < 1 }.size
 
 		spellSlotView.text = (
 			(1..9).joinToString(" ") {
@@ -250,14 +279,10 @@ class SpellView : LinearLayout {
 				/* \u2776 (10102) ... \u277e (10110) */
 				(10101 + it).toChar().toString().repeat(slot(it))
 			} + "\n\n" +
-			"Prepared Cantrips: ${spellsPrepared.filter { it.level < 1 }.size}\n" +
-			"Prepared Spells:   ${spellsPrepared.filter { it.level > 0 }.size}\n\n" +
-			"Spellcasting Ability: $spellcastingAbility ($spellcastingMod)\n" +
-			"Spellcasting Attack Mod: (+$spellAttackMod)\n" +
-			"Spellcasting DC: ($spellDC)\n\n" +
-			"Can cast rituals: false\n\n" + // TODO (2020-11-04) rituals
-			"Sorcery Points (Metamagic): ${6}/${ch.level}\n" // TODO (2020-11-04) Metamagic and other
-			)
+			"Prepared Cantrips: ${prepCantripsCnt}\n" +
+			"Prepared Spells:   ${prepSpellsCnt - prepCantripsCnt}\n\n") +
+			spellcasterNote
+			// "Sorcery Points (Metamagic): ${6}/${ch.level}\n" // TODO (2020-11-04) Metamagic and other
 
 		spellSlotView.textSize = 7.0f
 	}

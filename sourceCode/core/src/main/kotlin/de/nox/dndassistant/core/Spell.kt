@@ -6,7 +6,7 @@ data class Spell(
 	val casting: Casting,
 	val effects: List<Effect>,
 	val description: String,
-	val casterKlasses: List<String>
+	var casterKlasses: List<SpellcasterKlass>
 ) : Comparable<Spell> {
 
 	companion object {
@@ -109,7 +109,8 @@ data class Spell(
 			else -> name.compareTo(other.name) // second level sort
 		}
 
-	/* Information bundle about casting and co. */
+	/* Information bundle about casting and co.
+	 * The Default Casting is [1 action, (VS). */
 	public class Casting(
 		val duration: String = "1 action", // reaction / bonus / 1 minutes
 
@@ -122,7 +123,8 @@ data class Spell(
 		// override fun toString(): String = duration
 	);
 
-	/** Information bundle about one effect of the spell. */
+	/** Information bundle about one effect of the spell.
+	 * The default Effect is [LVL?, Touch/0ft, <>Instantaneous, No Atk, no Saving Throw]. */
 	public class Effect(
 		/** The level this spell is cast with.
 		 * On higher level, more powerful effects cold happen. */

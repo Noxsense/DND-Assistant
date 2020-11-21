@@ -151,10 +151,10 @@ public fun playgroundWithOnyx() : PlayerCharacter {
 				onSuccess = "Create small visual image",
 			)
 		),
-		casterKlasses = listOf("Sorcerer", "Cleric"),
+		casterKlasses = listOf(), // listOf("Sorcerer", "Cleric"),
 		description = "Minor Illusion Description!!!! Make an illusion.")
 
-	pc.learnSpell(illusion, "Gnome (Forest)")
+	pc.learnSpell(illusion, Ability.INT, false) // race attribute
 	pc.current.prepareSpell(illusion)
 
 	pc.wear(clothes)
