@@ -6,6 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Filter
+import android.widget.Filter.FilterResults
 import android.widget.GridLayout
 import android.widget.LinearLayout
 import android.widget.ListView
@@ -52,16 +54,49 @@ class SpellView : LinearLayout {
 		}
 	}
 
+	/** In Spell Adapter currently displayed spells. */
+	private var spellsList: List<Spell> = spellsLearnt // start with all.
+
 	/** Adapter for Spell list. With custom spell list items.
 	  * Use items from getItem(). */
 	private val spellListAdapter: ArrayAdapter<Spell> = object: ArrayAdapter<Spell>(
 		getContext(), R.layout.list_item_spell, R.id.name
 	){
+		private var filter: Filter = object: Filter() {
+			override fun publishResults(constraint: CharSequence, results: Filter.FilterResults): Unit {
+				spellsList = when {
+					results == null || results.count < 1 -> spellsLearnt
+					else -> results.values as List<Spell>
+				}
+				notifyDataSetChanged()
+			}
+			override protected fun performFiltering(constraint: CharSequence): Filter.FilterResults {
+				var results: FilterResults = FilterResults()
+
+				var filteredSpells: List<Spell> = when {
+					constraint == null || constraint.length < 1 -> spellsLearnt
+					else -> {
+						// TODO (2020-11-22) a more complex filter with keyword supported search.
+						// example: L<8, ATK=melee|ranged SAVE=STR|DEX|CON|WIS|INT|CHA RANGE<120 DURATION<1h ...
+						spellsLearnt.filter { it.name.contains(constraint, true) }
+					}
+				}
+
+				results.count = filteredSpells.size
+				results.values = filteredSpells
+
+				return results
+			}
+		}
+
+		override public fun getFilter() : Filter
+			= filter
+
 		/** getCount() as spellsLearnt.size. */
-		override public fun getCount() : Int = spellsLearnt.size
+		override public fun getCount() : Int = spellsList.size
 
 		/** getItem(p0) as spellsLearnt(p0). */
-		override public fun getItem(p0: Int) : Spell? = spellsLearnt.get(p0)
+		override public fun getItem(p0: Int) : Spell? = spellsList.get(p0)
 
 		/** True if the item is not a separator. */
 		override public fun isEnabled(p0: Int) : Boolean = false
@@ -139,7 +174,7 @@ class SpellView : LinearLayout {
 
 	/** Translate view to spell. */
 	private fun viewToSpell(v: View) : Spell?
-		= spellsLearnt.get(
+		= spellsList.get(
 			spellListView.getFirstVisiblePosition()
 			+ spellListView.indexOfChild(v.getParent() as View))
 
@@ -291,6 +326,11 @@ class SpellView : LinearLayout {
 	public fun notifySpellChanged() {
 		spellListView;
 		spellListAdapter.notifyDataSetChanged()
+	}
+
+	/** Filter the spell list view by a given char sequence. */
+	public fun filterSpells(cs: CharSequence) {
+		spellListAdapter.getFilter().filter(cs)
 	}
 
 	/** Shortcut for current spell slots. */

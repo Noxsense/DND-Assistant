@@ -185,6 +185,27 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		label_inventory.setOnClickListener(this)
 		label_classes.setOnClickListener(this)
 		label_race_background.setOnClickListener(this)
+
+		/* Search in currently displayed content view. */
+		val inputSearch = findViewById<EditText>(R.id.search_content).also {
+			it.setOnEditorActionListener { v, actionId, event ->
+				if(actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE){
+					/* Find the currently displayed adapter. */
+					when  {
+						panelSpells.second.visibility == View.VISIBLE -> {
+							(panelSpells.second as SpellView).filterSpells(it.text.toString())
+						}
+						else -> {}
+					}
+					true
+				} else {
+					false
+				}
+			}
+		}
+
+		// TODO (2020-11-22) keep screen on?
+		window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 	}
 
 	/** Poke the roll history view to display potentially updated entries.

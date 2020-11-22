@@ -6,6 +6,7 @@
   android:layout_width="match_parent"
   android:orientation="vertical"
   android:paddingHorizontal="@dimen/hmargin"
+  android:keepScreenOn="true"
   xmlns:android="http://schemas.android.com/apk/res/android"
   >
   <LinearLayout
@@ -253,7 +254,7 @@
         android:hint="Search"
         android:id="@+id/search_content"
         android:inputType="text"
-        android:layout_height="@dimen/textSize"
+        android:layout_height="20sp"
         android:textSize="@dimen/textSize"
         android:layout_width="match_parent"
         />
