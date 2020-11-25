@@ -268,7 +268,7 @@ public class OnEventRoller
 		lastRoll = rolls.sum()
 
 		/* Add to roll history: <Timestamp, <Result, Reason>>. */
-		val result = RollResult(lastRoll, rolls, reason) // default ts: now
+		val result = RollResult(lastRoll, rolls, reason + " ($term)") // default ts: now
 		log.debug("$result")
 
 		Rollers.history = listOf(result) + Rollers.history // workaround: prepend.

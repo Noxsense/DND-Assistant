@@ -313,6 +313,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		val hitpointView: HitpointView = content_health as HitpointView
 		hitpointView.displayNow()
+
 	}
 
 	/** Update the "content_skills" panel.
@@ -853,6 +854,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				}
 			}
 			R.id.label_skills -> {
+				updateSkills()
 				closeContentsBut(R.id.content_skills)
 			}
 			R.id.label_attacks -> {
@@ -864,12 +866,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				closeContentsBut(R.id.content_spells)
 			}
 			R.id.label_inventory -> {
+				updateInventory()
 				closeContentsBut(R.id.content_inventory)
 			}
 			R.id.label_classes -> {
+				updateKlasses()
 				closeContentsBut(R.id.content_classes)
 			}
 			R.id.label_race_background -> {
+				updateStory()
 				closeContentsBut(R.id.content_race_background)
 			}
 
