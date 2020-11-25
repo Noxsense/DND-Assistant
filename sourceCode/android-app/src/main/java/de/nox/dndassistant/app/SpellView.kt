@@ -128,10 +128,10 @@ class SpellView : LinearLayout {
 			nameView.text = spell?.name ?: "Spell"
 
 			statsView.text = (
-				"${spell?.school ?: "School"}, ${when (spell?.level) {
+				"${spell?.school ?: "School"}, ${when (spell?.minlevel) {
 					null -> "Level ?"
 					0 -> "Cantrip"
-					else -> "Level ${spell!!.level}"
+					else -> "Level ${spell!!.minlevel}"
 				}}\n" +
 				"Duration: ${spell?.showEffectDuration() ?: "? seconds"}\n" +
 				"${spell?.briefEffect()}")
@@ -306,7 +306,7 @@ class SpellView : LinearLayout {
 			}
 
 		val prepSpellsCnt = spellsPrepared.size
-		val prepCantripsCnt = spellsPrepared.filter { it.level < 1 }.size
+		val prepCantripsCnt = spellsPrepared.filter { it.minlevel < 1 }.size
 
 		spellSlotView.text = (
 			(1..9).joinToString(" ") {

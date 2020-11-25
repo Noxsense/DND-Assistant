@@ -49,6 +49,49 @@ data class State(val pc: PlayerCharacter) {
 		= pc.spellSlots.toMutableList().toIntArray() // copied to a new list ?
 		private set
 
+	public val spellComperator: Comparator<Spell> = Comparator<Spell> { a, b ->
+		/* Check, if both spells are prepared. */
+		val aPrep = a in this.spellsPrepared
+		val bPrep = b in this.spellsPrepared
+
+		/* Check if the spell is cast or not. */
+		val aCast = this.spellsCast.containsKey(a)
+		val bCast = this.spellsCast.containsKey(b)
+
+		when {
+			a == b -> {
+				0 /* spells are the same. */
+			}
+			aPrep != bPrep -> {
+				/* One spell is prepared, the other is not. */
+				-aPrep.compareTo(bPrep) // descending: true smaller false
+			}
+			!aPrep || (aPrep && !aCast && !bCast) -> {
+				/* Not different and one is not prepared
+				 * => Both spells are not prepared/equipped.
+				 * OR:
+				 * NOt different and one is prepared
+				 * => Both spells are prepared, both are not cast. */
+				a.compareTo(b) // compares by level and name.
+			}
+			aCast != bCast -> {
+				/* Both spells are prepared/equipped. (Else caught before.)
+				 * Only one is cast. */
+				-aCast.compareTo(bCast) // descending: true smaller false
+			}
+			else -> {
+				/* Both spells are prepared, both are cast.
+				 * Get each rest time; sort concentration to head. */
+				val spellContr = this.spellConcentration?.first
+
+				val aRestTime = if (a == spellContr) 0 else this.spellsCast[a]!!.second
+				val bRestTime = if (b == spellContr) 0 else this.spellsCast[b]!!.second
+
+				aRestTime.compareTo(bRestTime)
+			}
+		}
+	}
+
 	private fun slotIndex(slot: Int) : Int
 		= Math.min(Math.max(slot - 1, 0), 8)
 
@@ -317,7 +360,7 @@ data class State(val pc: PlayerCharacter) {
 	 * @return true, if the spell is cast, otherwise false.
 	 */
 	fun castSpell(spell: Spell, unlearned: Boolean = false, higherSpellSlots: Int = 0) : Boolean
-		= (spell.level + higherSpellSlots).let { lvl -> when {
+		= (spell.minlevel + higherSpellSlots).let { lvl -> when {
 			/* Not learnt, but cast with an item (like scroll or item. */
 			unlearned -> {
 				spellsCast += spell to (-1 to -1) // TODO (2020-10-30) duration of item magic.
@@ -397,7 +440,7 @@ data class State(val pc: PlayerCharacter) {
 			}
 			/* Spell cannot be prepared due to level limitations. */
 			// TODO (2020-10-30) implement.
-			spell.level > 9 -> false. also {
+			spell.minlevel > 9 -> false. also {
 				pc.log.info("Spell '$spell' cannot be prepared due to level limitations.")
 			}
 			/* PREPARE THE SPELL. */
@@ -419,6 +462,7 @@ data class State(val pc: PlayerCharacter) {
 	fun toggleSpellPreparation(spell: Spell): Boolean
 		= when (spell in spellsPrepared) {
 			true -> false. also {
+				spellsPrepared -= spell
 				pc.log.info("Toggle Spell prepation: Unprepare. ($spell)")
 			}
 			else -> prepareSpell(spell).also {

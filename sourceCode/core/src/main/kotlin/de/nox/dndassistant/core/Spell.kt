@@ -105,7 +105,7 @@ data class Spell(
 
 	override fun compareTo(other: Spell) : Int
 		= when {
-			level != other.level -> level - other.level // first level sort
+			minlevel != other.minlevel -> minlevel - other.minlevel // first level sort
 			else -> name.compareTo(other.name) // second level sort
 		}
 
@@ -119,9 +119,21 @@ data class Spell(
 		val verbal: Boolean = true,
 		val somatic: Boolean = true,
 		val materials: Map<String, Int> = mapOf<String, Int>() // item to min value.
+	) {
+		/** String representation. */
+		fun show() = this.let { c ->
+			/* Maybe tag ritual spell. */
+			val R = when { c.ritual -> INDICATOR_RITUAL; else -> "" }
 
-		// override fun toString(): String = duration
-	);
+			/* Show invocation components. */
+			val V = when { c.verbal -> "V"; else -> "" }
+			val S = when { c.somatic -> "S"; else -> "" }
+			val M = when { c.materials.size > 0 -> "M, ${c.materials}"; else -> "" }
+
+			/* Final String. */
+			"${R}${c.duration} ($V$S$M)"
+		}
+	}
 
 	/** Information bundle about one effect of the spell.
 	 * The default Effect is [LVL?, Touch/0ft, <>Instantaneous, No Atk, no Saving Throw]. */
@@ -177,9 +189,19 @@ data class Spell(
 		/** Describe what happens, if the target could be successfully saved.
 		 * By default: There is no special mention for a saved target. */
 		val forSaved: String? = null,
+	){
+		/** String representation of an effect. */
+		fun show() : String = run {
+			val duration = "${if (concentration) "${INDICATOR_CONCENTRATION} " else ""}${duration}"
+			val distance = "${area} (${distance}ft)"
 
-		// override fun toString(): String = result
-	);
+			val save = savingThrow?.toString() ?: ""
+
+			val term = optionalRolls?.toString() ?: ""
+
+			"[$duration | $distance] -- ${onSuccess}${save}${term}"
+		}
+	}
 
 	init {
 		if (name.trim().length < 1) throw Exception("Spell has empty name")
@@ -192,76 +214,43 @@ data class Spell(
 		= name
 
 	/** Get the minimum level the spell can be cast in. */
-	val level: Int get()
+	val minlevel: Int get()
 		= effects.minByOrNull { it.level }!!.level // must not be without effects
 
 	/** String representation for a certain level. */
-	fun showLevel(lvl: Int = level) : String = when (lvl) {
+	fun showLevel(lvl: Int = minlevel) : String = when (lvl) {
 		0 -> "Cantrip"
 		else -> "Level $lvl"
 	}
 
-	/** Show casting invocation components. */
-	fun showInvocationComponents(): String
-		= casting.let { c ->
-			/* Show invocation components. */
-			val V = when { c.verbal -> "V"; else -> "" }
-			val S = when { c.somatic -> "S"; else -> "" }
-			val M = when { c.materials.size > 0 -> "M, ${c.materials}"; else -> "" }
-
-			/* Final String. */
-			"$V$S$M"
-		}
-
 	/** Show casting time of the spell in readable English. */
 	fun showCasting(): String
-		= casting.let { c ->
-			/* Maybe tag ritual spell. */
-			val R = when { c.ritual -> INDICATOR_RITUAL; else -> "" }
-
-			/* Show invocation components. */
-			val vsm = showInvocationComponents()
-
-			/* Final String. */
-			"${R}${c.duration} ($vsm)"
-		}
+		= casting.show()
 
 	/** Get the effects, which match the effect.
 	 * If no effect has the certain level, get the next lesser level. */
-	private fun getEffect(lvl:Int = level) : Effect
+	private fun getEffect(lvl:Int = minlevel) : Effect
 		= effects.filter { it.level == lvl }.let { ofLevel ->
-			if (ofLevel.size < 1) getEffect(level) else ofLevel[0]
+			if (ofLevel.size < 1) getEffect(minlevel) else ofLevel[0]
 		}
 
 	/** Get duration for spell cast on a certain level. */
-	fun getEffectDuration(lvl: Int = level) : Pair<String, Boolean>
+	fun getEffectDuration(lvl: Int = minlevel) : Pair<String, Boolean>
 		= getEffect(lvl).let { e -> e.duration to e.concentration }
 
 	/** Show duration for spell cast on a certain level. */
-	fun showEffectDuration(lvl: Int = level) : String
+	fun showEffectDuration(lvl: Int = minlevel) : String
 		= getEffectDuration(lvl).let { (dur, conc) ->
 			"${when (conc) { true -> INDICATOR_CONCENTRATION; else -> ""}} ${dur}"
 		}
 
 	/** Show area of the spell effect, when cast with a certain level. */
-	fun showEffectArea(lvl: Int = level) : Pair<String, Int>
+	fun showEffectArea(lvl: Int = minlevel) : Pair<String, Int>
 		= getEffect(lvl).let { e -> e.area to e.distance }
+
 
 	/** Show all effects as Map of Level to String. */
 	fun showEffects() : List<Pair<Int, String>> = effects.map { e ->
-		val duration = "${if (e.concentration) "${INDICATOR_CONCENTRATION} " else ""}${e.duration}"
-		val distance = "${e.area} (${e.distance}ft)"
-
-		val save = when (e.savingThrow) {
-			null -> ""
-			else -> " (Saving Throw: ${e.savingThrow})"
-		}
-
-		val term = when (e.optionalRolls) {
-			null -> ""
-			else -> " (${e.optionalRolls})"
-		}
-
-		e.level to "[$duration | $distance] -- ${e.onSuccess}${save}${term}"
+		e.level to e.show()
 	}
 }

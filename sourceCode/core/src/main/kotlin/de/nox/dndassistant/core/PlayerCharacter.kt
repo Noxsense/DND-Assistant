@@ -214,49 +214,7 @@ public class PlayerCharacter private constructor(
 	/** List the spells, the character has learnt
 	 * They are sorted by: Cocnentration > Cast > Prepared > Rest. */
 	val spellsLearnt: List<Spell> get() = spellsLearntWith.keys.toList()
-		.sortedWith{ a, b ->
-			/* Check, if both spells are prepared. */
-			val aPrep = a in current.spellsPrepared
-			val bPrep = b in current.spellsPrepared
-
-			/* Check if the spell is cast or not. */
-			val aCast = current.spellsCast.containsKey(a)
-			val bCast = current.spellsCast.containsKey(b)
-
-			when {
-				a == b -> {
-					0 /* spells are the same. */
-				}
-				aPrep != bPrep -> {
-					/* One spell is prepared, the other is not. */
-					-aPrep.compareTo(bPrep) // descending: true smaller false
-				}
-				!aPrep || (aPrep && !aCast && !bCast) -> {
-					/* Not different and one is not prepared
-					 * => Both spells are not prepared/equipped.
-					 * OR:
-					 * NOt different and one is prepared
-					 * => Both spells are prepared, both are not cast. */
-					a.compareTo(b) // compares by level and name.
-				}
-				aCast != bCast -> {
-					/* Both spells are prepared/equipped. (Else caught before.)
-					 * Only one is cast. */
-					-aCast.compareTo(bCast) // descending: true smaller false
-				}
-				else -> {
-					/* Both spells are prepared, both are cast.
-					 * Get each rest time; sort concentration to head. */
-					val spellContr = current.spellConcentration?.first ?: null
-
-					val aRestTime = if (a == spellContr) 0 else current.spellsCast[a]!!.second
-					val bRestTime = if (b == spellContr) 0 else current.spellsCast[b]!!.second
-
-					aRestTime.compareTo(bRestTime)
-				}
-
-			}
-		}
+		.sortedWith(current.spellComperator)
 
 	/* ------------------------------------------------------------------------
 	 * Equipment and inventory.
