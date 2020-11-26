@@ -120,18 +120,34 @@ data class Spell(
 		val somatic: Boolean = true,
 		val materials: Map<String, Int> = mapOf<String, Int>() // item to min value.
 	) {
+		/** Show the ritual indicator, if this spell can be cast as ritual, else an empty String. */
+		fun showRitual() : String = when {
+			ritual -> INDICATOR_RITUAL
+			else -> ""
+		}
+
+		/** Show the verbal compoenent as 'V'. Or an empty string. */
+		val V: String get() = if (verbal) "V" else ""
+
+		/** Show the somatic compoenent as 'S'. Or an empty String. */
+		val S: String get() = if (verbal) "S" else ""
+
+		/** Show the material compoenent as 'M'. Or an empty String. */
+		val M: String get() = if (needsMaterials) "M" else ""
+
+		/** Show all components, if they are needed. */
+		val VSM: String = "${V}${S}${M}"
+
+		/** Check, if casting needs materials. */
+		val needsMaterials: Boolean get() = materials.size > 0
+
 		/** String representation. */
 		fun show() = this.let { c ->
 			/* Maybe tag ritual spell. */
-			val R = when { c.ritual -> INDICATOR_RITUAL; else -> "" }
-
-			/* Show invocation components. */
-			val V = when { c.verbal -> "V"; else -> "" }
-			val S = when { c.somatic -> "S"; else -> "" }
-			val M = when { c.materials.size > 0 -> "M, ${c.materials}"; else -> "" }
+			val R = showRitual()
 
 			/* Final String. */
-			"${R}${c.duration} ($V$S$M)"
+			"${R}${c.duration} (${c.VSM})"
 		}
 	}
 

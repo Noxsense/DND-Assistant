@@ -1,0 +1,116 @@
+<LinearLayout
+  android:gravity="top"
+  android:id="@+id/spell_dialog"
+  android:layout_height="wrap_content"
+  android:layout_width="wrap_content"
+  android:orientation="vertical"
+  android:padding="10dp"
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  >
+  <TextView
+    android:alpha="0.5"
+    android:id="@+id/spell_school_minlvl"
+    android:layout_height="0sp"
+    android:layout_weight="0.5"
+    android:layout_width="match_parent"
+    android:text="Minimum Spell Level, School, Spell Ability"
+    />
+  <LinearLayout
+    android:layout_height="0sp"
+    android:layout_weight="1"
+    android:layout_width="match_parent"
+    android:orientation="horizontal"
+    >
+    <TextView
+      android:id="@+id/spell_dailog_title"
+      android:layout_height="match_parent"
+      android:layout_weight="6"
+      android:layout_width="0sp"
+      android:text="Spell Title."
+      android:textSize="@dimen/textSizeTitle"
+      android:gravity="center|start"
+      />
+    <CheckBox
+      android:id="@+id/spell_try_prepare"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      android:layout_width="0sp"
+      android:gravity="center|end"
+      />
+  </LinearLayout>
+  <ScrollView
+    android:layout_height="0sp"
+    android:layout_weight="5"
+    android:layout_width="match_parent"
+    android:layout_marginVertical="6sp"
+    >
+    <TextView
+      android:id="@+id/spell_description"
+      android:layout_height="match_parent"
+      android:layout_width="match_parent"
+      android:text="Long Spell description."
+      />
+  </ScrollView>
+
+  <!-- if the spell is prepared. -->
+  <LinearLayout
+    android:layout_height="0sp"
+    android:layout_weight="1"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/spell_on_higher_level"
+    >
+    <SeekBar
+      android:id="@+id/spell_on_higher_level_slots"
+      android:layout_height="0sp"
+      android:layout_weight="1"
+      android:layout_width="match_parent"
+      android:orientation="horizontal"
+      android:min="1"
+      android:max="9"
+      style="@style/Widget.AppCompat.SeekBar.Discrete"
+      />
+    <TextView
+      android:id="@+id/spell_on_higher_level_text"
+      android:layout_height="0sp"
+      android:layout_weight="1"
+      android:layout_width="match_parent"
+      />
+  </LinearLayout>
+  <Button
+    android:id="@+id/spell_dialog_cast"
+    android:layout_height="0sp"
+    android:layout_weight="1"
+    android:layout_width="match_parent"
+    android:text="Cast Now."
+    />
+  <TextView
+    android:id="@+id/spell_casting_components"
+    android:layout_height="0sp"
+    android:layout_weight="1"
+    android:layout_width="match_parent"
+    android:text="r V S M, 1 action"
+  />
+  <LinearLayout
+    android:layout_height="0sp"
+    android:layout_weight="1"
+    android:layout_width="match_parent"
+    android:orientation="horizontal"
+    android:id="@+id/spell_more_options"
+    >
+    <Button
+      android:id="@+id/spell_attack"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      android:layout_width="0sp"
+      android:text="Roll Spell Attack"
+      />
+    <Button
+      android:id="@+id/spell_optional_rolls"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      android:layout_width="0sp"
+      android:text="Other optional rolls"
+      />
+  </LinearLayout>
+</LinearLayout>

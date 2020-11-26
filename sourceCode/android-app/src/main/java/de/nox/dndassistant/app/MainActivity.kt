@@ -187,8 +187,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		label_race_background.setOnClickListener(this)
 
 		/* Search in currently displayed content view. */
-		val inputSearch = findViewById<EditText>(R.id.search_content).also {
-			it.setOnEditorActionListener { v, actionId, event ->
+		findViewById<EditText>(R.id.search_content).also {
+			it.setOnEditorActionListener { _, actionId, _ ->
 				if(actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE){
 					/* Find the currently displayed adapter. */
 					when  {
@@ -542,6 +542,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		/* Reload content of the content. */
 		spellPanel.reload()
+		spellPanel.sortSpells()
 	}
 
 	/** Update the "content_inventory" panel.
