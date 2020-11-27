@@ -253,29 +253,28 @@ class SpellView : LinearLayout {
 		v0.findViewById<TextView>(R.id.spell_description)
 			.text = spell.description
 
+		val slotView = v0.findViewById<SeekBar>(R.id.spell_on_higher_level_slots)
+
 		/* Add a handy option to as more powerfull spells (use higher spell slots). */
 		if (minlevel > 0) {
-			v0.findViewById<SeekBar>(R.id.spell_on_higher_level_slots).let { slotView ->
-				if (minlevel > 0) {
-					// slotView.min = minlevel
-					slotView.progress = minlevel
-				}
-
-				v0.findViewById<TextView>(R.id.spell_on_higher_level_text)
-					.text = "On Higher Level?! (${slotView.progress})"
-			}
-
-			v0.findViewById<View>(R.id.spell_on_higher_level).setVisible(true)
-		} else {
-			/* Hide for cantrips. */
-			v0.findViewById<View>(R.id.spell_on_higher_level).setVisible(false)
+			// slotView.min = minlevel
+			slotView.progress = minlevel
 		}
+		slotView.setVisible(minlevel > 0)
+
+		/* Show selected level's effects. */
+		v0.findViewById<TextView>(R.id.spell_on_higher_level_text)
+			.text = spell.getEffect(slotView.progress).show()
 
 		/* Cast the Spell. */
 		v0.findViewById<TextView>(R.id.spell_dialog_cast).run {
+			// XXX (2020-11-26) avoid anonymous OnClickListener
 			setOnClickListener { _ ->
-				val lvl = minlevel
-				toast("Cast '$spell' on level $lvl")
+				val lvl = when {
+					minlevel == 0 -> 0
+					else ->  v0.findViewById<SeekBar>(R.id.spell_on_higher_level_slots).progress
+				}
+				castSpell(spell, lvl)
 			}
 
 			val c = spell.casting
@@ -299,6 +298,7 @@ class SpellView : LinearLayout {
 
 			/* Roll a spell attack. */
 			// XXX (2020-11-26) tidy up anonymous OnClickListener.
+			// TODO (2020-11-26) feature: On long click, try to add a attack shortcut.
 			v0.findViewById<View>(R.id.spell_attack).run {
 				setOnClickListener(OnEventRoller.Builder(D20)
 					.addDiceTerm(SimpleDice(1, ch.proficiencyBonus + ch.abilityModifier(spellAbility))) // spell attack bonus
@@ -379,34 +379,36 @@ class SpellView : LinearLayout {
 		val spell = viewToSpell((v.getParent() as View).getParent() as View) // more nested
 
 		if (spell != null && spell in spellsPrepared) {
-			val minLvl = spell?.minlevel ?: 0
-			var higher = 0
+			var bestLvl = spell?.minlevel ?: 0
 
 			/* Find the next higher spell slot, to cast the spell,
 			 * when the needed spell slot is not longer available. */
-			while (ch.current.spellSlot(minLvl + higher) < 1 && higher in 1..9) {
-				higher += 1
+			while (ch.current.spellSlot(bestLvl) < 1 && bestLvl in 0..9) {
+				bestLvl += 1
 			}
 
-			if (ch.current.castSpell(spell, true, higher)) {
-				reload()
-				toast("Quickly cast $spell, used spell slot ${minLvl + higher}!")
-			} else {
-				toast("Could not cast '$spell'.")
-			}
+			log.debug("Quickly cast '$spell', using slot $bestLvl (try to)")
+
+			castSpell(spell, bestLvl)
 		}
 	}
 
-	/** Cast the spell on click. */
-	private val castClick: View.OnClickListener = View.OnClickListener { v ->
-		/* Cast the spell of the connected spell view. */
-		val spell = viewToSpell((v.getParent() as View).getParent() as View) // more nested
+	/** Cast the spell on given level, or minimum level. */
+	private fun castSpell(spell: Spell?, level: Int) : Boolean {
+		if (!isPrepared(spell)) {
+			log.debug("Spell cannot be cast, it's not prepared. ($spell)")
+			return false
+		}
 
-		// TODO (2020-11-04) is it possible to cast unprepared spells, eg. from scroll, magic ring, etc?
+		val minlevel = spell!!.minlevel
+		val higher = (level - minlevel).let { when { it < 0 -> 0; else -> it } }
 
-		if (spell != null && spell in spellsPrepared && ch.current.castSpell(spell)) {
-			reload()
-			toast("Cast $spell")
+		log.debug("Cast '$spell', using slot $level (try to)")
+
+		return ch.current.castSpell(spell, false, higher).let { success ->
+			if (success) reload()
+			toast("Spell '$spell' is ${when {success -> "Cast"; else -> "Not Cast"}}")
+			success
 		}
 	}
 
@@ -538,5 +540,7 @@ class SpellView : LinearLayout {
 	private fun slot(s: Int) : Int = ch.current.spellSlot(s)
 
 	/** Check, if a spell is prepared. */
-	private fun isPrepared(spell: Spell) = spell in spellsPrepared
-}
+	private fun isPrepared(spell: Spell?) = spell != null && spell in spellsPrepared
+
+	/** Get the maximum of two numbers. */
+	private fun max(a: Int, b: Int) = when { a >= b -> a; else -> a; } }

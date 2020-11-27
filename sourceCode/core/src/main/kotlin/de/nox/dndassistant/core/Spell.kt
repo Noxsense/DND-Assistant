@@ -211,9 +211,9 @@ data class Spell(
 			val duration = "${if (concentration) "${INDICATOR_CONCENTRATION} " else ""}${duration}"
 			val distance = "${area} (${distance}ft)"
 
-			val save = savingThrow?.toString() ?: ""
+			val save = savingThrow?.let { " vs. $it" } ?: ""
 
-			val term = optionalRolls?.toString() ?: ""
+			val term = optionalRolls?.let { " ($it)" } ?: ""
 
 			"[$duration | $distance] -- ${onSuccess}${save}${term}"
 		}
@@ -245,7 +245,7 @@ data class Spell(
 
 	/** Get the effects, which match the effect.
 	 * If no effect has the certain level, get the next lesser level. */
-	private fun getEffect(lvl:Int = minlevel) : Effect
+	fun getEffect(lvl:Int = minlevel) : Effect
 		= effects.filter { it.level == lvl }.let { ofLevel ->
 			if (ofLevel.size < 1) getEffect(minlevel) else ofLevel[0]
 		}

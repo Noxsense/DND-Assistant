@@ -6,28 +6,12 @@
   android:orientation="vertical"
   xmlns:android="http://schemas.android.com/apk/res/android"
   >
-  <LinearLayout
+  <TextView
+    android:id="@+id/spell_name"
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
-    android:orientation="horizontal"
-    >
-    <TextView
-      android:id="@+id/spell_name"
-      android:layout_height="wrap_content"
-      android:layout_width="0sp"
-      android:layout_weight="5"
-      android:text="Spell Name"
-      />
-    <TextView
-      android:layout_height="wrap_content"
-      android:layout_width="0sp"
-      android:layout_weight="5"
-      android:text="level"
-      android:id="@+id/brief_spell_school_minlvl"
-      android:alpha="0.50"
-      android:gravity="end"
-      />
-  </LinearLayout>
+    android:text="Spell Name"
+    />
   <LinearLayout
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
@@ -40,17 +24,24 @@
       android:alpha="0.66"
       >
       <TextView
+        android:id="@+id/brief_spell_school_minlvl"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_width="0sp"
+        android:textSize="9sp"
+        />
+      <TextView
         android:id="@+id/spell_duration"
         android:layout_height="wrap_content"
         android:layout_width="0sp"
-        android:layout_weight="1"
+        android:layout_weight="2"
         android:textSize="9sp"
         />
       <TextView
         android:id="@+id/spell_area"
         android:layout_height="wrap_content"
+        android:layout_weight="2"
         android:layout_width="0sp"
-        android:layout_weight="1"
         android:textSize="9sp"
         />
     </LinearLayout>

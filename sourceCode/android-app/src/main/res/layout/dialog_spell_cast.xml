@@ -53,30 +53,16 @@
   </ScrollView>
 
   <!-- if the spell is prepared. -->
-  <LinearLayout
+  <SeekBar
+    android:id="@+id/spell_on_higher_level_slots"
     android:layout_height="0sp"
     android:layout_weight="1"
     android:layout_width="match_parent"
-    android:orientation="vertical"
-    android:id="@+id/spell_on_higher_level"
-    >
-    <SeekBar
-      android:id="@+id/spell_on_higher_level_slots"
-      android:layout_height="0sp"
-      android:layout_weight="1"
-      android:layout_width="match_parent"
-      android:orientation="horizontal"
-      android:min="1"
-      android:max="9"
-      style="@style/Widget.AppCompat.SeekBar.Discrete"
-      />
-    <TextView
-      android:id="@+id/spell_on_higher_level_text"
-      android:layout_height="0sp"
-      android:layout_weight="1"
-      android:layout_width="match_parent"
-      />
-  </LinearLayout>
+    android:orientation="horizontal"
+    android:min="1"
+    android:max="9"
+    style="@style/Widget.AppCompat.SeekBar.Discrete"
+    />
   <Button
     android:id="@+id/spell_dialog_cast"
     android:layout_height="0sp"
@@ -91,6 +77,12 @@
     android:layout_width="match_parent"
     android:text="r V S M, 1 action"
   />
+  <TextView
+    android:id="@+id/spell_on_higher_level_text"
+    android:layout_height="0sp"
+    android:layout_weight="1"
+    android:layout_width="match_parent"
+    />
   <LinearLayout
     android:layout_height="0sp"
     android:layout_weight="1"

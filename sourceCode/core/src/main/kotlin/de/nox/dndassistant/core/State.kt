@@ -109,10 +109,15 @@ data class State(val pc: PlayerCharacter) {
 	/** Try to use a spell slot and return reduction was successful. */
 	fun spellSlotUse(slot: Int) : Boolean
 		= when {
+			/* No spell slot available. */
 			spellSlot(slot) < 1 -> false
+
+			/* No spell slot needed. */
 			slot < 1 -> true . also {
 				pc.log.debug("Cantrip hasn't used up a spell slot.")
 			}
+
+			/* Reduce spell slot. */
 			else -> true.also{
 				// the actual reduction.
 				spellSlots[slotIndex(slot)] -= 1
@@ -364,6 +369,7 @@ data class State(val pc: PlayerCharacter) {
 			/* Not learnt, but cast with an item (like scroll or item. */
 			unlearned -> {
 				spellsCast += spell to (-1 to -1) // TODO (2020-10-30) duration of item magic.
+				pc.log.debug("Spell '$spell' is not learned, but cast from forgein knowledge.")
 				true
 			}
 			/* Not enough spell slots left, to cast this spell. */
@@ -385,6 +391,7 @@ data class State(val pc: PlayerCharacter) {
 						pc.log.info("Lost Concentration for other spells, in order to cast a new concentration spell!")
 					}
 					spellConcentration = spell to lvl
+					pc.log.debug("Casting '$spell': New Concentration.")
 				}
 
 				// TODO (2020-10-30) focuS | resource used on spell cast.
@@ -396,9 +403,11 @@ data class State(val pc: PlayerCharacter) {
 				/* Check spell source. */
 				val (_, usesSpellSlots) = pc.spellsLearntWith.getOrElse(spell) { Ability.WIS to true }
 
+				pc.log.debug("Casting '$spell': uses spell slots (learnt): $usesSpellSlots.")
+
 				if (usesSpellSlots) {
 					pc.log.info("Cast '$spell', spell slot ${lvl} for ${seconds} secs (${duration})")
-					spellSlotUse(lvl) // use spell slot.
+					spellSlotUse(lvl) // use spell slot
 					spellsCast += spell to (lvl to Math.max(1, seconds)) // add with duration (at least 1).
 					pc.log.debug("Cast spells: $spellsCast")
 				}
