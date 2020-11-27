@@ -10,6 +10,9 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.ActivityTestRule
+import kotlin.test.assertEquals
+import kotlin.test.assertNoEquals
+import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,14 +21,42 @@ import org.junit.runner.RunWith
 class MainActivityTest {
 
 	@get:Rule
-	var activityRule: ActivityTestRule<MainActivity> = ActivityTestRule(MainActivity::class.java)
+	var activityRule: ActivityTestRule<MainActivity>
+		= ActivityTestRule(MainActivity::class.java)
 
 	@Test
-	fun typeANumber_resultIsDisplayed() {
-		onView(withId(R.id.edit_text_factorial)).perform(typeText("1"), closeSoftKeyboard())
-		onView(withId(R.id.button_compute)).perform(click())
+	fun rollHistory() {
+		var size = Rollers.history.size
+		var sizeDisplayed = Rollers.history.size
 
-		onView(withId(R.id.text_result)).check(matches(isDisplayed()))
-		onView(withId(R.id.text_result)).check(matches(withText("1")))
+		/* Normal extra die view. */
+		onView(withId(R.id.d4)).perform(click())
+
+		/* Roller history increased. */
+		assertNoEquals(size, Rollers.history.size, "Increase history entries.")
+
+		/* Check, if view for history is updated. */
+		onView(withId(R.id.list_rolls)).check(matches(isDisplayed()));
+
+		/* Parse Term and roll it. */
+		// onView(withId(R.id.dterm)).perform(typeText("D20 + -1"), closeSoftKeyboard())
+
+		// onView(withId(R.id.text_result)).check(matches(isDisplayed()))
+		// onView(withId(R.id.text_result)).check(matches(withText("1")))
+	}
+
+	@Test
+	fun openPreviewContent() {
+		var preview: View
+		var content: View
+
+		/* Check toggle view/content. */
+		println("Toggle preview view: Show")
+		preview.performClick()
+		assertEquals(View.VISIBLE, content.visibility, "Content shown")
+
+		println("Toggle preview view: Hide")
+		preview.performClick()
+		assertEquals(View.GONE, content.visibility, "Content hidden")
 	}
 }
