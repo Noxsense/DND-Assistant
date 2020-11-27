@@ -11,7 +11,7 @@ object LoggerFactory {
 				= "%-19s".format(System.currentTimeMillis()) // yyyy-mm-dd HH:MM:SS
 
 			override fun log(t: LoggingLevel, msg: Any?) {
-				println("${now()} ${t.name.first()} ${tag}  -  $msg")
+				println("${t.name.first()} ${tag}  -  $msg")
 			}
 		}
 }

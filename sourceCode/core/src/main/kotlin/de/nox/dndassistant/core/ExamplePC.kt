@@ -1,6 +1,6 @@
 package de.nox.dndassistant.core
 
-// private val logger = LoggerFactory.getLogger("ExamplePC")
+private val log = LoggerFactory.getLogger("ExamplePC")
 
 public fun playgroundWithOnyx() : PlayerCharacter {
 
@@ -89,7 +89,7 @@ public fun playgroundWithOnyx() : PlayerCharacter {
 	pc.addProficiency(Skill.PERCEPTION) // proficient
 	pc.addProficiency(Skill.PERCEPTION) // expert
 
-	// logger.debug("Proficient Skills: " + pc.proficiencies)
+	log.info("Proficient Skills: " + pc.proficiencies)
 
 	val dagger =  Weapon("Dagger", 1.0, Money(gp=2),
 		weightClass = WeightClass.LIGHT,
@@ -164,15 +164,17 @@ public fun playgroundWithOnyx() : PlayerCharacter {
 
 	pc.wear(leather)
 
-	pc.hitpoints = 12
-	// pc.curHitPoints = 7
+	log.info("Character $pc current level: ${pc.level} \u21d0 ${pc.experiencePoints}")
+
+	for (i in 1 .. pc.level) pc.addKlassLevel(rogue)
+
 
 	pc.addKlassLevel(rogue)
 	pc.experiencePoints = 3000 // at least level 4
 
 	// modifiable
-	pc.height = 1.99
-	pc.weight = 13.0
+	pc.height = 1.99 // ft
+	pc.weight = 30.0 // lb
 
 	// pc.background.speciality = "Liberian"
 	pc.trait = "Watch and Learn."
