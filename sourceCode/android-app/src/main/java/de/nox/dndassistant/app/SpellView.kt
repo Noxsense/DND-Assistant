@@ -151,7 +151,7 @@ class SpellView : LinearLayout {
 		/* Show (normal) effect (on success).
 		 * Open dialog to cast with more options, or attacking and optinal rolls. */
 		v0.findViewById<TextView>(R.id.spell_on_success).run {
-			text = (spell?.effects?.joinToString(", "){ e -> e.onSuccess } ?: "") +
+			text = (spell?.effects?.first()?.onSuccess ?: "") +
 			(firstOptionalRoll?.let { " ($it)" } ?: "")
 		}
 
@@ -226,7 +226,7 @@ class SpellView : LinearLayout {
 		/* Show School, Level and Spell casting ability (maybe also if learnt by another source). */
 		v0.findViewById<TextView>(R.id.spell_school_minlvl)
 			.text = spell.let {
-				val source = spellAbility.fullname + (if (source.second) "" else " from another Source")
+				val source = spellAbility.fullname + (if (source.second) "" else " ?/?")
 
 				val school = spell.school
 				val lvl = if (minlevel < 1) "Cantrip"  else "Lvl $minlevel"
