@@ -244,8 +244,7 @@ public class PlayerCharacter private constructor(
 		= abilityModifier(Ability.STR) to abilityModifier(Ability.DEX)
 
 	/** Get the attack damage for an unarmed strike. */
-	val attackUnarmed: Attack get()
-		= Attack(
+	var attackUnarmed: Attack = Attack(
 			name = "Unarmed Strike",
 			note = """
 				Punch, kick, head-butt, or similar forceful blow.
