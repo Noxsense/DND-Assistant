@@ -22,7 +22,6 @@ import de.nox.dndassistant.core.D20
 import de.nox.dndassistant.core.DiceTerm
 import de.nox.dndassistant.core.Logger
 import de.nox.dndassistant.core.PlayerCharacter
-import de.nox.dndassistant.core.SimpleDice
 import de.nox.dndassistant.core.Spell
 import de.nox.dndassistant.core.SpellcasterKlass
 
@@ -301,7 +300,7 @@ class SpellView : LinearLayout {
 			// TODO (2020-11-26) feature: On long click, try to add a attack shortcut.
 			v0.findViewById<View>(R.id.spell_attack).run {
 				setOnClickListener(OnEventRoller.Builder(D20)
-					.addDiceTerm(SimpleDice(1, ch.proficiencyBonus + ch.abilityModifier(spellAbility))) // spell attack bonus
+					.addDiceTerm(DiceTerm.bonus(ch.proficiencyBonus + ch.abilityModifier(spellAbility))) // spell attack bonus
 					.setReasonString("Spell Attack") // cast the spell.
 					.create())
 				// deactivate if not a spell attack.

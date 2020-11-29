@@ -88,7 +88,8 @@ public class PlayerCharacter private constructor(
 			klassFirst!!, baseKlassSpeciality,
 			name, gender, age
 		).apply {
-			hitpoints = klassFirst.hitdie.faces + abilityModifier(Ability.CON)
+			/* First level hit points: Klass Hit die + CON modifier. */
+			hitpoints = klassFirst.hitdie.max + abilityModifier(Ability.CON)
 		}
 	}
 
@@ -155,17 +156,21 @@ public class PlayerCharacter private constructor(
 		private set
 
 	/** Hit dice as a list of faces, gained by every class level up. */
-	val hitdice : List<Int>
+	val hitdice : List<DiceTerm.Die>
 		get() = klasses.toList().flatMap { (klass, lvlSpec) ->
-			/* Add level times the hitdie face to the hitdice list. */
-			(1 .. (lvlSpec.first)).map { klass.hitdie.faces }
+			/* For every klass: Hitdie: {level}d{face}.
+			 * To the current character's hitdice: Add x (= klass level) the hitdie of the klass. */
+			val (level, _) = lvlSpec
+
+			@Suppress("UNCHECKED_CAST") // it's filterered...
+			(klass.hitdie * level).term.filter { it is DiceTerm.Die } as List<DiceTerm.Die>
 		}
 
 	/** Maximal hit points of the character.
 	 * If dropped to 0, the character becomes unconscious.
 	 * If dropped to negative max HP in One hit, the character dies at once. */
 	var hitpoints: Int
-		= klassFirst.hitdie.faces + abilityModifier(Ability.CON) // first HP
+		= 0 // first HP
 
 	/** The abilities, the character has proficiency for saving throws. */
 	var savingThrows: List<Ability>
@@ -253,7 +258,7 @@ public class PlayerCharacter private constructor(
 				""".trimIndent(),
 			proficient = false,
 			abilityModifier = Ability.STR,
-			damage = listOf(Damage(DamageType.BLUDGEONING, DiceTerm(1))),
+			damage = listOf(Damage(DamageType.BLUDGEONING, DiceTerm.bonus(1))),
 		)
 
 	/** Get the current attack bonus, doing the given attack. */
@@ -280,7 +285,7 @@ public class PlayerCharacter private constructor(
 				""".trimIndent(),
 			proficient = false, // TODO depends on the intended weapon.
 			abilityModifier = Ability.STR, // depends ont he intened weapon.
-			damage = listOf(Damage(DamageType.PIERCING, DiceTerm(4))), // type depends on the intended weapon.
+			damage = listOf(Damage(DamageType.PIERCING, D4)), // type depends on the intended weapon.
 		)
 
 	/** Get the attack damage for the currently hold item. */
@@ -413,8 +418,9 @@ public class PlayerCharacter private constructor(
 	fun setAbilityScore(a: Ability, v: Int) {
 		abilityScore += Pair(a, if (v > 0) v else 0)
 
+		/* On first level, if the CON mod is changed, recalculate the base hitpoints. */
 		if (a == Ability.CON && level < 2) {
-			hitpoints = abilityModifier(a) + klassFirst.hitdie.faces
+			hitpoints = abilityModifier(a) + klassFirst.hitdie.max
 		}
 	}
 

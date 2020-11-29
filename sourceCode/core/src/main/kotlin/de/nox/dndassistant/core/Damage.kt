@@ -24,8 +24,8 @@ data class Attack(
 	/** Get the combined damage term (roll). */
 	val damageTerm: DiceTerm
 		= when {
-			damage.size < 1 -> DiceTerm(0)
-			else -> DiceTerm(damage.flatMap { it.term.dice.asList() })
+			damage.size < 1 -> DiceTerm.EMPTY
+			else -> damage.fold(DiceTerm.EMPTY) { diceterm, d -> diceterm + d.term }
 		}
 		// = damage.foldl { }
 
@@ -57,8 +57,6 @@ data class Attack(
  * 2. Flame Strike: "4d6 fire damage and 4d6 radiant damage".
  */
 class Damage(val type: DamageType, val term: DiceTerm) : Comparable<Damage> {
-	constructor(type: DamageType, simple: SimpleDice) : this(type, DiceTerm(simple))
-
 	/** Add damage to another damage get a list of multiple damage forms. */
 	operator fun plus(d: Damage) : List<Damage>
 		= toList() + d

@@ -31,7 +31,7 @@ class PlayerCharacterTest {
 		log.info("PC hitdice: ${hitdice}")
 		assertEquals(1, pc.level)
 		assertEquals(pc.level, hitdice.size)
-		assertEquals(9, hitdice[0])
+		assertEquals(DiceTerm.Die(9), hitdice[0])
 
 		// the first hitpoints are depended on the first klass, full face + CON mod
 		log.info("PC hitpoints: ${pc.hitpoints}")
@@ -67,7 +67,7 @@ class PlayerCharacterTest {
 		for (i in 1 .. 20) pc.addKlassLevel(klass)
 
 		pc.hitpoints = 23
-		pc.hitpoints = DiceTerm(SimpleDice(8,20)).roll() // random hitpoints
+		pc.hitpoints = DiceTerm.xDy(y = 8, x = 20).roll().sum() // random hitpoints
 		pc.current.heal(1) // at least one
 
 		log.info("Charachter $pc with new HP: ${pc.hitpoints}")
@@ -78,7 +78,7 @@ class PlayerCharacterTest {
 		log.info("Charachter $pc with current HP: ${pc.current.hitpoints}")
 
 		// spent 3 hd
-		pc.current.restShort(listOf(8,8,8), 0)
+		pc.current.restShort(listOf(8,8,8).map { DiceTerm.Die(it) }, 0)
 		pc.current.takeHit(pc.hitpoints / 3) // remove current HP
 
 		log.info("Charachter $pc with current HP: ${pc.current.hitpoints}")
@@ -284,16 +284,16 @@ class PlayerCharacterTest {
 	val dagger =  Weapon("Dagger", 1.0, Money(gp=2),
 		weightClass = WeightClass.LIGHT,
 		weaponType = Weapon.Type.SIMPLE_MELEE,
-		damage = listOf(Damage(DamageType.PIERCING, DiceTerm(D4))),
-		thrown = 20..60 to listOf(Damage(DamageType.PIERCING, DiceTerm(D4))),
+		damage = listOf(Damage(DamageType.PIERCING, D4)),
+		thrown = 20..60 to listOf(Damage(DamageType.PIERCING, D4)),
 		isFinesse = true,
 		note = "Finesse, light, thrown (range 20/60)")
 
 	val spear =  Weapon("Spear", 3.0, Money(gp=1),
 		weightClass = WeightClass.NONE,
 		weaponType = Weapon.Type.SIMPLE_MELEE,
-		damage = listOf(Damage(DamageType.PIERCING, DiceTerm(D6))),
-		thrown = 20..60 to listOf(Damage(DamageType.PIERCING, DiceTerm(D6))),
+		damage = listOf(Damage(DamageType.PIERCING, D6)),
+		thrown = 20..60 to listOf(Damage(DamageType.PIERCING, D6)),
 		// versatile: 1d8
 		note = "Thrown (range 20/60) | versatile (1d8)")
 
@@ -328,7 +328,7 @@ class PlayerCharacterTest {
 
 	val klass = Klass(
 		"Class",
-		hitdie = SimpleDice(9), // d9
+		hitdie = DiceTerm.xDy(y = 9, x = 1), // d9
 		savingThrows = listOf(Ability.DEX, Ability.CHA),
 		klassLevelTable = setOf(
 			Klass.Feature(1,  "Class (1)", "Text: Class (1)"),
