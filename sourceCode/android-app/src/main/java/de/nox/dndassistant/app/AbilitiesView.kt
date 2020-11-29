@@ -13,8 +13,6 @@ import kotlin.properties.Delegates
 
 import de.nox.dndassistant.core.Logger
 import de.nox.dndassistant.core.D20
-import de.nox.dndassistant.core.SimpleDice
-import de.nox.dndassistant.core.DiceTerm
 import de.nox.dndassistant.core.Ability
 import de.nox.dndassistant.core.Proficiency
 import de.nox.dndassistant.core.PlayerCharacter

@@ -7,7 +7,7 @@ import kotlin.math.floor
 /** A Class (derived from Klass) that can cast spells. */
 public class SpellcasterKlass(
 	name: String,
-	hitdie: SimpleDice,
+	hitdie: DiceTerm,
 	savingThrows: List<Ability>,
 	klassLevelTable: Set<Feature>,
 	specialisations: Map<String, Set<Feature>>,
@@ -37,7 +37,7 @@ public class SpellcasterKlass(
 /** A class of the characters. */
 open public class Klass(
 	val name: String,
-	val hitdie: SimpleDice = SimpleDice(0),
+	val hitdie: DiceTerm = DiceTerm(0),
 	val savingThrows: List<Ability> = listOf(),
 	val klassLevelTable: Set<Feature> = setOf(),
 	val specialisations: Map<String, Set<Feature>> = mapOf(),

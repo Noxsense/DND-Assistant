@@ -88,7 +88,8 @@ public class PlayerCharacter private constructor(
 			klassFirst!!, baseKlassSpeciality,
 			name, gender, age
 		).apply {
-			hitpoints = klassFirst.hitdie.faces + abilityModifier(Ability.CON)
+			/* First level hit points: Klass Hit die + CON modifier. */
+			hitpoints = klassFirst.hitdie.max + abilityModifier(Ability.CON)
 		}
 	}
 
@@ -157,15 +158,17 @@ public class PlayerCharacter private constructor(
 	/** Hit dice as a list of faces, gained by every class level up. */
 	val hitdice : List<Int>
 		get() = klasses.toList().flatMap { (klass, lvlSpec) ->
-			/* Add level times the hitdie face to the hitdice list. */
-			(1 .. (lvlSpec.first)).map { klass.hitdie.faces }
+			/* For every klass: Hitdie: {level}d{face}.
+			 * To the current character's hitdice: Add x (= klass level) the hitdie of the klass. */
+			val (level, _) = lvlSpec
+			(1 .. (level)).flatMap { klass.hitdie.faces.toList() }
 		}
 
 	/** Maximal hit points of the character.
 	 * If dropped to 0, the character becomes unconscious.
 	 * If dropped to negative max HP in One hit, the character dies at once. */
 	var hitpoints: Int
-		= klassFirst.hitdie.faces + abilityModifier(Ability.CON) // first HP
+		= 0 // first HP
 
 	/** The abilities, the character has proficiency for saving throws. */
 	var savingThrows: List<Ability>
@@ -413,8 +416,9 @@ public class PlayerCharacter private constructor(
 	fun setAbilityScore(a: Ability, v: Int) {
 		abilityScore += Pair(a, if (v > 0) v else 0)
 
+		/* On first level, if the CON mod is changed, recalculate the base hitpoints. */
 		if (a == Ability.CON && level < 2) {
-			hitpoints = abilityModifier(a) + klassFirst.hitdie.faces
+			hitpoints = abilityModifier(a) + klassFirst.hitdie.max
 		}
 	}
 

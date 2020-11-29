@@ -5,8 +5,6 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.View.OnClickListener
 import android.view.View.OnKeyListener
-import android.widget.ArrayAdapter
-import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 
@@ -14,7 +12,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 import de.nox.dndassistant.core.DiceTerm
-import de.nox.dndassistant.core.SimpleDice
+import de.nox.dndassistant.core.d
 
 object Rollers {
 	var history: List<RollResult> = listOf()
@@ -81,9 +79,6 @@ public class OnEventRoller
 		/** Construct with first dice Term (DiceTerm). */
 		constructor(dt: DiceTerm) { addDiceTerm(dt) }
 
-		/** Construct with first simple dice Term (DiceTerm). */
-		constructor(sd: SimpleDice) : this(sd.toTerm()) ;
-
 		/** Add another TextView to the list to parse. */
 		public fun addDiceView(tv: TextView) = apply {
 			this.diceSources += (tv)
@@ -94,14 +89,9 @@ public class OnEventRoller
 			this.diceSources += (dt)
 		}
 
-		/** Set the alternative simple dice. */
-		public fun addDiceTerm(sd: SimpleDice) = apply {
-			this.diceSources += (sd.toTerm())
-		}
-
 		/** Set the alternative written boni. */
 		public fun addDiceTerm(i: Int) = apply {
-			this.diceSources += (SimpleDice(1, i))
+			this.diceSources += d(1, i)
 		}
 
 		/** Set reason from a string. */
@@ -160,7 +150,7 @@ public class OnEventRoller
 	private var parsedUpdated: Boolean = false // if the resulting term changed => recalculate.
 	private var parsedDiceTerm: DiceTerm? = null
 
-	private var finalDiceTerm: DiceTerm = rawDiceTerm ?: SimpleDice(0, 0).toTerm()
+	private var finalDiceTerm: DiceTerm = rawDiceTerm ?: DiceTerm(0)
 
 	/** Parse the given parseDiceTermViews or use alternative term. */
 	private fun collectDiceTexts() : String
@@ -264,7 +254,7 @@ public class OnEventRoller
 	 */
 	private fun roll(term: DiceTerm, reason: String, toastContext: Context? = null) : Int {
 		/* Roll the result. */
-		val rolls = term.rollList()
+		val rolls = term.roll()
 		lastRoll = rolls.sum()
 
 		/* Add to roll history: <Timestamp, <Result, Reason>>. */

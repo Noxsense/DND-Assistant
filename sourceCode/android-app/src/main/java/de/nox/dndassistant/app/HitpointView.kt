@@ -18,7 +18,8 @@ import de.nox.dndassistant.core.Ability
 import de.nox.dndassistant.core.Logger
 import de.nox.dndassistant.core.Condition
 import de.nox.dndassistant.core.PlayerCharacter
-import de.nox.dndassistant.core.SimpleDice
+import de.nox.dndassistant.core.DiceTerm
+import de.nox.dndassistant.core.d
 
 /**
  * HitpointView.
@@ -466,7 +467,7 @@ public class HitpointView : LinearLayout {
 
 		/** The actual rolling event, later wrapped in heal. */
 		private val roller: OnEventRoller
-			= OnEventRoller.Builder(SimpleDice(face, 1))
+			= OnEventRoller.Builder(DiceTerm(face))
 				.addDiceView(conModHack)
 				.setReasonString("Hitdie D$face + CON")
 				.create()
