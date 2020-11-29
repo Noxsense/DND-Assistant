@@ -463,7 +463,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 					// TODO (2020-10-16) clean up attack_roll.OnEventRoller.
 					(v.findViewById<TextView>(R.id.attack_roll)).run {
-						text = "%+d".format(attack.attackBonus)
+						text = "%+d".format(character.getAttackBonus(attack))
 						setOnClickListener(OnEventRoller.Builder(D20)
 							.addDiceView(this)
 							.setReasonString("Attack with ${attack.name}")
@@ -477,19 +477,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 					// TODO (2020-10-16) clean up damage_dice.OnEventRoller.
 					(v.findViewById<TextView>(R.id.damage_dice)).run {
-						val dmgRoll = attack.damageRoll
-						text = dmgRoll.toString()
+						// val dmgRoll = attack.damageRoll
+						text = attack.damageString // dmgRoll.toString()
 						// TODO (2020-10-11) make depended on attack roll ? => 20 -> Crit?
-						setOnClickListener(OnEventRoller.Builder(this)
-							.setReasonString("Damage with ${attack.name}")
-							.create())
+						// setOnClickListener(OnEventRoller.Builder(this) .setReasonString("Damage with ${attack.name}") .create())
 					}
 
 					(v.findViewById<TextView>(R.id.damage_type)).run {
-						val dmgTypes = attack.damageType
-						text = when (dmgTypes.size) {
+						// val dmgTypes = attack.damageType
+						text = when (attack.damage.size) {
 							0 -> "???"
-							else -> dmgTypes.joinToString()
+							else -> "!!!" // dmgTypes.joinToString()
 						}
 					}
 
@@ -509,19 +507,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		/* Update preview. */
 		label_attacks.text = formatLabel(
 			"Attacks",
-			"${attacks.maxByOrNull{ it.damage.first.average }}")
+			"Hardest Hit", /*"${attacks.maxByOrNull{ character.attackUnarmed }}" */)
 	}
-
-	/** Make a weapon to an attack for the selected character. */
-	private fun weaponToAttack(wpn: Weapon, str: Int = 0, dex: Int = 0) : Attack
-		= Attack(
-			wpn.name,
-			ranged = !wpn.weaponType.melee,
-			damage = wpn.damage to wpn.damageType,
-			note = wpn.note,
-			finesse = wpn.isFinesse,
-			proficientValue = character.getProficiencyFor(wpn).second,
-			modifierStrDex = str to dex)
 
 	/** Update the "content_spells" panel.
 	 * Show left and available spell slots.

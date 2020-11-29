@@ -94,18 +94,16 @@ public fun playgroundWithOnyx() : PlayerCharacter {
 	val dagger =  Weapon("Dagger", 1.0, Money(gp=2),
 		weightClass = WeightClass.LIGHT,
 		weaponType = Weapon.Type.SIMPLE_MELEE,
-		damage = DiceTerm(D4),
-		damageType = setOf(DamageType.PIERCING),
-		throwable = true,
+		damage = listOf(Damage(DamageType.PIERCING, DiceTerm(D4))),
+		thrown = 20..60 to Damage(DamageType.PIERCING, DiceTerm(D6)).toList(),
 		isFinesse = true,
 		note = "Finesse, light, thrown (range 20/60)")
 
 	val spear =  Weapon("Spear", 3.0, Money(gp=1),
 		weightClass = WeightClass.NONE,
 		weaponType = Weapon.Type.SIMPLE_MELEE,
-		damage = DiceTerm(D6),
-		damageType = setOf(DamageType.PIERCING),
-		throwable = true,
+		damage = listOf(Damage(DamageType.PIERCING, DiceTerm(D6))),
+		thrown = 20..60 to Damage(DamageType.PIERCING, DiceTerm(D8)).toList(),
 		// versatile: 1d8
 		note = "Thrown (range 20/60) | versatile (1d8)")
 

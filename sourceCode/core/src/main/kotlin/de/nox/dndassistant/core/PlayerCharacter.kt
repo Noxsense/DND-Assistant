@@ -243,19 +243,30 @@ public class PlayerCharacter private constructor(
 	private val modsStrDex: Pair<Int, Int> get()
 		= abilityModifier(Ability.STR) to abilityModifier(Ability.DEX)
 
-	/** Get the attack damage for an unarmed strike. */
+	/** The base attack damage for an unarmed strike, on get,
+	 * it returns a modified Attack, which has added the current modifiers and proficiency. */
 	var attackUnarmed: Attack = Attack(
 			name = "Unarmed Strike",
 			note = """
 				Punch, kick, head-butt, or similar forceful blow.
 				Anything without a weapon or spell.
 				""".trimIndent(),
-			ranged = false,
-			finesse = false, // TODO (2020-10-10) unarmed strike is finesse with certain exceptions. classes
-			damage = DiceTerm(SimpleDice(1)) to setOf(DamageType.BLUDGEONING),
-			proficientValue = proficiencyBonus, // proficient with own hands
-			modifierStrDex = modsStrDex // XXX (2020-10-07) ...
+			proficient = false,
+			abilityModifier = Ability.STR,
+			damage = listOf(Damage(DamageType.BLUDGEONING, DiceTerm(1))),
 		)
+
+	/** Get the current attack bonus, doing the given attack. */
+	fun getAttackBonus(a: Attack) : Int
+		= when { a.proficient -> proficiencyBonus; else -> 0 } + abilityModifier(a.abilityModifier)
+
+	/** Get the current attack damage, doing the given attack.
+	 * A weapon attack adds the ability modifier, a Spell attack tells, which modifiers are too add. */
+	fun getAttackDamage(a: Attack) : List<Damage>
+		= a.damage.mapIndexed{ indx, d -> when {
+		indx == 0  -> Damage(d.type, d.term + abilityModifier(a.abilityModifier))
+		else -> d
+	}}
 
 	/** Get the attack damage for an improvised (melee) attack. */
 	val attackImprovised: Attack get()
@@ -267,11 +278,9 @@ public class PlayerCharacter private constructor(
 				Damage Type depends on the way
 				it was used or its own characterists.
 				""".trimIndent(),
-			ranged = false,
-			finesse = false,
-			damage = DiceTerm(SimpleDice(4)) to setOf(), // depends on the chosen item/ way to use.
-			proficientValue = proficiencyBonus, // XXX (2020-10-07) depends on the way it was intended?
-			modifierStrDex = modsStrDex // XXX (2020-10-07) ...
+			proficient = false, // TODO depends on the intended weapon.
+			abilityModifier = Ability.STR, // depends ont he intened weapon.
+			damage = listOf(Damage(DamageType.PIERCING, DiceTerm(4))), // type depends on the intended weapon.
 		)
 
 	/** Get the attack damage for the currently hold item. */
@@ -283,13 +292,16 @@ public class PlayerCharacter private constructor(
 		= bags.values.flatMap { it.inside }.distinct()
 			.filter { it is Weapon /* && it !=  equippedStuff */}
 			.map{ (it as Weapon).let { wpn -> Attack(
-				name = "Draw and Attack with '${wpn.name}'",
+				name = "Draw/Attack with '${wpn.name}'",
 				note = wpn.note,
-				ranged = wpn.weaponType == Weapon.Type.SIMPLE_RANGED,
-				finesse = wpn.isFinesse,
-				damage = wpn.damage to setOf(),
-				proficientValue = proficiencyBonus,
-				modifierStrDex = modsStrDex
+				abilityModifier = when {
+					wpn.isFinesse -> Ability.DEX // TODO max(Ability.STR, Ability.DEX) by mob
+					wpn.weaponType == Weapon.Type.SIMPLE_RANGED -> Ability.DEX
+					wpn.weaponType == Weapon.Type.MARTIAL_RANGED -> Ability.DEX
+					else -> Ability.STR
+				},
+				proficient = isProficientIn(wpn),
+				damage = wpn.damage, // XXX wpn.damage to setOf(),
 			)}}
 
 	/* ------------------------------------------------------------------------

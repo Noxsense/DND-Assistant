@@ -7,74 +7,82 @@ package de.nox.dndassistant.core
  */
 data class Attack(
 	val name: String,
-	val ranged: Boolean,
-	val damage: Pair<DiceTerm, Set<DamageType>>,
-	val finesse: Boolean = false,
-	val proficientValue: Int = 0,
-	val modifierStrDex: Pair<Int, Int> = Pair(0, 0),
-	val note: String = ""
+	val note: String = "",
+	val proficient: Boolean = false,
+	val abilityModifier: Ability = Ability.STR,
+	val damage: List<Damage> = listOf(),
 ): Comparable<Attack> {
 
-	companion object {
-		val UNARMED: Attack = Attack(
-			name = "Unarmed",
-			ranged = false, damage = DiceTerm(0) to setOf(DamageType.BLUDGEONING),
-			note = "slap, hit, kick, push, ...",
-			proficientValue = 0, // XXX (2020-10-07) the current proficiency value
-			modifierStrDex = 0 to 0) // XXX (2020-10-07) ...
-	}
+	/** Get the average damage dealt of the attack. */
+	val damageAverage: Double
+		= damage.sumByDouble { d -> d.term.average }
 
-	/** Decide which bonus is added. */
-	private val bonus: Int = when {
-		finesse -> modifierStrDex.run { Math.max(first, second) }
-		ranged -> modifierStrDex.second // dex
-		else -> modifierStrDex.first // str
-	}
+	/** Get all (officially) listed damage types.. */
+	val damageTypes: List<DamageType>
+		= damage.map { d -> d.type }
 
-	/** Attack Bonus: (STR or DEX) + (proficiency if proficient). */
-	val attackBonus: Int
-		= bonus +  (proficientValue)
-
-	val damageRollPure : DiceTerm
-		= damage.first
-
-	val damageType : Set<DamageType>
-		= damage.second
-
-	/** Damage Modifier: Ability modifier, used for attack roll. */
-	val damageRoll: DiceTerm
-		= (damageRollPure + Bonus(bonus)).contracted().let {
-			if (it.dice.size == 1
-				&& (it.dice[0].faces < 2 && it.dice[0].factor < 0)) {
-				// logger.warn("Never Negative Damage")
-				DiceTerm(0)
-			} else {
-				it
-			}
+	/** Get the combined damage term (roll). */
+	val damageTerm: DiceTerm
+		= when {
+			damage.size < 1 -> DiceTerm(0)
+			else -> DiceTerm(damage.flatMap { it.term.dice.asList() })
 		}
+		// = damage.foldl { }
 
-	/** The damage roll for a critical hit are twice the base attack damage dice. */
-	val damageRollCritical: DiceTerm
-		= (damageRoll + damageRollPure).contracted()
+	/** String representation of the damage. */
+	val damageString: String
+		= damage.joinToString(" + ")
 
 	/** Compare an attack by it's average damage */
 	override fun compareTo(other: Attack) : Int
-		= (damageRoll.average - other.damageRoll.average).toInt()
+		= this.damageAverage.compareTo(other.damageAverage)
 
 	/** Make a nice string representation, see example.
-	 * Example 0: Unarmed Attack (+2) 1 + 2 (B, 3.0)
-	 * Example 1: Dagger (+5) 1d4 + 3 (P, 5.5)
-	 * Example 2: Spell (+2) Dc 11 (B+F, 0.5)
+	 * Example 0: Unarmed Attack (+2) 1 + 2 (bludgeoning) (3.0)
+	 * Example 1: Dagger (+5) 1d4 + 3 (piercing) (5.5)
+     * Example 2: Flame Strike (+0) 4d6 (fire) + 4d6 (radiant) (24.0)
 	 */
 	override fun toString() : String
-		= "%s (%+d) %s (%s, %.1f)".format(
+		= "%s (%s%s) %s (avg: %.1f)".format(
 			name,
-			attackBonus,
-			damageRoll,
-			damageType.joinToString("+") { it.name.first().toString() },
-			damageRoll.average
+			abilityModifier.name, when { proficient -> "+PROF"; else -> ""},
+			damageString, damageAverage
 		)
 }
+
+/** A damage which can be dealt to anything. It consists of a certain type and
+ * a (dice) term that defines the actual hurting value.
+ * Examples:
+ * 1. Dagger: "1d4 piercing damage",
+ * 2. Flame Strike: "4d6 fire damage and 4d6 radiant damage".
+ */
+class Damage(val type: DamageType, val term: DiceTerm) : Comparable<Damage> {
+	constructor(type: DamageType, simple: SimpleDice) : this(type, DiceTerm(simple))
+
+	/** Add damage to another damage get a list of multiple damage forms. */
+	operator fun plus(d: Damage) : List<Damage>
+		= toList() + d
+
+	/** Put damage into a list. */
+	fun toList() : List<Damage>
+		= listOf(this)
+
+	/** Check equality between an Damage and any other object. */
+	override fun equals(other: Any?) : Boolean
+		= (other != null && other is Damage
+		&& other.type == this.type && other.term == this.term)
+
+	/** Compare an damage by its average. */
+	override fun compareTo(other: Damage) : Int
+		= term.average.compareTo(term.average)
+
+	/** Simple String representation. */
+	override fun toString() : String
+		= "${term} ($type)"
+}
+
+fun List<Damage>.tryToContract() : List<Damage>
+	= this
 
 // TODO (2020-10-07) give option to update, depending on character or less character dependent.
 // TODO (2020-10-07) spell attack => (optional) Difficulty class

@@ -81,6 +81,8 @@ class DiceTerm {
 
 	val dice : Array<SimpleDice> //  = arrayOf(*ds)
 
+	constructor(ds: List<SimpleDice>) { dice = ds.toTypedArray() }
+
 	constructor(vararg ds: SimpleDice) { dice = arrayOf(*ds) }
 
 	// initiate with a list of faces: 6 =~ 1D6, 1 =~ 1d1, 20 =~ 1D20, ...

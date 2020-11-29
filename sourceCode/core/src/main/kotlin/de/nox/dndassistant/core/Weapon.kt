@@ -25,21 +25,17 @@ data class Weapon(
 	/* Weapon specific attributes.*/
 
 	val weaponType: Type,
-	val range: Range = Range(5), // range in feet. => disadvantage out of range.
+	val range: IntRange = 0..5, // range in feet. => disadvantage out of range.
 
 	/* The damage, which is dealt, on hit. */
-	val damageType: Set<DamageType>,
-
-	val damage: DiceTerm, // damage on hit and type.
+	val damage: List<Damage>, // damage on hit and type.
 
 	/* A thrown melee weapon without thrown property deals 1D4
 	 * (like ranged weapon on melee attack, out of range). */
-	val throwable : Boolean = false,
-	val thrownRange: Range = Range(20,60),
-	val thrown: DiceTerm = DiceTerm(D4),
+	val thrown: Pair<IntRange, List<Damage>>? = null,
 
 	/* Can also be used two-handed => has a second dice term. */
-	val versatile: DiceTerm? = null,
+	val versatile: List<Damage>? = null,
 
 	/* needs two hand to wield, no off-hand possible. */
 	val isTwoHanded: Boolean = false,
@@ -62,26 +58,9 @@ data class Weapon(
 
 	override fun toString() : String = name
 
-	/* A range contains two numbers: Normal and long.
-	 * Beyond normal range: Disadvantage.
-	 * Beyond long range: Out-of-range.
-	 * (Long can also be normal.) */
-	data class Range(val normal_: Int, val long_: Int = 0) : Comparable<Range> {
-
-		val normal = normal_
-		val long = if (long_ < normal) normal else long_
-
-		/* True, if x is in range of the range aka. not out-of-range.*/
-		operator fun contains(x: Int) : Boolean
-			= x <= long
-
-		fun hasDisadventage(x: Int) : Boolean
-			= normal != long // no disadvantage, on any range.
-			|| normal < x // disadvantage, beyond normal range.
-
-		/* Compare by length in-between. */
-		override fun compareTo(other: Range) : Int = normal - other.normal
-	}
+	/** Check, if a given distance is still in weapons range. */
+	fun inRange(distance: Int, isThrown: Boolean = false) : Boolean
+		= distance in range
 
 	/* Basic: Weapon Types: Simple or Martial, Melee or Ranged.
 	 * Also the "other" option is available.*/
@@ -91,45 +70,5 @@ data class Weapon(
 		MARTIAL_MELEE(false, true),
 		MARTIAL_RANGED(false, false),
 		OTHER(false, false)
-	}
-
-	/* TWO HANDED ATTACK.
-	 * Versatile Weapon as two-handed: Use versatile Damage Dice.
-	 * One-Handed Weapon as two-handed (wo/ versatility): No change.
-	 */
-	val damageUsingTwoHanded : DiceTerm
-		= versatile ?: damage
-		// = if (versatile != null) versatile?? else damage
-	// can be used two handed.
-
-	/* One HANDED ATTACK.
-	 * Two-Handed weapon use as one-handed: see suggestions.
-	 * [last update: 2020-06-13](https://rpg.stackexchange.com/a/128940)
-	 * - Less control (Disadvantage).
-	 * - reduced power, like versatile weapons.
-	 * - perquisites to wield the weapon at all (like STR > 15)
-	 * - lose/alter proficiency
-	 */
-	val damageUsingOneHanded : DiceTerm = when {
-		isTwoHanded -> damage // with disadvantage or lesser dice term.
-		else -> damage // can have disadvantage.
-	}
-
-	private val improvised = DiceTerm(D4)
-
-	/* RANGED ATTACK
-	 * Additionally (like a two-handed ranged weapon: any bow)
-	 * Ranged weapon as melee : "Improvised" 1D4 ...
-	 * Melee Weapon thrown (20/60): "Improvised" 1d4
-	 * Ranged weapon in long-range: Disadvantage
-	 */
-	val damageUsingMelee : DiceTerm = when {
-		weaponType != Type.OTHER && !weaponType.melee -> improvised
-		else -> damage
-	}
-
-	val damageUsingRanged : DiceTerm = when {
-		weaponType != Type.OTHER && weaponType.melee -> improvised
-		else -> damage // can have disadvantage.
 	}
 }
