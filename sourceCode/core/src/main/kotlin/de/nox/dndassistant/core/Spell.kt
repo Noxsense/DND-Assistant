@@ -196,7 +196,7 @@ data class Spell(
 		 * - can influence the area or targets => higher armor class, molded around, make some wings and fly around
 		 */
 		val optionalRolls: DiceTerm? = null,
-		// ALT: val resulsWithNote: Map<String, Any> = mapOf("ATTACK" to Damage(DamageType.FIRE to DiceTerm(6)), "Knock out" to Condition.PRONE),
+		// ALT: val resulsWithNote: Map<String, Any> = mapOf("ATTACK" to Damage(DamageType.FIRE to D6), "Knock out" to Condition.PRONE),
 
 		/** The target can make optional saving throws to avoid the spell's full power.
 		 * By default: The spell effect cannot be avoided (null). */

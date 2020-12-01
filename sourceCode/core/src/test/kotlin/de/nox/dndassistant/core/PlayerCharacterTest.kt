@@ -31,7 +31,7 @@ class PlayerCharacterTest {
 		log.info("PC hitdice: ${hitdice}")
 		assertEquals(1, pc.level)
 		assertEquals(pc.level, hitdice.size)
-		assertEquals(9, hitdice[0])
+		assertEquals(DiceTerm.Die(9), hitdice[0])
 
 		// the first hitpoints are depended on the first klass, full face + CON mod
 		log.info("PC hitpoints: ${pc.hitpoints}")
@@ -67,7 +67,7 @@ class PlayerCharacterTest {
 		for (i in 1 .. 20) pc.addKlassLevel(klass)
 
 		pc.hitpoints = 23
-		pc.hitpoints = d(8, 20).roll().sum() // random hitpoints
+		pc.hitpoints = DiceTerm.xDy(y = 8, x = 20).roll().sum() // random hitpoints
 		pc.current.heal(1) // at least one
 
 		log.info("Charachter $pc with new HP: ${pc.hitpoints}")
@@ -78,7 +78,7 @@ class PlayerCharacterTest {
 		log.info("Charachter $pc with current HP: ${pc.current.hitpoints}")
 
 		// spent 3 hd
-		pc.current.restShort(listOf(8,8,8), 0)
+		pc.current.restShort(listOf(8,8,8).map { DiceTerm.Die(it) }, 0)
 		pc.current.takeHit(pc.hitpoints / 3) // remove current HP
 
 		log.info("Charachter $pc with current HP: ${pc.current.hitpoints}")
@@ -328,7 +328,7 @@ class PlayerCharacterTest {
 
 	val klass = Klass(
 		"Class",
-		hitdie = d(9), // d9
+		hitdie = DiceTerm.xDy(y = 9, x = 1), // d9
 		savingThrows = listOf(Ability.DEX, Ability.CHA),
 		klassLevelTable = setOf(
 			Klass.Feature(1,  "Class (1)", "Text: Class (1)"),

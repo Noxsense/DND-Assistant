@@ -12,7 +12,6 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 import de.nox.dndassistant.core.DiceTerm
-import de.nox.dndassistant.core.d
 
 object Rollers {
 	var history: List<RollResult> = listOf()
@@ -91,7 +90,7 @@ public class OnEventRoller
 
 		/** Set the alternative written boni. */
 		public fun addDiceTerm(i: Int) = apply {
-			this.diceSources += d(1, i)
+			this.diceSources += DiceTerm.xDy(x = 1, y = i)
 		}
 
 		/** Set reason from a string. */
@@ -150,7 +149,7 @@ public class OnEventRoller
 	private var parsedUpdated: Boolean = false // if the resulting term changed => recalculate.
 	private var parsedDiceTerm: DiceTerm? = null
 
-	private var finalDiceTerm: DiceTerm = rawDiceTerm ?: DiceTerm(0)
+	private var finalDiceTerm: DiceTerm = rawDiceTerm ?: DiceTerm.EMPTY
 
 	/** Parse the given parseDiceTermViews or use alternative term. */
 	private fun collectDiceTexts() : String

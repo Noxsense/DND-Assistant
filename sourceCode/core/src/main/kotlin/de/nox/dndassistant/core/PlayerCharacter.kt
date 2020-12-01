@@ -156,12 +156,14 @@ public class PlayerCharacter private constructor(
 		private set
 
 	/** Hit dice as a list of faces, gained by every class level up. */
-	val hitdice : List<Int>
+	val hitdice : List<DiceTerm.Die>
 		get() = klasses.toList().flatMap { (klass, lvlSpec) ->
 			/* For every klass: Hitdie: {level}d{face}.
 			 * To the current character's hitdice: Add x (= klass level) the hitdie of the klass. */
 			val (level, _) = lvlSpec
-			(1 .. (level)).flatMap { klass.hitdie.faces.toList() }
+
+			@Suppress("UNCHECKED_CAST") // it's filterered...
+			(klass.hitdie * level).term.filter { it is DiceTerm.Die } as List<DiceTerm.Die>
 		}
 
 	/** Maximal hit points of the character.
@@ -256,7 +258,7 @@ public class PlayerCharacter private constructor(
 				""".trimIndent(),
 			proficient = false,
 			abilityModifier = Ability.STR,
-			damage = listOf(Damage(DamageType.BLUDGEONING, DiceTerm(1))),
+			damage = listOf(Damage(DamageType.BLUDGEONING, DiceTerm.bonus(1))),
 		)
 
 	/** Get the current attack bonus, doing the given attack. */
@@ -283,7 +285,7 @@ public class PlayerCharacter private constructor(
 				""".trimIndent(),
 			proficient = false, // TODO depends on the intended weapon.
 			abilityModifier = Ability.STR, // depends ont he intened weapon.
-			damage = listOf(Damage(DamageType.PIERCING, DiceTerm(4))), // type depends on the intended weapon.
+			damage = listOf(Damage(DamageType.PIERCING, D4)), // type depends on the intended weapon.
 		)
 
 	/** Get the attack damage for the currently hold item. */

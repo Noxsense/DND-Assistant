@@ -24,8 +24,8 @@ data class Attack(
 	/** Get the combined damage term (roll). */
 	val damageTerm: DiceTerm
 		= when {
-			damage.size < 1 -> DiceTerm(0)
-			else -> DiceTerm(damage.flatMap { it.term.faces.asList() })
+			damage.size < 1 -> DiceTerm.EMPTY
+			else -> damage.fold(DiceTerm.EMPTY) { diceterm, d -> diceterm + d.term }
 		}
 		// = damage.foldl { }
 

@@ -49,7 +49,7 @@ class DiceTest {
 		// 9d5
 		// 9 or 45 with possibility of 0.000001 => check if roll is in range instead.
 
-		dice = DiceTerm(5) * (9) // 9d5 => (all 1: 9) upto (all 5: 45)
+		dice = DiceTerm.xDy(x = 9, y = 5) // 9d5 => (all 1: 9) upto (all 5: 45)
 		assertEquals(dice.min, 9 )
 		assertEquals(dice.max, (5*9))
 		expected = (dice.min.. dice.max)
@@ -67,7 +67,7 @@ class DiceTest {
 
 		// -2d3
 
-		dice = DiceTerm(3) * (-2) // -2d3 = -d3 -d3 = {-3..-1}x2
+		dice = DiceTerm.xDy(x = -2, y = 3) // -2d3 = -d3 -d3 = {-3..-1}x2
 		assertEquals(dice.min, -6) // -3, -3
 		assertEquals(dice.max, -2) // -1, -1
 		expected = dice.min .. dice.max
@@ -82,7 +82,7 @@ class DiceTest {
 		// test if expected average is close to the thrown results.
 		assertEquals(expected.average(), dice.average)
 		assertTrue(dice.average.shouldBe(avg))
-		log.info("OK")
+		log.info("testRoll: OK")
 	}
 
 	@Test
@@ -99,7 +99,7 @@ class DiceTest {
 
 		log.info(">>>> Part: Roll d20")
 
-		dice = DiceTerm(20)
+		dice = DiceTerm.xDy(x = 1, y = 20)
 		expectedNum = 1
 		expectedRange = (1..20)
 		expectedSumRange = 1 .. 20
@@ -117,7 +117,7 @@ class DiceTest {
 
 		log.info(">>>> Part: Roll 5d9")
 
-		dice = DiceTerm(5) * (9)
+		dice = DiceTerm.xDy(x = 9, y = 5)
 		expectedNum = 9
 		expectedRange = (1..5)
 		expectedSumRange = (9) .. (45)
@@ -135,7 +135,7 @@ class DiceTest {
 
 		log.info(">>>> Part: Roll -2d3")
 
-		dice = DiceTerm(3) * (-2)
+		dice = DiceTerm.xDy(x = -2, y = 3)
 		expectedNum = 2
 		expectedRange = (-3) .. (-1)
 		expectedSumRange = (-6) .. (-2)
@@ -149,9 +149,7 @@ class DiceTest {
 			assertTrue(rolls.sum() in expectedSumRange, "All rolls in expected range.")
 		}
 
-		log.info(">>> Do not unfold bonus aka. SimpleDice(1, bonus) == '+bonus'")
-
-		dice = DiceTerm(0) * (+3)
+		dice = DiceTerm.xDy(x = 1, y = 0) * (+3)
 		expectedNum = 1
 		expectedRange = (0) .. (0)
 		expectedSumRange = expectedRange
@@ -162,11 +160,11 @@ class DiceTest {
 			rolls = dice.roll()
 			// log.info("Rolled $dice: (${rolls.sum()}) $rolls")
 
-			assertEquals(expectedNum, rolls.size, "Expected Number of rolls.")
+			assertEquals(expectedNum, rolls.size, "Expected Number of rolls.") // = 1
 			assertTrue(rolls.all { it in expectedRange }, "All rolls in expected range.")
 			assertTrue(rolls.sum() in expectedSumRange, "All rolls in expected range.")
 		}
-		log.info("OK")
+		log.info("testRollList: OK")
 	}
 
 	@Test
@@ -174,60 +172,59 @@ class DiceTest {
 		log.info("\n\n>>> Test testToString()")
 
 		var str = "Just null, 0d20"
-		assertEquals("+0", (DiceTerm(20) * 0).toString(), str + " (d20 * 0)")
-		assertEquals("+0", (DiceTerm(0) * 20).toString(), str + " (d0 * 20)")
-		assertEquals(DiceTerm(20) * (0), DiceTerm(0) * (20), str + " (0d20 == 20d0)")
+		assertEquals("+0", (DiceTerm.xDy(x = 1, y = 20) * 0).toString(), str + " (d20 * 0)")
+		assertEquals("+0", (DiceTerm.xDy(x = 1, y = 0) * 20).toString(), str + " (d0 * 20)")
+		assertEquals(DiceTerm.xDy(x = 0, y = 20), DiceTerm.xDy(x = 20, y = 0), str + " (0d20 == 20d0)")
 
 		str = "default, 1d20 / d20"
-		assertEquals("+1d20", DiceTerm(20).toString(), str)
-		assertEquals("+1d20", (DiceTerm(-20) * (-1)).toString(), str)
-		assertEquals("+1d20", DiceTerm(20).toString(), str)
-		assertEquals(DiceTerm(20), DiceTerm(20))
-		assertEquals(DiceTerm(20), DiceTerm(-20) * (-1))
-		assertEquals(DiceTerm(20), DiceTerm(-20) * (-1), str)
+		assertEquals("+1d20", DiceTerm.xDy(x = 1, y = 20).toString(), str)
+		assertEquals("+1d20", (DiceTerm.xDy(x = -1, y = -20)).toString(), str)
+		assertEquals("+1d20", DiceTerm.xDy(x = 1, y = 20).toString(), str)
+		assertEquals(DiceTerm.xDy(x = 1, y = 20), DiceTerm.xDy(x = 1, y = 20))
+		assertEquals(DiceTerm.xDy(x = 1, y = 20), DiceTerm.xDy(x = -1, y = -20))
+		assertEquals(DiceTerm.xDy(x = 1, y = 20), DiceTerm.xDy(x = -1, y = -20), str)
 
 		str = "Minus, 1d(-3) => d(-3)"
-		assertEquals("-1d3", (DiceTerm(-3) * (1)).toString(), str)
-		assertEquals("-1d3", (DiceTerm(3) * (-1)).toString(), str)
-		assertEquals(DiceTerm(-3), DiceTerm(-3) * (1), str)
-		assertEquals(DiceTerm(-3), DiceTerm(3) * (-1), str)
+		assertEquals("-1d3", (DiceTerm.xDy(x = 1, y = -3)).toString(), str)
+		assertEquals("-1d3", (DiceTerm.xDy(x = -1, y = 3)).toString(), str)
+		assertEquals(DiceTerm.xDy(x = 1, y = -3), DiceTerm.xDy(x = 1, y = -3), str)
+		assertEquals(DiceTerm.xDy(x = 1, y = -3), DiceTerm.xDy(x = -1, y = 3), str)
 
-		str = "bonus, (-3)d1 => (-3)"
-		assertEquals("-3", (DiceTerm(1) * (-3)).toString(), str)
-		assertEquals("-3", (DiceTerm(-1) * (3)).toString(), str)
-		assertEquals("-3", bonus(-3).toString(), str)
-		assertEquals(DiceTerm(1) * (-3), DiceTerm(-1) * (3), str)
-		assertEquals(DiceTerm(1) * (-3), bonus(-3), str)
-		log.info("OK")
+		str = "bonus, (-3) => (-3)"
+		// assertEquals("-3", (DiceTerm.xDy(x = -3, y = 1)).toString(), str)
+		// assertEquals("-3", (DiceTerm.xDy(x = 3, y = -1)).toString(), str)
+		assertEquals("-3", DiceTerm.bonus(-3).toString(), str)
+		assertEquals(DiceTerm.xDy(x = -3, y = 1), DiceTerm.xDy(x = 3, y = -1), str)
+		log.info("testToString: OK")
 	}
 
 	@Test
 	fun testAverage() {
 		log.info("\n\n>>> Test testAverage()")
 
-		assertEquals(  1.0, DiceTerm(1).average)
-		assertEquals(  1.5, DiceTerm(2).average)
-		assertEquals(  3.5, DiceTerm(6).average)
-		assertEquals( 10.5, DiceTerm(20).average)
-		assertEquals( 50.5, DiceTerm(100).average)
-		assertEquals( 13.5, (DiceTerm(8) * (3)).average) // 3d8
+		assertEquals(  1.0, DiceTerm.xDy(x = 1, y = 1).average)
+		assertEquals(  1.5, DiceTerm.xDy(x = 1, y = 2).average)
+		assertEquals(  3.5, DiceTerm.xDy(x = 1, y = 6).average)
+		assertEquals( 10.5, DiceTerm.xDy(x = 1, y = 20).average)
+		assertEquals( 50.5, DiceTerm.xDy(x = 1, y = 100).average)
+		assertEquals( 13.5, (DiceTerm.xDy(x = 3, y = 8)).average) // 3d8
 
 		// constansts
-		(0..100).forEach { assertEquals(it * 1.0, d(1, it).average, "constant") }
-		log.info("OK")
+		(0..100).forEach { assertEquals(it * 1.0, DiceTerm.xDy(x = it, y = 1).average, "constant") }
+		log.info("testAverage: OK")
 	}
 
 	@Test
 	fun testCustomDice() {
 		log.info("\n\n>>> Test testCustomDice()")
 
-		val dice = DiceTerm(-3) * (1)
+		val dice = DiceTerm.xDy(x = 1, y = -3)
 		val rolled = (1..repeatRolls).map { dice.roll().sum() }
 		log.info("Roll: $dice: $rolled")
 		for (i in 1..3) {
 			assertTrue((-i) in rolled, "Thrown ${-i} with $dice")
 		}
-		log.info("OK")
+		log.info("testCustomDice: OK")
 	}
 
 	@Test
@@ -235,11 +232,11 @@ class DiceTest {
 		log.info("\n\n>>> Test testRollbonus()")
 
 		/// only fixied values.
-		val dice = DiceTerm(1) * (-3)
+		val dice = DiceTerm.xDy(x = -3, y = 1)
 		val rolled = (1..repeatRolls).map { dice.roll().sum() }
 		log.info("Roll: $dice: $rolled")
 		assertTrue(rolled.all { it == (-3) }, "Thrown only (-3) with $dice")
-		log.info("OK")
+		log.info("testRollbonus: OK")
 	}
 
 	@Test
@@ -247,25 +244,28 @@ class DiceTest {
 		log.info("\n\n>>> Test testTermInitiators()")
 
 		// 2d6
-		var a =(DiceTerm(6) * (2))
-		var b = DiceTerm(6) + DiceTerm(6)
-		var c = DiceTerm(6, 6)
+		var a =(DiceTerm.xDy(x = 2, y = 6))
+		var b = DiceTerm.xDy(x = 1, y = 6) + DiceTerm.xDy(x = 1, y = 6)
+		var c = DiceTerm.fromDieFaces(6, 6)
 
 		assertEquals(a, b, "'2d6': Init grouped and D6.plus(D6)")
 		assertEquals(a, c, "'2d6': Init grouped with faces")
 
 		// 2d6 + 1d20
-		a =(DiceTerm(6) * (2) + DiceTerm(20))
-		b = b + DiceTerm(20) // plus
-		c = DiceTerm(6, 20, 6)
+		a =(DiceTerm.xDy(x = 2, y = 6) + DiceTerm.xDy(x = 1, y = 20))
+		b = b + DiceTerm.xDy(x = 1, y = 20) // plus
+		c = DiceTerm.fromDieFaces(6, 20, 6)
 
 		assertEquals(a, b, "'2d6 + d20': Init with separated and plus")
 		assertEquals(a, c, "'2d6 + d20': Init with separated, single faces")
 
-		// 2d6 + 1d20
-		a =(DiceTerm(6) * (2) + DiceTerm(20) + bonus(-2))
-		b = b - bonus(2) // minus
-		c = DiceTerm(6, 20, -1, 6, -1)
+		println("\n\n2d6 + 1d20")
+
+		// +2d6 +1d20 -2
+		a =(DiceTerm.xDy(x = 2, y = 6) + DiceTerm.xDy(x = 1, y = 20) + DiceTerm.bonus(-2))
+		b = b - DiceTerm.bonus(2) // +2d6 -1d20 -2
+		c = DiceTerm.fromDieFaces(6, 20, 6) - DiceTerm.bonus(1) - DiceTerm.bonus(1)
+		// - 2d1 != -2 ... ?
 
 		assertEquals(a, b, "'2d6 + d20 - 2': Init with separated, and minus")
 		assertEquals(a, c, "'2d6 + d20 - 2': Init with separated, single faces")
@@ -281,48 +281,48 @@ class DiceTest {
 			// + 3 + 3 - 3 + 3d8 - d8 + 5d12 + d12 + 2d21 - d21
 			// (+ 3 + 3 - 3) (+ 3d8 - d8) (+ 5d12 + d12) (+ 2d21 - d21)
 			// (+ 3) (+ 2d8) (+ 6d12) (+ 1d21)
-			bonus(+3)
-			+ DiceTerm(8) * (3)
-			+ DiceTerm(12)
-			+ DiceTerm(-21)
-			+ bonus(+3)
-			+ DiceTerm(8) * (-1)
-			+ DiceTerm(21) * (2)
-			+ bonus(-3)
-			+ DiceTerm(12) * (5)
+			DiceTerm.bonus(+3)
+			+ DiceTerm.xDy(x = 3, y = 8)
+			+ DiceTerm.xDy(x = 1, y = 12)
+			+ DiceTerm.xDy(x = 1, y = -21)
+			+ DiceTerm.bonus(+3)
+			+ DiceTerm.xDy(x = -1, y = 8)
+			+ DiceTerm.xDy(x = 2, y = 21)
+			+ DiceTerm.bonus(-3)
+			+ DiceTerm.xDy(x = 5, y = 12)
 		)
 
 		val expected =(
 			// 2d21 + 6d12 + 2d8 + 3
-			DiceTerm(21)
-			+ DiceTerm(12) * (6)
-			+ DiceTerm(8) * (2)
-			+ d(1, +3)
+			DiceTerm.xDy(x = 1, y = 21)
+			+ DiceTerm.xDy(x = 6, y = 12)
+			+ DiceTerm.xDy(x = 2, y = 8)
+			+ DiceTerm.bonus(+3)
 		)
 
 		assertEquals(dice.cumulated(), expected)
 
-		log.info("OK")
+		log.info("testSimplifyTerm: OK")
 	}
 
 	@Test
 	fun testSubTerms() {
 		// will fit
-		assertTrue(DiceTerm(4) in DiceTerm(4), "1d4 in 1d4")
-		assertTrue(DiceTerm(4) in DiceTerm(4, 4, 4, 4), "1d4 in 4d4")
+		assertTrue(DiceTerm.xDy(x = 1, y = 4) in DiceTerm.xDy(x = 1, y = 4), "1d4 in 1d4")
+		assertTrue(DiceTerm.xDy(x = 1, y = 4) in DiceTerm.fromDieFaces(4, 4, 4, 4), "1d4 in 4d4")
 
 		// missing face, not matching face
-		assertFalse(DiceTerm(3) in DiceTerm(4), "1d3 not in 1d4")
-		assertFalse(DiceTerm(4, 5) in DiceTerm(4, 4, 4, 4), "1d5 not in 4d4")
+		assertFalse(DiceTerm.xDy(x = 1, y = 3) in DiceTerm.xDy(x = 1, y = 4), "1d3 not in 1d4")
+		assertFalse(DiceTerm.fromDieFaces(4, 5) in DiceTerm.fromDieFaces(4, 4, 4, 4), "1d5 not in 4d4")
 
 		// needs higher count than given
-		assertFalse(DiceTerm(4, 4) in DiceTerm(4), "2d4 not in 1d4")
+		assertFalse(DiceTerm.fromDieFaces(4, 4) in DiceTerm.xDy(x = 1, y = 4), "2d4 not in 1d4")
 
 		// is looking for negative terms. // always simplyfied.
-		assertFalse(DiceTerm(-4) in DiceTerm(4), " (0 - 1d4) not in (+1d4)")
-		assertFalse(DiceTerm(4) in DiceTerm(-4), " (0 - 1d4) not in (+1d4)")
+		assertFalse(DiceTerm.xDy(x = 1, y = -4) in DiceTerm.xDy(x = 1, y = 4), " (0 - 1d4) not in (+1d4)")
+		assertFalse(DiceTerm.xDy(x = 1, y = 4) in DiceTerm.xDy(x = 1, y = -4), " (0 - 1d4) not in (+1d4)")
 
-		assertFalse(DiceTerm(4, -4, -4) in DiceTerm(4, -4), " (0 - 1d4) not in (+0)")
+		assertFalse(DiceTerm.fromDieFaces(4, -4, -4) in DiceTerm.fromDieFaces(4, -4), " (0 - 1d4) not in (+0)")
 	}
 
 	@Test
@@ -333,14 +333,16 @@ class DiceTest {
 		var dice: DiceTerm // the parsed dice term.
 		var diceDice: DiceTerm // the parsed diceterm string to dice term
 
+		println("RGX_ABILITY: ${DiceTerm.RGX_ABILITY}")
+
 		/* Easy test run. No hidden gems. */
 
-		string = "3d8 + d12 - D21 + 3 + 3 - 3"
+		string = "d12 + 3d8  - D21 + 3 + 3 -\t 3"
 		dice = DiceTerm.parse(string)
-		assertTrue(DiceTerm(8) * (3) in dice, "(3d8) in ($dice)")
-		assertTrue(DiceTerm(12) in dice, "(1d12) in ($dice)")
-		assertTrue(DiceTerm(-21) in dice, "(-1d21) in ($dice)")
-		assertTrue(d(1, 3) in dice, "(+3) in ($dice)")
+		assertTrue(DiceTerm.xDy(x = 3, y = 8) in dice, "(3d8) in ($dice)")
+		assertTrue(DiceTerm.xDy(x = 1, y = 12) in dice, "(1d12) in ($dice)")
+		assertTrue(DiceTerm.xDy(x = 1, y = -21) in dice, "(-1d21) in ($dice)")
+		assertTrue(DiceTerm.bonus(3) in dice, "(+3) in ($dice)")
 
 		diceDice = DiceTerm.parse(dice.toString())
 		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
@@ -356,12 +358,12 @@ class DiceTest {
 
 		/* Parsing mathematically correct terms. */
 
-		string = "-1" // typical having a bonus of (-2)
+		string = "-1" // typical having a bonus of (-1)
 		dice = DiceTerm.parse(string)
 		log.debug("Parsed [$string] => [$dice]")
 
-		assertTrue((-1) in dice, "(-1) correctly parsed.")
-		assertFalse(1 in dice, "No fixed one for empty terms or such..")
+		assertTrue(DiceTerm.bonus(-1) in dice, "(-1) correctly parsed.")
+		assertFalse(DiceTerm.bonus(1) in dice, "No other fixed one (+1) for empty terms or such..")
 
 		diceDice = DiceTerm.parse(dice.toString())
 		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
@@ -371,8 +373,8 @@ class DiceTest {
 		dice = DiceTerm.parse(string)
 		log.debug("Parsed [$string] => [$dice]")
 
-		assertTrue(D20 in dice, "D20 correctly parsed.")
-		assertTrue(d(1, -2) in dice, "(-2) correctly parsed.")
+		assertTrue(D20 in dice, "D20 correctly parsed (in '$string' => ($dice)).")
+		assertTrue(DiceTerm.bonus(-2) in dice, "(-2) correctly parsed.")
 
 		diceDice = DiceTerm.parse(dice.toString())
 		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
@@ -386,7 +388,7 @@ class DiceTest {
 		string = "12*(D6 + 3)" // typical levelling. => 12d6 + 12*CON
 		dice = DiceTerm.parse(string)
 		assertTrue(D6 in dice, "(D6) in dice $dice.")
-		assertTrue(3 in dice, "(3) in dice $dice.")
+		assertTrue(DiceTerm.bonus(3) in dice, "(3) in dice $dice.")
 
 		diceDice = DiceTerm.parse(dice.toString())
 		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
@@ -396,12 +398,12 @@ class DiceTest {
 		string = "12*(D6 + 3)" // typical levelling. => 12d6 + 12*CON
 		dice = DiceTerm.parse(string)
 		assertTrue(D6 in dice, "(D6) in dice $dice.")
-		assertTrue(3 in dice, "(3) in dice $dice.")
+		assertTrue(DiceTerm.bonus(3) in dice, "(3) in dice $dice.")
 
 		diceDice = DiceTerm.parse(dice.toString())
 		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
 		assertEquals(dice, diceDice, "The dice to string to dice should be equal")
-		log.info("OK")
+		log.info("testDiceParsing: OK")
 	}
 
 	@Test
@@ -410,7 +412,7 @@ class DiceTest {
 
 		// TODO (2020-07-14)
 		// D6.rollTake(3, 4, true)
-		log.info("OK")
+		log.info("testTake3of4: OK")
 	}
 
 }

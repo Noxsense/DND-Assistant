@@ -37,7 +37,7 @@ public class SpellcasterKlass(
 /** A class of the characters. */
 open public class Klass(
 	val name: String,
-	val hitdie: DiceTerm = DiceTerm(0),
+	val hitdie: DiceTerm = DiceTerm.EMPTY,
 	val savingThrows: List<Ability> = listOf(),
 	val klassLevelTable: Set<Feature> = setOf(),
 	val specialisations: Map<String, Set<Feature>> = mapOf(),

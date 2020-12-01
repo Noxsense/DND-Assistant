@@ -21,7 +21,7 @@ data class State(val pc: PlayerCharacter) {
 	val hitpointsMax: Int
 		get() = pc.hitpoints + hitpointsTMP
 
-	var hitdice: List<Int> = pc.hitdice.toMutableList() // to new list.
+	var hitdice: List<DiceTerm.Die> = pc.hitdice.toMutableList() // to new list.
 		private set
 
 	var initiativeRolled: Int = 0 // latest rolled initiative, 0 if none
@@ -270,7 +270,7 @@ data class State(val pc: PlayerCharacter) {
 
 	/** Make a short rest, ca. 1h.
 	 * @param spentDice (optionally) spent hitdie to heal. */
-	fun restShort(spentDice: List<Int> = listOf(), heal: Int) {
+	fun restShort(spentDice: List<DiceTerm.Die> = listOf(), heal: Int) {
 		if (hitpoints < 1) {
 			pc.log.info("Character cannot take effect of a rest, they are not yet healed.")
 			return
@@ -305,7 +305,7 @@ data class State(val pc: PlayerCharacter) {
 		pc.log.info("Temporary hitpoints resetted.")
 
 		/* Restore half of the spent hitdice, rounded down. */
-		var missing: List<Int> = pc.hitdice.toMutableList()
+		var missing: List<DiceTerm.Die> = pc.hitdice.toMutableList()
 		val max: Int = missing.size
 		hitdice.forEach { missing = missing.minusElement(it) }
 

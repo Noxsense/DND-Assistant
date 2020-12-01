@@ -19,7 +19,6 @@ import de.nox.dndassistant.core.Logger
 import de.nox.dndassistant.core.Condition
 import de.nox.dndassistant.core.PlayerCharacter
 import de.nox.dndassistant.core.DiceTerm
-import de.nox.dndassistant.core.d
 
 /**
  * HitpointView.
@@ -51,15 +50,15 @@ public class HitpointView : LinearLayout {
 	private val hpMaximal: Int get() = character.current.hitpointsMax
 
 	/* Quick shorcut: Hit dice. */
-	private val hitdiceAll: List<Int> get() = character.hitdice
-	private val hitdiceCurrent: List<Int> get() = character.current.hitdice
+	private val hitdiceAll: List<Int> get() = character.hitdice.map { it.value }
+	private val hitdiceCurrent: List<Int> get() = character.current.hitdice.map { it.value }
 
 	/* Quick shorcut: Conditions dice. */
 	private val conditions: Map<Condition, Int> get() = character.current.conditions
 
 	/* Quick rest functions. */
 	private fun restLong() = character.current.restLong()
-	private fun restShort(d: Int, heal: Int) = character.current.restShort(listOf(d), heal)
+	private fun restShort(d: Int, heal: Int) = character.current.restShort(listOf(DiceTerm.Die(d)), heal)
 	private fun heal(hp: Int) = character.current.heal(hp)
 	private fun takeHit(hp: Int, crit: Boolean) = character.current.takeHit(hp, crit)
 
@@ -467,7 +466,7 @@ public class HitpointView : LinearLayout {
 
 		/** The actual rolling event, later wrapped in heal. */
 		private val roller: OnEventRoller
-			= OnEventRoller.Builder(DiceTerm(face))
+			= OnEventRoller.Builder(DiceTerm.xDy(x = 1, y = face))
 				.addDiceView(conModHack)
 				.setReasonString("Hitdie D$face + CON")
 				.create()
