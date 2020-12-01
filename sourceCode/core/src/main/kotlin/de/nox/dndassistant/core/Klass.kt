@@ -1,6 +1,5 @@
 package de.nox.dndassistant.core
 
-import kotlin.math.floor
 
 // TODO (2020-07-31) connect spellcasting with klass.
 

@@ -1,6 +1,5 @@
 package de.nox.dndassistant.core
 
-import kotlin.math.floor
 import kotlin.math.min
 
 // TODO (2020-09-30) renaming, genderfluid, ...

@@ -3,7 +3,6 @@ package de.nox.dndassistant.core
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.math.abs
 
 class PlayerCharacterTest {
 
