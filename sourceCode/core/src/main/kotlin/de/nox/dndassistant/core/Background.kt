@@ -1,6 +1,5 @@
 package de.nox.dndassistant.core
 
-import kotlin.math.floor
 
 /** An Alignment is a direction of good or evil, and lawful or chaotic
  * the character can take.

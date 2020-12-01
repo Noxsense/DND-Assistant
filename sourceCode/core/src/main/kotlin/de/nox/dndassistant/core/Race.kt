@@ -1,6 +1,5 @@
 package de.nox.dndassistant.core
 
-import kotlin.math.floor
 
 data class Race(
 	val name: String,

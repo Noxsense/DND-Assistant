@@ -47,6 +47,14 @@ class DiceTerm(_faces: List<SimpleTerm>) {
 		private val RGX_DIE = Regex("^([+-]*[0-9]*)d([0-9]+)$") // => [1..x]
 		val RGX_ABILITY = Regex("^([+-]*[0-9]* *\\*? *)(${enumValues<Ability>().joinToString("|")})$") // => "() -> abilityModifier(X)"
 
+		/** Parse the factor. */
+		private fun parseFactor(str: String) : Int
+			= when (str) {
+				"", "+", "+1", "1" -> 1
+				"-", "-1" -> -1
+				else -> str.toInt()
+			}
+
 		/** Try to parse a simple term with a factor from a given string.
 		 * @throws Exception */
 		fun parseSimpleTerm(str: String) : Pair<SimpleTerm, Int>
@@ -54,13 +62,12 @@ class DiceTerm(_faces: List<SimpleTerm>) {
 				RGX_NUM.matches(s) -> Num(s.toInt()) to 1
 				RGX_DIE.matches(s) -> {
 					val (num, die) = RGX_DIE.find(s)!!.destructured
-					(Die(die.toInt()) to when (num) {
-						"", "+", "+1", "1" -> 1
-						"-", "-1" -> -1
-						else -> num.toInt()
-					})
+					(Die(die.toInt()) to parseFactor(num))
 				}
-				RGX_ABILITY.matches(s) -> Fun(s) { 1 } to 1 // XXX implement me
+				RGX_ABILITY.matches(s) -> {
+					val (num, abi) = RGX_ABILITY.find(s)!!.destructured
+					Fun(abi) { 0 /* place holder. */ } to parseFactor(num)
+				}
 				else -> throw Exception("Cannot parse SimpleTerm from \"$s\"")
 			}}
 
@@ -323,6 +330,9 @@ class DiceTerm(_faces: List<SimpleTerm>) {
 		log.debug("New DiceTerm(${term.toList()}) => {max: $max, min: $min, avg: $average, grouped: $facesGrouped, fixed: $fixedSum string: $facesString }")
 	}
 
+	/** Implement DiceTerm[t] = num with default 0, if not available. */
+	operator fun get(t: SimpleTerm) : Int  = facesGrouped.get(t) ?: 0
+
 	/** Check, if a term contains a die with a given face count.*/
 	operator fun contains(x: SimpleTerm) : Boolean
 		= x in term
@@ -363,14 +373,25 @@ class DiceTerm(_faces: List<SimpleTerm>) {
 			log.debug("Checked ($other) equals ($this): $it")
 		}
 
-
 	/** Roll every dice one and constants in this term.
 	  *@return List<Int> containing each rolled result and the fixed constants. */
 	fun roll() : List<Int> = term.map { it.fetchValue() }
 
 	/** Roll the term x times, each result(s) into a own list. */
 	fun rollTimes(x: Int) : List<List<Int>>
-		= (0 until x).map { roll() }
+		= if (x < 1) listOf<List<Int>>() else (0 until x).map { roll() }
+
+	/** Roll the term x times, take the first y rolls. */
+	fun rollTake(takeFirst: Int, maxRolls: Int) : List<List<Int>>
+		= rollTimes(maxRolls).take(takeFirst)
+
+	/** Roll the term x times, the one with the maximum sum. */
+	fun rollTakeMax(maxRolls: Int = 2) : List<Int>
+		= rollTimes(maxRolls).maxByOrNull { it.sum() } ?: listOf<Int>()
+
+	/** Roll the term x times, the one with the mininum sum. */
+	fun rollTakeMin(maxRolls: Int = 2) : List<Int>
+		= rollTimes(maxRolls).minByOrNull { it.sum() } ?: listOf<Int>()
 
 	/** Create new dice term with added fixed number (fixed).*/
 	operator fun plus(bonus: Int) : DiceTerm
@@ -408,7 +429,14 @@ class DiceTerm(_faces: List<SimpleTerm>) {
 	operator fun minus(other: DiceTerm) : DiceTerm
 		= this + (-other) // add other, where all is internally flipped.
 
-	// XXX refactor simple term
+	/** Get a new DiceTerm, with given filter applied. */
+	fun filter(f: (SimpleTerm) -> Boolean) : DiceTerm
+		= DiceTerm(term.filter(f))
+
+	/** Get a new DiceTerm, with given map applied. */
+	fun map(f: (SimpleTerm) -> SimpleTerm) : DiceTerm
+		= DiceTerm(term.map(f))
+
 	/** Collect same term with negative and positive counts, and summarize the.
 	 * For example: (3d4 - 2d4 + 4d2 - 1d3) => (1d4 + 4d2 - 1d3). */
 	fun cumulated() : DiceTerm

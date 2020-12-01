@@ -23,11 +23,9 @@ import de.nox.dndassistant.core.PlayerCharacter
 import de.nox.dndassistant.core.Item
 import de.nox.dndassistant.core.Ability
 import de.nox.dndassistant.core.Proficiency
-import de.nox.dndassistant.core.Spell
 import de.nox.dndassistant.core.Container
 import de.nox.dndassistant.core.Skill
 import de.nox.dndassistant.core.Skillable
-import de.nox.dndassistant.core.Weapon
 import de.nox.dndassistant.core.Attack
 import de.nox.dndassistant.core.D20
 

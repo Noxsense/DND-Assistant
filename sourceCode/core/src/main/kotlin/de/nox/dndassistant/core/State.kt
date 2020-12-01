@@ -1,6 +1,5 @@
 package de.nox.dndassistant.core
 
-import kotlin.math.ceil
 import kotlin.math.min
 
 /** A state the attributes of the character can have.
