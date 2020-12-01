@@ -333,8 +333,6 @@ class DiceTest {
 		var dice: DiceTerm // the parsed dice term.
 		var diceDice: DiceTerm // the parsed diceterm string to dice term
 
-		println("RGX_ABILITY: ${DiceTerm.RGX_ABILITY}")
-
 		/* Easy test run. No hidden gems. */
 
 		string = "d12 + 3d8  - D21 + 3 + 3 -\t 3"
@@ -348,12 +346,14 @@ class DiceTest {
 		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
 		assertEquals(dice, diceDice, "The dice to string to dice should be equal")
 
-		/* Incorrect parsing will throw error. */
+		/* Parsing strange names as variable names will throw error. */
+
+		var note = "Try to parse: [x20] -> interpret it as Fun."
+		assertEquals((DiceTerm.mod("x20") { 1 }) + DiceTerm.bonus(-1), DiceTerm.parse("x20 + -1"), note)
 
 		try {
-			// not a correct term with x instead of d
-			DiceTerm.parse("x20 + -1")
-			fail("Didn't failed on parsing invalid term")
+			DiceTerm.parse("x:20 + -1") // [x:20] is an invalid variable name.
+			fail("Not event the function label fits.")
 		} catch (e: Exception) {}
 
 		/* Parsing mathematically correct terms. */
@@ -380,30 +380,62 @@ class DiceTest {
 		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
 		assertEquals(dice, diceDice, "The dice to string to dice should be equal")
 
-		// TODO (2020-10-17) feature more complex terms.
+		log.info("testDiceParsing: OK")
+
+		// local abilityModifier
+		val mod: (Ability) -> Int = { when (it) {
+			Ability.STR -> -2
+			Ability.DEX -> +2
+			Ability.CON -> +4
+			Ability.WIS -> +1
+			Ability.INT -> +1
+			Ability.CHA -> +4
+			else -> 0
+		}}
+
+		// map a label to a pseudo ability modifier getter.
+		val termMapper: (DiceTerm.SimpleTerm) -> (DiceTerm.SimpleTerm) = { term ->
+			if (term !is DiceTerm.Fun) {
+				term
+			} else {
+				DiceTerm.Fun(term.label) { mod(Ability.CON) }
+			}
+		}
+
+		string = "D6 + CON" // typical levelling. => 6 + CON
+
+		log.debug("Parse '$string'")
+
+		dice = DiceTerm.parse(string).map(termMapper)
+		assertTrue(D6 in dice, "(D6) in dice $dice.")
+		assertTrue(("CON") in dice, "(CON) in dice $dice.")
+		assertEquals(D6 + DiceTerm.mod("CON", { 1 }), dice)
+
+		log.debug("Roll with $dice: ${dice.roll()}")
+
+		diceDice = DiceTerm.parse(dice.toString())
+		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
+		assertEquals(dice, diceDice, "The dice to string to dice should be equal")
+
+		log.info("testDiceParsing (lvl 2): OK")
+
 		if (true) return
 
-		/* Complexity Level 1. */
-
-		string = "12*(D6 + 3)" // typical levelling. => 12d6 + 12*CON
-		dice = DiceTerm.parse(string)
-		assertTrue(D6 in dice, "(D6) in dice $dice.")
-		assertTrue(DiceTerm.bonus(3) in dice, "(3) in dice $dice.")
-
-		diceDice = DiceTerm.parse(dice.toString())
-		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
-		assertEquals(dice, diceDice, "The dice to string to dice should be equal")
-
 		/* Complexity Level 2. */
-		string = "12*(D6 + 3)" // typical levelling. => 12d6 + 12*CON
-		dice = DiceTerm.parse(string)
-		assertTrue(D6 in dice, "(D6) in dice $dice.")
-		assertTrue(DiceTerm.bonus(3) in dice, "(3) in dice $dice.")
+		// TODO should there be a recogninizeable difference between:
+		// 12*(d6 + CON) as 12d6 + 12*CON  // multiplied before rolling
+		// and 12*(d6 + CON) as 12 * ([1..6] + |CON|) = 12 * x  // multiplied after rolling, but the term was parsed
+
+		string = "12*(D6 + CON)" // typical levelling. => 12d6 + 12*CON
+		dice = DiceTerm.parse(string).map(termMapper)
+
+		assertEquals((D6 + DiceTerm.mod("CON", { 1 })) * 12, dice)
 
 		diceDice = DiceTerm.parse(dice.toString())
 		log.info("Parsed back: ($dice) \u21d2 ($diceDice)")
 		assertEquals(dice, diceDice, "The dice to string to dice should be equal")
-		log.info("testDiceParsing: OK")
+
+		log.info("testDiceParsing (lvl 3): OK")
 	}
 
 	@Test

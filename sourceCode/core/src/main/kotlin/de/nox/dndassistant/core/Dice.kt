@@ -44,8 +44,8 @@ class DiceTerm(_faces: List<SimpleTerm>) {
 			= DiceTerm((fs.toList() + f).map { face -> Die(face) })
 
 		private val RGX_NUM = Regex("^[+-][0-9]+$") // x
-		private val RGX_DIE = Regex("^([+-]*[0-9]*)d([0-9]+)$") // => [1..x]
-		val RGX_ABILITY = Regex("^([+-]*[0-9]* *\\*? *)(${enumValues<Ability>().joinToString("|")})$") // => "() -> abilityModifier(X)"
+		private val RGX_DIE = Regex("^([+-]*[0-9]*)[dD]([0-9]+)$") // => [1..x]
+		private val RGX_VAR = Regex("^([+-]*[0-9]* *\\*? *)([a-zA-Z]\\w*)$") // signed, maybe factoriezed variable name
 
 		/** Parse the factor. */
 		private fun parseFactor(str: String) : Int
@@ -58,14 +58,14 @@ class DiceTerm(_faces: List<SimpleTerm>) {
 		/** Try to parse a simple term with a factor from a given string.
 		 * @throws Exception */
 		fun parseSimpleTerm(str: String) : Pair<SimpleTerm, Int>
-			= str.trim().toLowerCase().let { s -> when {
+			= str.trim().let { s -> when {
 				RGX_NUM.matches(s) -> Num(s.toInt()) to 1
 				RGX_DIE.matches(s) -> {
 					val (num, die) = RGX_DIE.find(s)!!.destructured
 					(Die(die.toInt()) to parseFactor(num))
 				}
-				RGX_ABILITY.matches(s) -> {
-					val (num, abi) = RGX_ABILITY.find(s)!!.destructured
+				RGX_VAR.matches(s) -> {
+					val (num, abi) = RGX_VAR.find(s)!!.destructured
 					Fun(abi) { 0 /* place holder. */ } to parseFactor(num)
 				}
 				else -> throw Exception("Cannot parse SimpleTerm from \"$s\"")
@@ -88,18 +88,10 @@ class DiceTerm(_faces: List<SimpleTerm>) {
 
 			val valid = Regex("([\\+-]?\\d*)([dD])?(\\d*)")
 
-			/* Check, if all terms are valid on the first view. */
-			if (!terms.all { valid.matches(it) }) {
-				log.error("Throw Error: Not a valid Dice Term!")
-				throw Exception("Not a valid Dice Term")
-			}
-
 			/* Map terms to parsed simple dice terms.*/
 			val parsedTerms =  terms.map { parseSimpleTerm(it) }
 
-			log.debug("Parsed String \"${str}\"")
-			log.debug("Parsed Pre-Terms ${terms}")
-			log.debug("Parsed Terms: ($parsedTerms)")
+			log.debug("Parsed Terms \"$str\" => $terms => $parsedTerms")
 
 			// avoid on "toMap()" the following example
 			// [(+3, 1), (+3, +2)] = {+3 = 2)}
@@ -136,14 +128,14 @@ class DiceTerm(_faces: List<SimpleTerm>) {
 
 		fun copy() : SimpleTerm = when {
 			this is Die -> toDie()
-			this is Fun -> toMod()
+			this is Fun -> toFun()
 			this is Num -> toNum()
 			else -> this
 		}
 
 		fun toNum() : Num = Num(value)
 		fun toDie() : Die = Die(value)
-		fun toMod() : Fun = Fun("mod"){ this.fetchValue() }
+		fun toFun() : Fun = Fun(if (this is Fun) this.label else "fun"){ this.fetchValue() }
 
 		/** Append two simple terms to a dice term. */
 		operator fun plus(other: SimpleTerm) : DiceTerm
@@ -173,7 +165,6 @@ class DiceTerm(_faces: List<SimpleTerm>) {
 				else -> false
 			}
 		}
-
 
 	/** A num is a component, which returns just the fixed value. */
 	class Num(override val value: Int) : SimpleTerm() {
@@ -330,20 +321,44 @@ class DiceTerm(_faces: List<SimpleTerm>) {
 		log.debug("New DiceTerm(${term.toList()}) => {max: $max, min: $min, avg: $average, grouped: $facesGrouped, fixed: $fixedSum string: $facesString }")
 	}
 
-	/** Implement DiceTerm[t] = num with default 0, if not available. */
-	operator fun get(t: SimpleTerm) : Int  = facesGrouped.get(t) ?: 0
+	/** Implement DiceTerm[t] = num with default 0, if not available.
+	 * Attention: The requested simple term must fit this dice term fingerprint. */
+	operator fun get(t: SimpleTerm) : Int
+		= facesGrouped.filterKeys { when {
+			t is Fun && it is Fun -> t.label == it.label
+			t !is Fun && it !is Fun -> t == it
+			else -> false
+		}}.values.sum()
+
+	/** Check, if a term contains a function term with a given label.*/
+	operator fun contains(label: String) : Boolean
+		= term.any { it is Fun && it.label == label }
+
+	/** Check, if a term contains at least given constant.*/
+	operator fun contains(x: Int) : Boolean
+		= (x < 0 == fixedSum < 0) && abs(x) <= abs(fixedSum)
 
 	/** Check, if a term contains a die with a given face count.*/
 	operator fun contains(x: SimpleTerm) : Boolean
 		= x in term
 
+	/** Check, if a term contains a die with a given face count.*/
+	operator fun contains(termFactor: Pair<SimpleTerm, Int>) : Boolean
+		= termFactor.let { (a, x) -> when {
+			x == 0 -> true // factor is null.
+			else -> this[a].let { y ->
+				// this[a] = y is at least x (covering x) (as absolute value), with same sign.
+				(x < 0 == y < 0) && abs(x) <= abs(y)
+			}
+		}}
+
 	/** Check, if the term contains all dice given by the other term.
 	 * For example: (4d8) is in (12d8 + 1). */
 	operator fun contains(other: DiceTerm) : Boolean {
 		/* Check if all non constants are at least as much available as the other. */
-		val containsAllNoNums = other.facesGrouped.all { (sterm, count) ->
+		val containsAllNoNums = other.facesGrouped.toList().all {
 			/* The term is at least in this. */
-			(sterm is Num || (this.facesGrouped[sterm] ?: 0) >= count)
+			(it.first is Num || it in this)
 		}
 
 		/* If other has constants, these constants must be at least like those (in sum). */
@@ -358,9 +373,6 @@ class DiceTerm(_faces: List<SimpleTerm>) {
 			}}
 
 		return (containsFixedSums && containsAllNoNums)
-		.also {
-			log.debug("Checked ($other/${other.facesGrouped}) in ($this/${this.facesGrouped}): $it")
-		}
 	}
 
 	/** Check equality to another term.*/
@@ -369,8 +381,6 @@ class DiceTerm(_faces: List<SimpleTerm>) {
 			other == null -> false
 			other !is DiceTerm -> false
 			else -> (this in other) && (other in this) // mutally including the other's term.
-		}.also {
-			log.debug("Checked ($other) equals ($this): $it")
 		}
 
 	/** Roll every dice one and constants in this term.
