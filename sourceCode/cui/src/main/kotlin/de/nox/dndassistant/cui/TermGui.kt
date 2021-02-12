@@ -5,6 +5,11 @@ import de.nox.dndassistant.core.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+val log: Logger = LoggerFactory.getLogger("TermGui").also {
+	it.displayLevel(LoggingLevel.DEBUG)
+}
+
+
 fun main(args: Array<String>) {
 	println(
 		"""
@@ -18,7 +23,9 @@ fun main(args: Array<String>) {
 }
 
 object LoggerFactory {
-	fun getLogger(tag: String) : Logger
+	private var LOG_LEVEL: LoggingLevel = LoggingLevel.INFO
+
+	public fun getLogger(tag: String) : Logger
 		= object : Logger {
 			private val formatter
 				= DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss")
@@ -26,8 +33,21 @@ object LoggerFactory {
 			private fun now(): String
 				= LocalDateTime.now().format(formatter)
 
+			override fun displayLevel(t: LoggingLevel) {
+				LOG_LEVEL = t
+			}
+
 			override fun log(t: LoggingLevel, msg: Any?) {
-				println("${now()} ${t.name.first()} ${tag}  -  $msg")
+				// abort if log level not demaded
+				if (t > LOG_LEVEL) return
+
+				val now = now()
+				val l = t.name.first()
+
+				// split message lines and print them all indented.
+				("$msg").split("\n").forEach { line ->
+					println("$now $l $tag  -  $line")
+				}
 			}
 		}
 }
