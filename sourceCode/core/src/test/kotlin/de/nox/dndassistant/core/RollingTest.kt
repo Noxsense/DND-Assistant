@@ -435,14 +435,14 @@ class RollingTest {
 
 		// x * D6, with x = 0
 		// => with x=0 no die, otherwise, it's unknown or depending on x.
-		// testcaseRoll(
-		// 	term = xd6,
-		// 	min = 0,
-		// 	max = 0,
-		// 	expected = listOf(0),
-		// 	diceCount = 1, // 0,
-		// 	variables = x0
-		// )
+		testcaseRoll(
+			term = xd6,
+			min = 0,
+			max = 0,
+			expected = listOf(0),
+			diceCount = 0,
+			variables = x0
+		)
 
 		// x * D6, with x = 4
 		// => with x=4 four dice, otherwise, it's unknown or depending on x.
@@ -451,8 +451,7 @@ class RollingTest {
 			min = 4*1,
 			max = 4*6,
 			expected = (4 .. 24).toList(),
-			// diceCount = 4,
-			diceCount = 1, // 0,
+			diceCount = 4,
 			variables = x4,
 		)
 

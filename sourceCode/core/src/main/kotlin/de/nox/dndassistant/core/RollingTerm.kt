@@ -14,41 +14,6 @@ import java.util.EmptyStackException
 private val log = LoggerFactory.getLogger("RollingTerm")
 
 /*
- * Supporting functions.
- */
-
-/** Check if a char is a number. */
-private fun Char.isNumeric() : Boolean
-	= this in '0' .. '9'
-
-/** Check if a char is a letter, [A-Za-z]. */
-private fun Char.isAlpha() : Boolean
-	= this in 'a' .. 'z' || this in 'A' .. 'Z'
-
-/** Check if a char is either a number or a letter. */
-private fun Char.isAlphaNumeric() : Boolean
-	= this.isNumeric() || this.isAlpha()
-
-/** Get the precedence and left associativy of an opartor. */
-private fun String.operatorsPrecedenceAssosicativity() : Pair<Int, Boolean>
-	= when (this) {
-		"^" -> 4 to false
-		"*", "/", "%" -> 3 to true
-		"+", "-" -> 2 to true
-		else -> 0 to true
-	}
-
-/* A String is numeric, if it is not empty and all chars are a number,
- * the first char can be plus or minus (sign). */
-private fun String.isNumeric() : Boolean
-	= (length > 0 &&
-	// all chars are numeric
-	( all { c -> c.isNumeric() }
-
-	// or it starts signed, rest is numeric. (again maybe also signed)
-	|| (length > 1 && (get(0) == '+' || get(0) == '-') && substring(1).isNumeric())))
-
-/*
  * Custom Exceptions.
  */
 
@@ -604,8 +569,8 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 	private var lastEval: Int? = null
 	private var lastRoll: List<Pair<Die, Int>> = listOf()
 
-	public fun evaluate(variables: TermVaribales = { _ -> 0 }) : Int
-		 = evaluateIntern(variables = variables, rolled = listOf()).let { (result, ds) ->
+	public fun evaluate(variables: TermVaribales? = null) : Int
+		 = evaluateIntern(variables = variables ?: { _ -> 0 }, rolled = listOf()).let { (result, ds) ->
 			// log.info("Rolled dice ($this): $ds ==> ($result)")
 			lastEval = result
 			lastRoll = ds
@@ -659,6 +624,8 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 				val (num, numRs) = numPre
 
 				val rolledWithNum = rolled + numRs
+
+				log.debug("TODO late unfolding.")
 
 				when {
 					//  eliminate here
@@ -828,28 +795,24 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 		this.simplify()
 	}
 
-	/** Get all dice in this term. */
-	public val dice: List<Die> by lazy {
-		when {
+	public val dice: (TermVaribales?) -> List<Die> by lazy {
+		// create a function that can return the summands.
+		// try to keep reference, except it's
+		{ vars: TermVaribales? -> when {
 			this is Die -> listOf(this)
 			this is BasicRollingTerm -> listOf()
-			this is UnaryRollingTerm -> value.dice
-
-			this is BinaryRollingTerm && summands.size < 2 -> {
-				right.dice + left.dice
+			this is UnaryRollingTerm -> value.dice(vars)
+			this.summandsWith(vars).size != 1 -> {
+				log.debug("Get Dice count for term: $this")
+				log.debug("Use summands to find the dice count: ${this.summandsWith(vars)}")
+				listOf()
 			}
-
-			this is Sum || this is Difference || this is Product || this is Fraction || this is Power -> {
-				log.debug("Take dice from summands.")
-				log.debug("  > $summands")
-				summands.flatMap { s -> s.dice }
-			}
-			this is BinaryRollingTerm -> left.dice + right.dice
+			this is BinaryRollingTerm -> left.dice(vars) + right.dice(vars)
 			else -> listOf()
-		}
+		}}
 	}
 
-	/** The Summands of the RollingTerm. */
+	/** The Summands of the RollingTerm, aka write this as sum. */
 	public val summands: List<RollingTerm> by lazy {
 		when {
 			// ((a + b) + (c + d)) => [a,b,c,d]
@@ -861,19 +824,34 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 			// (3 * (a + b)) => [(a + b), (a + b), (a + b)]
 			// ! Do not unfold `[Term]` (= an already rolled term), handle it as number.
 			this is Product && (left.isTrueNumeric || right.isTrueNumeric) -> {
+				log.debug("Summands of $this: from a product. with true numerics.")
+				log.debug("> left:  (${get(0)!!.isTrueNumeric}) $left")
+				log.debug("> right: (${get(1)!!.isTrueNumeric}) $right")
+				log.debug("v Eval left and right.")
+
 				val (n, term) = when {
 					left.isTrueNumeric -> left.evaluate() to right
 					else -> right.evaluate() to left
 				}
+
+				log.debug("> n = $n, term = $term.")
+
 				when {
-					n == -1 -> term.summands.map { s -> -s } // multiply term's summands with (-1)
-					n == 1 -> term.summands // just term's summands.
-					n == 0 -> listOf() // no summand left.
+					// no summand left.
+					// 0 * term = 0
+					n == 0 -> listOf()
+
+					// simple anchors.
+					n == 1 -> term.summands
+					n == -1 -> term.summands.map { -it } // late negative expansion.
 
 					// do not expand the rolled term, handle as number at this point.
 					// => one is true numeric, one is already rolled.
+					// n * [term] = n * [term]
 					term is Rolled -> listOf(this)
 
+					// repeated term.
+					// (+/- n) * (term) = (+/- term) + (+/- term) ... + (+/- term)
 					n < 0 -> (1 .. -n).flatMap { (-term).summands }
 					else -> (1 .. n).flatMap { term.summands }
 				}
@@ -892,30 +870,7 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 		}.sorted()
 	}
 
-	/** The Factors of the RollingTerm. */
-	public val factors: List<RollingTerm> by lazy {
-		when {
-			this is Product && right is Product-> listOf(left) + right.factors
-			this is Product && left is Product-> listOf(right) + left.factors
-			this is Product -> listOf(left, right)
 
-			// (a / b) == (a * (1/b)) => [1/b] + a.factors
-			this is Fraction -> listOf(One / right) + left.factors
-
-			else -> listOf(this)
-		}.sortedWith(compareBy<RollingTerm> { when (this) {
-			is Number -> 0
-			is Reference -> 1
-			is Die -> 2
-			is Min, is Max -> 3
-			is Power -> 4
-			is Fraction -> 5
-			is Product -> 6
-			is Sum -> 7
-			is Difference -> 8
-			else -> -1
-		}}.thenBy { it.average().toInt() })
-	}
 
 	/** Try to unfold into simple operations (+|-) and numbers, if possible.
 	 * Try to reduce as most as possible.  */
@@ -1145,9 +1100,7 @@ public abstract class BinaryRollingTerm(val left: RollingTerm, val right: Rollin
 class Number(val value: Int): BasicRollingTerm();
 
 /** A simple / basic RollingTerm, that will be replaced with a function that returns an Int. */
-class Reference(val name: String): BasicRollingTerm() {
-	public fun toNumber(variables: TermVaribales) = variables(this)
-}
+class Reference(val name: String): BasicRollingTerm();
 
 /** A simple / basic RollingTerm that is a die, which will return a random number between 1 and its max face. */
 class Die(_max: Int) : BasicRollingTerm() {
@@ -1285,3 +1238,39 @@ class Abs(v: RollingTerm) : UnaryRollingTerm(v) {
 	public constructor(l: Int): this(Number(l));
 	public constructor(l: String): this(parseBasic(l));
 }
+
+/*
+ * ---------------------------------------------------------------------------
+ * Supporting functions.
+ */
+
+/** Check if a char is a number. */
+private fun Char.isNumeric() : Boolean
+	= this in '0' .. '9'
+
+/** Check if a char is a letter, [A-Za-z]. */
+private fun Char.isAlpha() : Boolean
+	= this in 'a' .. 'z' || this in 'A' .. 'Z'
+
+/** Check if a char is either a number or a letter. */
+private fun Char.isAlphaNumeric() : Boolean
+	= this.isNumeric() || this.isAlpha()
+
+/** Get the precedence and left associativy of an opartor. */
+private fun String.operatorsPrecedenceAssosicativity() : Pair<Int, Boolean>
+	= when (this) {
+		"^" -> 4 to false
+		"*", "/", "%" -> 3 to true
+		"+", "-" -> 2 to true
+		else -> 0 to true
+	}
+
+/* A String is numeric, if it is not empty and all chars are a number,
+ * the first char can be plus or minus (sign). */
+private fun String.isNumeric() : Boolean
+	= (length > 0 &&
+	// all chars are numeric
+	( all { c -> c.isNumeric() }
+
+	// or it starts signed, rest is numeric. (again maybe also signed)
+	|| (length > 1 && (get(0) == '+' || get(0) == '-') && substring(1).isNumeric())))
