@@ -338,6 +338,16 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 		}
 	}
 
+	// public val
+	public val postorderedTerms: List<RollingTerm> by lazy {
+		when {
+			this is BasicRollingTerm -> listOf(this)
+			this is UnaryRollingTerm -> value.postorderedTerms
+			this is BinaryRollingTerm -> left.postorderedTerms + right.postorderedTerms
+			else -> listOf()
+		}
+	}
+
 	/** Check if the term is without any references or dice. */
 	public val isTrueNumeric: Boolean by lazy {
 		when (this) {
@@ -775,7 +785,7 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 			this.summandsWith(vars).size != 1 -> {
 				log.debug("Get Dice count for term: $this")
 				log.debug("Use summands to find the dice count: ${this.summandsWith(vars)}")
-				listOf()
+				summandsWith(vars).flatMap { s -> s.dice(vars) }
 			}
 			this is BinaryRollingTerm -> left.dice(vars) + right.dice(vars)
 			else -> listOf()
@@ -840,6 +850,23 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 		}.sorted()
 	}
 
+	/** Replace all References with their given value, if available. */
+	public fun refToNum(variables: TermVaribales?) : RollingTerm
+		= when (this) {
+			is Reference -> Number(variables?.invoke(this) ?: 0)
+			is BasicRollingTerm -> this
+
+			is Rolled -> Rolled(value.refToNum(variables))
+			is Abs -> Abs(value.refToNum(variables))
+
+			is Product -> left.refToNum(variables) * right.refToNum(variables)
+			is Fraction -> left.refToNum(variables) / right.refToNum(variables)
+			is Power -> Power(left.refToNum(variables), right.refToNum(variables))
+			is Max -> Max(left.refToNum(variables), right.refToNum(variables))
+			is Min -> Min(left.refToNum(variables), right.refToNum(variables))
+
+			else -> this // ??? TODO how to keep relation?
+		}
 
 
 	/** Try to unfold into simple operations (+|-) and numbers, if possible.
