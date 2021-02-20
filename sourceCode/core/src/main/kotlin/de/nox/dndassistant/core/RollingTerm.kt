@@ -600,14 +600,6 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 			this is Rolled -> this.value.evaluateIntern(variables, rolled)
 			this is UnaryRollingTerm -> value.evaluateIntern(variables, rolled)
 
-			this.summands.size > 1 -> {
-				log.debug("  ... .. roll the next sum: ${summands}")
-				this.summands
-					 .map { s -> s.evaluateIntern(variables, rolled) } // [(Sum, Rolled)]
-					 .reduce { (sum, sumRolled), (s, sRolled) -> (sum + s) to (sumRolled + sRolled) } // (Sum, Rolled)
-			}
-			// otherwise this is probably a product / fraction / power which couldn't be unfolded.
-
 			// maybe write product to sum.
 			// TODO with late unfolding (with variables)
 			(this is Product && (this.left.isNumericLike || this.right.isNumericLike)) -> {
@@ -762,34 +754,12 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 				} else {
 					false
 				}
-			} ||
-
-			// products and fractions
-			((this is Product || this is Fraction) && (other is Product || other is Fraction)).run {
-				if (this) {
-					val a = this@RollingTerm.factors
-					val b = (other as RollingTerm).factors
-					log.debug("Compare factors: $a  == $b")
-					a.containsAll(b) && b.containsAll(a)
-				} else {
-					false
-				}
-			} ||
-
-			// simplified is equal, if available
-			(other is RollingTerm && (this.simple.second || other.simple.second)).run {
-				if (this) {
-					val a = this@RollingTerm
-					val b = other as RollingTerm
-					log.debug("Try to check equality by equivalence of the simplified terms: ($a \u21d2 ${a.simple}) == ($b \u21d2 ${b.simple})")
-					a.simple.first == b.simple.first
-				} else {
-					false
-				}
-			} ||
-
-			false
+			}
 		)
+
+	public fun equalsAlgebraically(other: RollingTerm) : Boolean
+		// TODO (2021-02-19) implement algebraic equality
+		= true
 
 	public val simple: Pair<RollingTerm, Boolean> by lazy {
 		this.simplify()

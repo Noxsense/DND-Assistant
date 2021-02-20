@@ -148,8 +148,9 @@ class RollingTest {
 		log.info("Unary operators are ok.")
 	}
 
-	@Test
-	fun testEquality() {
+ 	// TODO (2021-02-19) not implemented yet.
+ 	// @Test
+	fun testAlgebraicEquality() {
 		log.info("\n\n>>> Test: testEquality() .. and simplification.")
 
 		var t0: RollingTerm; var t1: RollingTerm
@@ -173,30 +174,35 @@ class RollingTest {
 
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0,  t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t1 = RollingTerm.parse("(2)^-1") // left out parentheses
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t0 = Power(2, 1)
 		t1 =  Number(2) // very simple, not simplified
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
 		assertEquals(false, t1.simple.second)
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t0 = Power(2, 1)
 		t1 =  RollingTerm.parse("(2)^(--1)") // dupl. negative
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t1 = RollingTerm.parse("(2)^(-(-1))") // dupl. negative
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		log.info("Addition: Commutative and Assoziative")
 
@@ -204,7 +210,8 @@ class RollingTest {
 		t1 = Sum("d2", "d1")
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		 // (d1 + (d2+d3)) == ((d1+d2) + d3)  == ((d3+d2) + d1)
 		t0 = Sum(Sum("d1", Sum("d2", "d3")), "d4")
@@ -215,12 +222,14 @@ class RollingTest {
 
 		log.debug("Check equality of: (summands)\n  >  ${t0.summands}\n  >  ${t1.summands}")
 
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t1 = Sum(Sum("d3", Sum("d2", "d4")), "d1")
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		log.info("Multiplication: Commutative and Assoziative")
 
@@ -239,7 +248,8 @@ class RollingTest {
 		log.debug("Check equality of: (summands)\n  >  ${t0.summands}\n  >  ${t1.summands}")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
 
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		// (d1 * (d2*d3)) == ((d1*d2) * d3) = ((d3*d2) * d1)
 		t0 = Product("d1", Product("d2", "d3"))
@@ -247,19 +257,22 @@ class RollingTest {
 		t1 = Product(Product("d1", "d2"), "d3")
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t1 = Product(Product("d3", "d2"), "d1")
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		// a / b == a * (1/b)
 		t0 = Product("a", Fraction(1, "b"))
 		t1 = Fraction("a", "b")
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		log.info("'Unfolded' multiplication and exponation")
 
@@ -268,14 +281,16 @@ class RollingTest {
 		t1 = Sum("d6", Sum("d6", "d6"))
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		// d6^3 == d6 * (d6 * d6)
 		t0 = Power("d6", 3)
 		t1 = Product("d6", Product("d6", "d6"))
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		log.info("Already evaluated easier terms")
 
@@ -284,19 +299,22 @@ class RollingTest {
 		t1 = (Die(6)*4) + 6
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t0 = Sum(2, 0)
 		t1 = Number(2)
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t0 = Product(2, -1)
 		t1 = Number(-2)
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		// mathematically valid reorder, but may bring different results while rounding the terms in-between.
 
@@ -306,43 +324,50 @@ class RollingTest {
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (summands)\n  >  ${t0.summands}\n  >  ${t1.summands}")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t0 = RollingTerm.parse("(a/3) + (b/2) + 1/3 + 1/2 + 1/3")
 		t1 = Sum(Fraction(Reference("b") + 1,2), Fraction(Reference("a") + 2,3)) // (a+2):3 + (b+1):
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t0 = Sum(Power(2, -1),Power(2, -1))
 		t1 = RollingTerm.parse("(2)^(-1) + (2)^(-1)") // == 1/2 + 1/2
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t0 = Product(10, Power(2, -1))
 		t1 = RollingTerm.parse("10 * (2)^(-1)") // == 10 / 2
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t0 = Product(2, 2)
 		t1 = Number(4)
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t0 = Product("2", Product("d2", "2"))
 		t1 = Product("d2", 4) // (2 * (d2*2)) == (4*d2
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		t0 = Product("2", Product("d2", "2"))
 		t1 = Die(2)  + "d2" + "d2" + "d2" // (2 * (d2*2)) == d4 + d4 + d4 + d4
 		log.debug("\nCheck equality of:\n  >  $t0\n  >  $t1")
 		log.debug("Check equality of: (simplified)\n  >  ${t0.simplify()}\n  >  ${t1.simplify()}")
-		assertEquals(t0, t1)
+		assertTrue(t0.equalsAlgebraically(t1))
+		assertTrue(t1.equalsAlgebraically(t0))
 
 		// not equal: "rolled three times" vs "rolled once and multiplied with 3"
 		assertTrue(Product("d2", 3) != Product(Rolled("d2"), 3)) // d2 + d2 + d2 != 3[d3]
