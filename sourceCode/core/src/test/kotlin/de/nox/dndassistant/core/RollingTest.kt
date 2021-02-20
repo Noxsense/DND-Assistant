@@ -512,9 +512,10 @@ class RollingTest {
 
 		assertTrue(avg.shouldBe(tAvg)) // expected average by term and expected results.
 
-		log.info("Dice of term: ${term.dice} with summands ${term.summands}")
+		log.info("summandsWith ${term.summandsWith(varF)}")
+		log.info("Dice of term: ${term.dice(varF)} (variables: $variables) with summandsWith ${term.summandsWith(varF)}")
 
-		assertEquals(diceCount, term.dice.size, "Num of dice ($term)")
+		assertEquals(diceCount, term.dice(varF).size, "Num of dice ($term;  ($variables))")
 
 		log.info("Roll: (${avg}) $expected (Expected)")
 
@@ -524,8 +525,8 @@ class RollingTest {
 
 		log.info("Roll: $term: ($average) ${rolled.groupBy { it }.mapValues { it.value.size }}")
 
-		log.debug("Recently rolled with: ${term.dice} \u21d2 ${term.getRecentlyRolled()}")
-		assertEquals(term.dice.size, term.getRecentlyRolled().size, "Rolled all dice ($term)")
+		log.debug("Recently rolled with: ${term.dice(varF)} \u21d2 ${term.getRecentlyRolled()}")
+		assertEquals(term.dice(varF).size, term.getRecentlyRolled().size, "Rolled all dice ($term)")
 
 		expected.forEach { assertTrue(it in rolled, "Dice ($term): Expected $it in ${rolled.toSet()}") }
 		rolled.forEach { assertTrue(it in expected, "Dice ($term): Rolled $it in $expected") }
