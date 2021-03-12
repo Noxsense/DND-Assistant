@@ -18,6 +18,9 @@ dependencies {
   // Use the Kotlin JDK 8 standard library.
   implementation(kotlin("stdlib-jdk7"))
 
+  // json
+  implementation("org.json:json:20171018")
+
   // -- Tests ---
 
   // Use the Kotlin test library.
