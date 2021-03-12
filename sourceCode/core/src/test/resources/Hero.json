@@ -1,0 +1,122 @@
+{
+  "name": "Example Hero",
+
+  "player": "Nox",
+  "inspiration": 2,
+
+  "race": {"race-name": "Dog", "subrace-name": "Bantam Dog"},
+  "level": 14,
+  "experience": {"num": 0, "type": "milestone"},
+
+  "hitpoints": {
+    "max": 109,
+    "current": 25,
+    "temporary-offset": 0
+  },
+
+  "deathsaves": [],
+
+  "attributes": { "STR": 7, "DEX": 14, "CON": 18, "INT": 13, "WIS": 13, "CHA": 20 },
+
+  "save-proficiencies": ["CON", "CHA"],
+
+  "classes": [
+    {"class-name": "Sorcerer", "subclass-name": "Divine Soul", "class-level": 12},
+    {"class-name": "Monk", "class-level": 2},
+    {"class-name": "Monk", "subclass-name": "Shadow Hand", "class-level": 1}
+  ],
+
+  "languages": ["Common", "Canine", "Giant", "Celestial", "Elvish"],
+
+  "armor": { "armor-class": 12, "armor-sources": ["(naked) base: 10 + DEX", "Spell: Mage Armor, cooldown: 7h 30min, override base: 13 + DEX"]   },
+
+  "speed": [
+    {"movement-name": "walking", "speed-in-feet": 35},
+    {"movement-name": "flying", "speed-in-feet": 30}
+  ],
+
+  "available-hitdice": { "d6": 6 },
+
+  "profiencies": [
+    {"skill-name": "Animal Handling", "is-expert": false, "skill-source": "Pet (Background)"},
+    {"skill-name": "Stealth", "is-expert": false, "skill-source": "Pet (Background)"},
+    {"skill-name": "Insight", "is-expert": false, "skill-source": "Race"},
+    {"skill-name": "Perception", "is-expert": false, "skill-source": "Awakened Dog"},
+    {"skill-name": "Deception", "is-expert": false, "skill-source": "Sorcerer"},
+    {"skill-name": "Persuation", "is-expert": false, "skill-source": "Awakened Dog"},
+
+    {"skill-name": "Melee Weaopon", "is-expert": false, "skill-source": "Rouge"}
+  ],
+
+  "base-attack": [{"name": "Bite", "piercing": "1d6"}],
+
+  "traits":
+    [ {"race-feature-name": "Fury of Flurry", "description": "+level (+ Howl's Mate Level) as attack damage", "count": { "max": 1, "recharge": "longrest"}}
+    , {"race-feature-name": "Convincing",     "description": "Cast Charm or cast Calm Emotions", "count": { "max": "CHA", "recharge": "longrest"}}
+
+    , {"klass-trait-name": "Spellcaster",   "trait-source": "Class Trait (Sorcerer, Divine Soul", "count": { "max": 15}}
+
+    , {"klass-trait-name": "Spell Level 1", "trait-source": "Spellcaster (full)", "count": { "max": 4, "recharge": "longrest" } }
+    , {"klass-trait-name": "Spell Level 2", "trait-source": "Spellcaster (full)", "count": { "max": 3, "recharge": "longrest" } }
+    , {"klass-trait-name": "Spell Level 3", "trait-source": "Spellcaster (full)", "count": { "max": 3, "recharge": "longrest" } }
+    , {"klass-trait-name": "Spell Level 4", "trait-source": "Spellcaster (full)", "count": { "max": 3, "recharge": "longrest" } }
+    , {"klass-trait-name": "Spell Level 5", "trait-source": "Spellcaster (full)", "count": { "max": 2, "recharge": "longrest" } }
+    , {"klass-trait-name": "Spell Level 6", "trait-source": "Spellcaster (full)", "count": { "max": 1, "recharge": "longrest" } }
+    , {"klass-trait-name": "Spell Level 7", "trait-source": "Spellcaster (full)", "count": { "max": 1, "recharge": "longrest" } }
+    , {"klass-trait-name": "Spell Level 8", "trait-source": "Spellcaster (full)", "count": { "max": 0, "recharge": "longrest" } }
+    , {"klass-trait-name": "Spell Level 9", "trait-source": "Spellcaster (full)", "count": { "max": 0, "recharge": "longrest" } }
+
+    , {"klass-trait-name": "Ki Points", "trait-source": "Monk", "count": { "max": 2, "recharge": "longrest" } }
+
+    , {"klass-trait-name": "Favored by the Gods",  "trait-source": "Class Trait (Sorcerer; Divine Soul)", "count": { "max": 1, "recharge": "any rest"}}
+    , {"klass-trait-name": "Otherwordly Wings",    "trait-source": "Class Trait (Sorcerer; Divine Soul)", "passive": "Bonus Speeed if cast" }
+    , {"klass-trait-name": "Sorcery Points",       "trait-source": "Class Trait (Sorcerer: Divine Soul)", "count": { "max": 15, "recharge": "longrest", "current": 6}}
+    , {"klass-trait-name": "Heightened Metamagic", "trait-source": "Class Trait (Sorcerer: Divine Soul)", "cost": "3 Sorcery Points" }
+    , {"klass-trait-name": "Quickened Metamagic",  "trait-source": "Class Trait (Sorcerer: Divine Soul)", "cost": "2 Sorcery Points" }
+    , {"klass-trait-name": "Subtle Metamagic",     "trait-source": "Class Trait (Sorcerer: Divine Soul)", "cost": "1 Sorcery Points" }
+    , {"klass-trait-name": "Twinned Metamagic",    "trait-source": "Class Trait (Sorcerer: Divine Soul)", "cost": "n Sorcery Points" }
+    , {"klass-trait-name": "Empowered Healing",    "trait-source": "Class Trait (Sorcerer: Divine Soul)", "cost": "1 Sorcery Points" }
+
+    , {"feat-name": "Spell Sniper", "flavor": "No flavor"}
+    , {"feat-name": "(actually not) Elemental Adept", "flavor": "Fire"}
+
+    , {"item-feature-name": "Ember Collar (Tuned Kajut Artefact:)", "trait-source": "Item", "count": { "max": 1, "recharge": "day" } }
+    , {"item-feature-name": "Mage Armor Vest", "trait-source": "Item", "count": { "max": 2, "recharge": "longrest" } }
+    , {"item-feature-name": "Ring of Spell Storing", "trait-source": "Item", "count": { "max": 5, "loaded-items": ["Shield", "Shield", "Shield", "Shield", "Bless"] } }
+
+    , {"item-feature-name": "Potion", "trait-source": "Item", "passive": "+2 Spell  DC and Spell Casfung Ability", "count": { "timeout": "1h?"}}
+    , {"item-feature-name": "Potion", "trait-source": "Item", "passive": "+2 Spell  DC and Spell Casfung Ability", "count": { "max": 1, "current": 0, "recharge": "1h"}}
+
+    , {"item-feature-name": "Sword of Answering", "trait-source": "Item", "passive": "Attack with this sword +3 => trigger on attack wirh it"}
+    , {"item-feature-name": "Arrow +3", "trait-source": "Item", "passive": "Attack with this sword +3 => trigger on attack wirh it"}
+
+    , {"custom-name": "Count of Defeated Dragons", "count": {"max": 0, "current": 3}}
+    , {"custom-name": "Days in Campaign", "count": {"max": 0, "current": 6}}
+  ],
+
+  "conditions":
+    [ {"effect-name": "Prone", "removable": true}
+    , {"effect-name": "Bewitched with 'Bless'", "seconds": 60}
+  ],
+
+  "spells": {
+    "prepared": ["Heal", "Wall of Stone"],
+    "available": [{"spell-name": "Heal", "spell-source": "Sorcerer"}, {"spell-name": "Wall of Stone", "spell-source": "Sorcerer"}, {"spell-name": "Mage Armor", "spell-source": "Sorcerer"}, {"spell-name": "Teleportation", "spell-source": "Sorcerer"}, {"spell-name": "More Spells", "spell-source": "other sources"} ]
+  },
+
+  "inventory":
+    [ {"item-name": "Mage Armor Vest", "amount": 1}
+    , {"item-name": "Ring of Spell Storing", "amount": 1, "price": "20 000 GP", "weight": "negligible so 0lb"}
+    , {"item-name": "Ember Collar", "amount": 1, "tuned": true}
+    , {"item-name": "Focus (pet collar)", "amount": 1}
+    , {"item-name": "Potion of Greater Healing", "amount": 2, "storage": "Mage Armor Vest"}
+    , {"item-name": "Sword of Answering", "amount": 1, "storage": ""}
+    , {"item-name": "Pouch", "identifier": "Pouch@20210311181407"}
+    , {"item-name": "Gold Coin", "amount": 2000, "storage": "Pouch@20210311181407"}
+    , {"item-name": "Pouch", "storage": "Mage Armor Vest", "identifier": "Pouch@20210311181408"}
+    , {"item-name": "Ball", "amount": 2, "storage": "Pouch@20210311181408"}
+
+    , {"item-name": "Flask", "amount": 1}
+    , {"item-name": "Oil", "weight-lb": 0.4, "storage": "Flask"}
+  ]
+}
