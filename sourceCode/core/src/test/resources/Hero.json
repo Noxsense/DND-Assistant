@@ -51,7 +51,8 @@
   "base-attack": [{"name": "Bite", "piercing": "1d6"}],
 
   "traits":
-    [ {"race-feature-name": "Fury of Flurry", "description": "+level (+ Howl's Mate Level) as attack damage", "count": { "max": 1, "recharge": "longrest"}}
+    [ {"race-feature-name": "Bite", "description": "Base attack is `1d6 + STR`"}
+    , {"race-feature-name": "Fury of Flurry", "description": "+level (+ Howl's Mate Level) as attack damage", "count": { "max": 1, "recharge": "longrest"}}
     , {"race-feature-name": "Convincing",     "description": "Cast Charm or cast Calm Emotions", "count": { "max": "CHA", "recharge": "longrest"}}
 
     , {"klass-trait-name": "Spellcaster",   "trait-source": "Class Trait (Sorcerer, Divine Soul", "count": { "max": 15}}
@@ -100,8 +101,8 @@
   ],
 
   "spells": {
-    "prepared": ["Heal", "Wall of Stone"],
-    "available": [{"spell-name": "Heal", "spell-source": "Sorcerer"}, {"spell-name": "Wall of Stone", "spell-source": "Sorcerer"}, {"spell-name": "Mage Armor", "spell-source": "Sorcerer"}, {"spell-name": "Teleportation", "spell-source": "Sorcerer"}, {"spell-name": "More Spells", "spell-source": "other sources"} ]
+    "prepared": ["Heal", "Wall of Stone", "Firebolt"],
+    "available": [{"spell-name": "Heal", "spell-source": "Sorcerer"}, {"spell-name": "Wall of Stone", "spell-source": "Sorcerer"}, {"spell-name": "Mage Armor", "spell-source": "Sorcerer"}, {"spell-name": "Clone", "spell-source": "Spell Scroll"}, {"spell-name": "More Spells", "spell-source": "other sources"}, {"spell-name": "Firebolt", "spell-source": "Sorcerer"} ]
   },
 
   "inventory":

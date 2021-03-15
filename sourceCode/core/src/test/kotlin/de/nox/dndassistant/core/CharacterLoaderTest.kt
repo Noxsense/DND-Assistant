@@ -75,6 +75,13 @@ class CharacterLoaderTest {
 			? - spells
 			? - spell DCs, spell (attack) modifiers, spell level
 
+			Spells:
+			? - Spells sorted by level?
+			? - Also show preparable spells (for later planning?)
+			* - Arcane Focus: ${getArcaneFocus()?.name}
+			* - Spells Prepared: ${spellsPrepared.size} items
+			* - ${spells}
+
 			Buffs and Effects:
 			? - being near paladin: +2 saving throws
 			? - being bewitched with Bless: 1d4 on saving throws and co.

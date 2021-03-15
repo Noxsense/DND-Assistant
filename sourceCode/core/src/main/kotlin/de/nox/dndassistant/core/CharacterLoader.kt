@@ -179,16 +179,36 @@ public fun loadHero(filepath: String) : Hero {
 				}
 			}
 
+			val spellCatalog: Map<String, SimpleSpell> = listOf(
+				// just a spell
+				SimpleSpell(name = "Mage Armor",    school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VSM(listOf("Piece of cured Leather" to 0)),       range = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(1 to mapOf()), optAttackRoll = false, optSpellDC = false),
+				// spel with concentration
+				SimpleSpell(name = "Wall of Stone", school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VSM(listOf("Small Block of Granite" to 0)),       range = "Touch",               duration = "10 min",        concentration =  true, description = "?", levels = mapOf(5 to mapOf()), optAttackRoll = false, optSpellDC = false),
+				// levelling spell
+				SimpleSpell(name = "Heal",          school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VS,                                               range = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = (6 .. 9).map { l -> l to mapOf("Heal" to "${(l + 1)*10} hp")}.toMap(), optAttackRoll = false, optSpellDC = false),
+				// leveling cantrip
+				SimpleSpell(name = "Firebolt",      school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VS,                                               range = "120 ft",              duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(0 to mapOf("Attack-Damage" to "1d10 (fire)"), -5 to mapOf("Attack-Damage" to "2d10 (fire)"), -11 to mapOf("Attack-Damage" to "3d10 (fire)"), -17 to mapOf("Attack-Damage" to "4d10 (fire)")), optAttackRoll = true, optSpellDC = false),
+				// spell with ritual (and concentration)
+				SimpleSpell(name = "Detect Magic",  school = "???", castingTime = "1 act", ritual =  true, components = SimpleSpell.Components.VS,                                               range = "self + globe (30ft)", duration = "10 min",        concentration =  true, description = "?", levels = mapOf(1 to mapOf()), optAttackRoll = false, optSpellDC = false),
+				// spell components with money
+				SimpleSpell(name = "Clone",         school = "???", castingTime =   "1 h", ritual = false, components = SimpleSpell.Components.VSM(listOf("Diamond" to 1000, "Vessel" to 2000)), range = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(8 to mapOf()), optAttackRoll = false, optSpellDC = false),
+			).map { it.name to it }.toMap()
+
+			log.debug("Spell Catalog: $spellCatalog")
+
 			// spells => object with two lists
 			// XXX (2021-03-05) spells
 			// list? of spells prepared, available at all.
 			obj.optJSONObject("spells")?.let { metaSpells ->
 				// XXX (2021-03-05) loteinit or look up in a library
-				val prepared = metaSpells.getJSONArray("prepared").map<String,String> { it }.forEach {
-					log.info("- Prepare Spell: $it")
-				}
 				val available = metaSpells.getJSONArray("available").map<JSONObject, Any?> {
-					it.also { log.info("Available Spell: '$it'") }
+					spellCatalog[it.getString("spell-name")]?.let { spell ->
+						learnSpell(spell = spell, it.optString("spell-source", "race"))
+					} ?: false
+				}
+
+				val prepared = metaSpells.getJSONArray("prepared").map<String,String> { it }.forEach {
+					prepareSpell(spellName = it as String)
 				}
 			}
 
