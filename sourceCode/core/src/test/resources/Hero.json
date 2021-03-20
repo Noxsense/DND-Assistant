@@ -37,16 +37,22 @@
 
   "available-hitdice": { "d6": 6 },
 
-  "profiencies": [
-    {"skill-name": "Animal Handling", "is-expert": false, "skill-source": "Pet (Background)"},
-    {"skill-name": "Stealth", "is-expert": false, "skill-source": "Pet (Background)"},
-    {"skill-name": "Insight", "is-expert": false, "skill-source": "Race"},
-    {"skill-name": "Perception", "is-expert": false, "skill-source": "Awakened Dog"},
-    {"skill-name": "Deception", "is-expert": false, "skill-source": "Sorcerer"},
-    {"skill-name": "Persuation", "is-expert": false, "skill-source": "Awakened Dog"},
-
-    {"skill-name": "Melee Weaopon", "is-expert": false, "skill-source": "Rouge"}
+  "proficiencies":
+   [ {"skill-name": "Animal Handling", "is-expert": false, "skill-source": "Pet (Background)"}
+   , {"skill-name": "Stealth", "is-expert": false, "skill-source": "Pet (Background)"}
+   , {"skill-name": "Insight", "is-expert": false, "skill-source": "Race"}
+   , {"skill-name": "Perception", "is-expert": false, "skill-source": "Awakened Dog"}
+   , {"skill-name": "Deception", "is-expert": false, "skill-source": "Sorcerer"}
+   , {"skill-name": "Persuasion", "is-expert": false, "skill-source": "Awakened Dog"}
+   , {"skill-name": "Puppy Eyes", "is-expert": false, "skill-source": "Pet (Background)", "custom-attribute": "CHA"}
   ],
+
+
+
+  "tool-proficiencies":
+    [ {"tool-category": "Melee Weaopon", "is-expert": false, "skill-source": "Rouge"}
+    , {"tool-name": "Poisoneer Kit", "is-expert": false, "skill-source": "Rouge"}
+    ],
 
   "base-attack": [{"name": "Bite", "piercing": "1d6"}],
 
@@ -113,11 +119,13 @@
     , {"item-name": "Potion of Greater Healing", "amount": 2, "storage": "Mage Armor Vest"}
     , {"item-name": "Sword of Answering", "amount": 1, "storage": ""}
     , {"item-name": "Pouch", "identifier": "Pouch@20210311181407"}
-    , {"item-name": "Gold Coin", "amount": 2000, "storage": "Pouch@20210311181407"}
+    , {"item-name": "Gold Coin", "amount": 2500, "storage": "Pouch@20210311181407"}
     , {"item-name": "Pouch", "storage": "Mage Armor Vest", "identifier": "Pouch@20210311181408"}
     , {"item-name": "Ball", "amount": 2, "storage": "Pouch@20210311181408"}
 
     , {"item-name": "Flask", "amount": 1}
     , {"item-name": "Oil", "weight-lb": 0.4, "storage": "Flask"}
+
+    , {"item-name": "Dagger"}
   ]
 }

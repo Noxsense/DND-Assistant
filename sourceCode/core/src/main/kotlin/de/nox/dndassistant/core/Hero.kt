@@ -41,6 +41,9 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 
 	/** Experience a Hero can gain. */
 	public class Experience(var points: Int = 0, var method: String = "milestone") {
+		override public fun equals(other: Any?) : Boolean
+			= other != null && other is Experience && (other.points == this.points && other.method == this.method)
+
 		override public fun toString() = "$points ($method)"
 
 		public operator fun plus(v: Int) = Experience(points + v, method)
@@ -73,12 +76,13 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 		set(value) { speed["walking"] = value }
 
 	var armorSources: List<String> = listOf()
-	var armorClass: Int = 1 // XXX ???
-		get() = 10 + abilityModifier(Ability.DEX)
+	val armorClass: Int // XXX get Smror class, depending on clothings and abilities. ???
+		get() = naturalBaseArmorClass
 		// else  armorSources.map { 1 }.reduce { b, e -> b + e } // sum up all sources
 		// private set
+	val naturalBaseArmorClass: Int get() = 10 + abilityModifier(Ability.DEX)
 
-	/* Get the current relation of current hitpoints and temporary maximal hitpoints. */
+	/* Get the current relation of current "hitpoints" and temporary maximal hitpoints. */
 	val hitpoints: Pair<Int, Int> get() = (hitpointsNow + hitpointsTmp) to (hitpointsMax + hitpointsTmp)
 
 	// hitpoints and life
@@ -185,6 +189,22 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 			= (when (evalSaved()) { null -> ""; true -> " Saved!!  "; false -> " Dead!!  " }
 			+ this.throws.values.filter { it != null }.joinToString(", ", "[", "]"))
 
+		/** Equally by evaluation. */
+		public override fun equals(other: Any?) : Boolean
+			= other != null && other is DeathSaveFight && this.toList() == other.toList()
+
+		/** Equal by all means. */
+		public fun equalsByCrits(other: DeathSaveFight?) : Boolean
+			= (other != null
+			// equal or both null
+			&& (throw0?.equals(other.throw0) ?: other.throw0 == null)
+			&& (throw1?.equals(other.throw1) ?: other.throw1 == null)
+			&& (throw2?.equals(other.throw2) ?: other.throw2 == null)
+			&& (throw3?.equals(other.throw3) ?: other.throw3 == null)
+			&& (throw4?.equals(other.throw4) ?: other.throw4 == null)
+			&& (throw5?.equals(other.throw5) ?: other.throw5 == null)
+			)
+
 		/** Return the death save fight as list of booleans.
 		 * The representing list drops meta information of critical successes/failures
 		 * and with that depended actual number of throws.
@@ -271,13 +291,6 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 	)
 		private set
 
-	var STR: Pair<Int, Boolean> get() = abilities[Ability.STR] ?: (10 to false); set (value) { abilities[Ability.STR] = value }
-	var CON: Pair<Int, Boolean> get() = abilities[Ability.CON] ?: (10 to false); set (value) { abilities[Ability.CON] = value }
-	var DEX: Pair<Int, Boolean> get() = abilities[Ability.DEX] ?: (10 to false); set (value) { abilities[Ability.DEX] = value }
-	var INT: Pair<Int, Boolean> get() = abilities[Ability.INT] ?: (10 to false); set (value) { abilities[Ability.INT] = value }
-	var WIS: Pair<Int, Boolean> get() = abilities[Ability.WIS] ?: (10 to false); set (value) { abilities[Ability.WIS] = value }
-	var CHA: Pair<Int, Boolean> get() = abilities[Ability.CHA] ?: (10 to false); set (value) { abilities[Ability.CHA] = value }
-
 	/** Get the full value for the ability. Default 10 => modifier 0. */
 	public fun Pair<Int,Boolean>?.value() : Int
 		= this?.first ?: 10
@@ -294,12 +307,17 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 	public fun Int?.getModifier() : Int
 		= if (this == null) 0 else floor((this - 10) / 2.0).toInt()
 
-	/* Saving throw proficiencies, by base klass, race and feats. */
+	/* Saving Throw Proficiencies, by base klass, race and feats. */
 	var saveProficiences: List<Ability> = listOf()
 
 	/** Get the pure ability value. */
 	public fun ability(a: Ability) : Int
 		= abilities.get(a)?.first ?: 10
+
+	/** Check if the hero is proficient for the Saving Throw of the given Ability. */
+	public fun isSavingThrowProficient(a: Ability) : Boolean
+		= abilities.get(a)?.second ?: false
+
 
 	/** Get the modifier for the ability. */
 	public fun abilityModifier(a: Ability) : Int
@@ -317,6 +335,22 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 
 	public val skillValues: Map<SimpleSkill, Int> get()
 		= (SimpleSkill.DEFAULT_SKILLS + skills.keys).map { it to skill(it) }.toMap()
+
+	/** Lists proficiencies for tools or weapons. A tool is given by it's name or the category.
+	 * Proficiencies can be <proficient> or <expert>.
+	 * As with skills, the reason why the hero is proficicient with the tool is also stored.*/
+	var toolProficiencies: MutableMap<Pair<String, String>, Pair<SimpleProficiency, String>> = mutableMapOf()
+		private set
+
+	/** Check if the Hero can proficiently use an item. */
+	public fun hasToolProficiency(item: SimpleItem) : Boolean
+		= getToolProficiency(item) != null
+
+	/** Get optional proficiency for a tool or its category. */
+	public fun getToolProficiency(item: SimpleItem)
+		= this.toolProficiencies.toList().find { (tool, _) ->
+			tool.first == item.name || tool.second == item.category
+		}
 
 	/* Classes and skills and proficiencies */
 
@@ -375,9 +409,7 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 	}
 
 	val hitdiceMax: Map<String, Int> get()
-		= klasses.map { "Hitdie of $it" to 1 }.toMap()
-		// = klasses.map { "Hitdie of $it" to "Level of $it" }.toMap()
-		// get() = klasses.mapKeys { "Hitdie og ${it}" }.mapKeys { "Level of it."" }
+		= klasses.map { (klass, sub, lvl) -> "Die($klass)" to lvl }.toMap()
 
 	var hitdice: MutableMap<String, Int> = mutableMapOf() // available hitdice
 		// private set
@@ -385,35 +417,28 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 	/* Languages which can be spoken, written and understood. */
 	var languages: List<String> = listOf()
 
-	var proficiencies: Map<String, Pair<Boolean, String>> = mapOf()
-		private set
-
-	/** Set a skill as proficient. */
-	public fun setProficientFor(skill: String, reason: String)
-		= this.setProficiencies(skill, false, reason)
-
-	/** Set a skill as expertised. */
-	public fun setExpertFor(skill: String, reason: String)
-		= this.setProficiencies(skill, true, reason)
-
-	/** Remove any expertise or proficiency of a skill. */
-	public fun removeProficientFor(skill: String) {
-		this.proficiencies - skill // remove from keys.
-	}
-
-	public fun setProficiencies(skill: String, asExpert: Boolean, reason: String) {
-		this.proficiencies += skill to (asExpert to reason)
-	}
 
 	// collection of feats, class features, race features, special items' abilities and custom counters.
 	// how to influence the hero when having these traits?
 	// like a temporary equipped item or so.
 	var specialities: List<Speciality> = listOf()
 
+	// TODO: difference between having an item equipped and as long as there the effect or being born with the effect/speciality?
+	var conditions: List<Effect> = listOf()
+		private set
+
+	// TODO (2021-03-16) is a condition (like PRONE, bewitched with 'Mage Armor') a (timed) speciality?
+	// TODO (2021-03-16) is an equipped magic item like an equipped speciality?
+	// TODO (2021-03-16) is an equipped spell like a equipped speciality?
+
 	/** List of spells which are currently equipped. */
 	val spellsPrepared: Set<Pair<SimpleSpell, String>> get() = spells.filter { it.value }.keys
 
 	// TODO restrictions of max 14 spells, max 6 cantrips, etc...
+	val maxPreparedSpells: List<Int>
+		get() = specialities.filter { false }.map { 1 } // TODO define max spell count depended by specialities?
+		// => maxPreparedSpells[0] = Infitiny
+		// => maxPreparedSpells[1] = 13 ...
 
 	/** List of spells, which can be equipped. Given by klasses, race or finding scrolls.
 	 * The value (Boolean) represents, if the spell is currently prepared or not. */
@@ -475,139 +500,11 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 	// rope is more or less attached to the backpack?
 	// no backpack with special pouches sewn in clothes.
 
-	public fun maxCarriageWeight() : Double = STR.first * 15.0
+	public fun maxCarriageWeight() : Double = ability(Ability.STR) * 15.0
 
-	public fun Collection<Pair<SimpleItem, String>>.printNested() : String {
-		// group items by storage place.
-		val bagsWithContent = this.groupBy { it.second }
-
-		if (bagsWithContent.size < 1 || !bagsWithContent.containsKey("")) {
-			return "No Items held or worn, therefore no bags are carried as well."
-		}
-
-		val directlyCarried = bagsWithContent[""]!!
-
-		/* Pretty print:
-		 * - nested
-		 * - sum up same objects (if they don't carry anything)
-		 */
-		lateinit var printNestedBags: ((List<Pair<SimpleItem, String>>, Int) -> String)
-		printNestedBags = { items, level ->
-			val (bagsPre, nobagsPre) = items.partition {
-				(i,_) -> i.identifier in bagsWithContent.keys
-			}
-
-			// indentation of each nesting level
-			val itemSep = "\n" + "\t".repeat(level)
-
-			// sum up same objects, not containing anything.
-			val nobags = nobagsPre.groupBy { (i, _) -> i.name }.toList()
-				.joinToString(itemSep, itemSep) { (name, allSame) ->
-					"- (${allSame.size}x) $name"
-				}
-
-			// print nested bags.
-			val bags = bagsPre
-				.joinToString(itemSep, itemSep) { (it, _) ->
-					(bagsWithContent[it.identifier]!!.let { nestedBag ->
-						("+ " + it.name
-						+ " (carries: ${nestedBag.size}, ${nestedBag.weight()} lb)"
-						+ printNestedBags(nestedBag, level + 1))
-					})
-				}
-
-			((if (nobagsPre.size > 0) nobags else "") // show summed items
-			+ (if (bagsPre.size > 0) bags else "") // show carrying items
-			)
-		}
-
-		return ("Worn / Held"
-			+ " (${directlyCarried.size} items, ${directlyCarried.weight()})"
-			+ printNestedBags(directlyCarried, 1)
-			)
-	}
-
-	/** Get the Weight (Double, Pounds) of the collection of items.
-	 * If the optional storage is null, get the overall carried weight. */
-	public fun Collection<Pair<SimpleItem, String>>.weight(storage: String? = null) : Double
-		= this.fold(0.0) { b, i -> b + (if (storage == null || storage == i.second) i.first.weight else 0.0) }
-
-	/** Get the Value (Int, in Coppers) of the collection of items.
-	 * If the optional storage is null, get the overall carried value. */
-	public fun Collection<Pair<SimpleItem, String>>.copperValue(storage: String? = null) : Int
-		= this.fold(0) { b, i -> b + (if (storage == null || storage == i.second) i.first.copperValue else 0) }
-
-	/** Find the item by name. @return Item and its storage. */
-	public fun Collection<Pair<SimpleItem, String>>.getItemByName(name: String) : Pair<SimpleItem, String>?
-		= this.find { (i, _) -> i.name == name }
-
-	/** Find the item by name. @return Item and its storage. */
-	public fun Collection<Pair<SimpleItem, String>>.getItemByID(identifier: String) : Pair<SimpleItem, String>?
-		= this.find { (i, _) -> i.identifier == identifier }
-
-	/** Check if an item has other items containing / attached on (aka serves as bag). */
-	public fun Collection<Pair<SimpleItem, String>>.isStoringItemsByID(identifier: String) : Boolean
-		= this.find { (_, storage) -> storage == identifier } != null // is a storage.
-
-	/** Get all items, that are stored in the given bag, also return the bag object itself. */
-	public fun Collection<Pair<SimpleItem, String>>.getBag(bagIdentifier: String) : Triple<SimpleItem, String, List<SimpleItem>>?
-		= this.getItemByID(bagIdentifier)?.let { (bag, bagsStorage) ->
-			val stored = this.filter { (_, storage) -> storage == bagIdentifier }.map { (i, _) -> i }
-			Triple(bag, bagsStorage, stored)
-		}
-
-	/** Store or change the current storage of an item to another storage.
-	 * If the storage (reference) is null, the item is worn or directly held by the hero.
-	 * @param storage item referenence the new item is put i or attached to.
-	 * @param force if true, ignore that the storage is not available.
-	 * @return true, if the item was successfully stored. */
-	public fun MutableCollection<Pair<SimpleItem, String>>.putItem(item: SimpleItem, storage: String = "", force: Boolean = false) : Boolean {
-		// XXX (2021-03-12) avoid looping Pouch 1 > Pouch 2 > Pouch 3 > Pouch 1
-
-		/* If `storage` represents an ID, put it to the id, if available.
-		 * If `storage` represents just the name of an item, find the next item's ID and put it there. */
-		val storageId = when {
-			storage == "" -> storage // worn or directl held
-			getItemByID(storage) != null -> storage // is already the storage id
-			else -> getItemByName(storage)?.first?.identifier
-		}
-		return if (storageId != null || force) {
-			this.plusAssign(item to (storageId ?: storage))
-			true
-		} else {
-			false
-		}
-	}
-
-	/** Check the inventory and drop all items whose storage is not a stored
-	 * item or the hero themself.
-	 * @return dropped items and intended storages. */
-	public fun MutableCollection<Pair<SimpleItem, String>>.dropIncorrectlyStoredItems() : List<Pair<SimpleItem, String>> {
-		val badlyStored = this.filter { (_, s) -> s != "" && getItemByID(s) == null }
-		this.minusAssign(badlyStored) // drop
-		return badlyStored
-	}
-
-	/** Try to drop an item which may be stored or held.
-	 * If there is no such item, return false, otherwise (on success) true.
-	 * If the optional storage is null, remove from the first storage that appears to have the item.
-	 * If the optinal storage is given, remove it from the storage if possible.
-	 * If you drop an item, which holds other items, they will be dropped as well.
-	 *
-	 * Return a possible new collection of items and how they were hold.
-	 */
-	public fun MutableCollection<Pair<SimpleItem, String>>.dropItem(item: SimpleItem, storage: String? = null) : List<Pair<SimpleItem, String>> {
-		// TODO (2021-03-10) what if the item is stored multiple times, but also in different bags (like a dagger in hand and in backpack)
-
-		/* Find all items that matches. */
-		val matches = this.filter {
-			(i, s) -> i == item && (storage == null || s == storage)
-		}
-
-		this.minusAssign(matches)
-
-		return matches
-	}
+	/** Get the weight of the equopped / carried items (in pounds / double). */
+	public fun getCarriedWeight(storage: String? = null) : Double
+		= this.inventory.weight(storage)
 }
 
 /** SimpleSkill. */
@@ -772,6 +669,139 @@ data class SimpleSpell(
 	}
 }
 
+/** Print a pretty / nested string of a simple item collection. */
+public fun Collection<Pair<SimpleItem, String>>.printNested() : String {
+	// group items by storage place.
+	val bagsWithContent = this.groupBy { it.second }
+
+	if (bagsWithContent.size < 1 || !bagsWithContent.containsKey("")) {
+		return "No Items held or worn, therefore no bags are carried as well."
+	}
+
+	val directlyCarried = bagsWithContent[""]!!
+
+	/* Pretty print:
+	 * - nested
+	 * - sum up same objects (if they don't carry anything)
+	 */
+	lateinit var printNestedBags: ((List<Pair<SimpleItem, String>>, Int) -> String)
+	printNestedBags = { items, level ->
+		val (bagsPre, nobagsPre) = items.partition {
+			(i,_) -> i.identifier in bagsWithContent.keys
+		}
+
+		// indentation of each nesting level
+		val itemSep = "\n" + "\t".repeat(level)
+
+		// sum up same objects, not containing anything.
+		val nobags = nobagsPre.groupBy { (i, _) -> i.name }.toList()
+			.joinToString(itemSep, itemSep) { (name, allSame) ->
+				"- (${allSame.size}x) $name"
+			}
+
+		// print nested bags.
+		val bags = bagsPre
+			.joinToString(itemSep, itemSep) { (it, _) ->
+				(bagsWithContent[it.identifier]!!.let { nestedBag ->
+					("+ " + it.name
+					+ " (carries: ${nestedBag.size}, ${nestedBag.weight()} lb)"
+					+ printNestedBags(nestedBag, level + 1))
+				})
+			}
+
+		((if (nobagsPre.size > 0) nobags else "") // show summed items
+		+ (if (bagsPre.size > 0) bags else "") // show carrying items
+		)
+	}
+
+	return ("Worn / Held"
+		+ " (${directlyCarried.size} items, ${directlyCarried.weight()})"
+		+ printNestedBags(directlyCarried, 1)
+		)
+}
+
+/** Get the Weight (Double, Pounds) of the collection of items.
+ * If the optional storage is null, get the overall carried weight. */
+public fun Collection<Pair<SimpleItem, String>>.weight(storage: String? = null) : Double
+	= this.fold(0.0) { b, i -> b + (if (storage == null || storage == i.second) i.first.weight else 0.0) }
+
+/** Get the Value (Int, in Coppers) of the collection of items.
+ * If the optional storage is null, get the overall carried value. */
+public fun Collection<Pair<SimpleItem, String>>.copperValue(storage: String? = null) : Int
+	= this.fold(0) { b, i -> b + (if (storage == null || storage == i.second) i.first.copperValue else 0) }
+
+/** Find the item by name. @return Item and its storage. */
+public fun Collection<Pair<SimpleItem, String>>.getItemByName(name: String) : Pair<SimpleItem, String>?
+	= this.find { (i, _) -> i.name == name }
+
+/** Find the item by name. @return Item and its storage. */
+public fun Collection<Pair<SimpleItem, String>>.getItemByID(identifier: String) : Pair<SimpleItem, String>?
+	= this.find { (i, _) -> i.identifier == identifier }
+
+/** Check if an item has other items containing / attached on (aka serves as bag). */
+public fun Collection<Pair<SimpleItem, String>>.isStoringItemsByID(identifier: String) : Boolean
+	= this.find { (_, storage) -> storage == identifier } != null // is a storage.
+
+/** Get all items, that are stored in the given bag, also return the bag object itself. */
+public fun Collection<Pair<SimpleItem, String>>.getBag(bagIdentifier: String) : Triple<SimpleItem, String, List<SimpleItem>>?
+	= this.getItemByID(bagIdentifier)?.let { (bag, bagsStorage) ->
+		val stored = this.filter { (_, storage) -> storage == bagIdentifier }.map { (i, _) -> i }
+		Triple(bag, bagsStorage, stored)
+	}
+
+/** Store or change the current storage of an item to another storage.
+ * If the storage (reference) is null, the item is worn or directly held by the hero.
+ * @param storage item referenence the new item is put i or attached to.
+ * @param force if true, ignore that the storage is not available.
+ * @return true, if the item was successfully stored. */
+public fun MutableCollection<Pair<SimpleItem, String>>.putItem(item: SimpleItem, storage: String = "", force: Boolean = false) : Boolean {
+	// XXX (2021-03-12) avoid looping Pouch 1 > Pouch 2 > Pouch 3 > Pouch 1
+
+	/* If `storage` represents an ID, put it to the id, if available.
+	 * If `storage` represents just the name of an item, find the next item's ID and put it there. */
+	val storageId = when {
+		storage == "" -> storage // worn or directl held
+		getItemByID(storage) != null -> storage // is already the storage id
+		else -> getItemByName(storage)?.first?.identifier
+	}
+	return if (storageId != null || force) {
+		this.plusAssign(item to (storageId ?: storage))
+		true
+	} else {
+		false
+	}
+}
+
+/** Check the inventory and drop all items whose storage is not a stored
+ * item or the hero themself.
+ * @return dropped items and intended storages. */
+public fun MutableCollection<Pair<SimpleItem, String>>.dropIncorrectlyStoredItems() : List<Pair<SimpleItem, String>> {
+	val badlyStored = this.filter { (_, s) -> s != "" && getItemByID(s) == null }
+	this.minusAssign(badlyStored) // drop
+	return badlyStored
+}
+
+/** Try to drop an item which may be stored or held.
+ * If there is no such item, return false, otherwise (on success) true.
+ * If the optional storage is null, remove from the first storage that appears to have the item.
+ * If the optinal storage is given, remove it from the storage if possible.
+ * If you drop an item, which holds other items, they will be dropped as well.
+ *
+ * Return a possible new collection of items and how they were hold.
+ */
+public fun MutableCollection<Pair<SimpleItem, String>>.dropItem(item: SimpleItem, storage: String? = null) : List<Pair<SimpleItem, String>> {
+	// TODO (2021-03-10) (dropItem) what if the item is stored multiple times, but also in different bags (like a dagger in hand and in backpack)
+
+	/* Find all items that matches. */
+	val matches = this.filter {
+		(i, s) -> i == item && (storage == null || s == storage)
+	}
+
+	this.minusAssign(matches)
+
+	return matches
+}
+
 // val cc = SimpleItem(  "Copper Coin", category: "Currency", 0.02, 1)
 // val cs = SimpleItem(  "Silver Coin", category: "Currency", 0.02, 10)
 // val cg = SimpleItem(    "Gold Coin", category: "Currency", 0.02, 50)
@@ -786,11 +816,11 @@ data class SimpleSpell(
  */
 data class SimpleItem(val name: String, val identifier: String, val category: String, val weight: Double, val copperValue: Int, val dividable: Boolean = false) {
 	companion object {
-		val CC_TO_CC : Int = 1; // copper to copper
-		val SC_TO_CC : Int = 10; // silver to copper
-		val GC_TO_CC : Int = 50; // gold to copper
-		val EC_TO_CC : Int = 100; // electrum to copper
-		val PC_TO_CC : Int = 1000; // platinum to copper
+		val CP_TO_CP : Int = 1; // copper piece to copper piece
+		val SP_TO_CP : Int = 10; // silver piece to copper piece
+		val GP_TO_CP : Int = 50; // gold piece to copper piece
+		val EP_TO_CP : Int = 100; // electrum piece to copper piece
+		val PP_TO_CP : Int = 1000; // platinum piece to copper piece
 	}
 
 	override fun toString() = "$name [$identifier]"
