@@ -54,6 +54,17 @@ enum class Ability(val fullname: String) {
 		/** Get the modifier for a certain score value. */
 		public fun scoreToModifier(score: Int) : Int
 			= floor((score - 10) / 2.0).toInt()
+
+		public fun fromString(str: String) : Ability
+			= when (str.toUpperCase()) {
+				"STR", "STRENGTH"      -> Ability.STR
+				"DEX", "DEXTERITY"     -> Ability.DEX
+				"CON", "CONSTITUTION"  -> Ability.CON
+				"INT", "INTELLIGENCE"  -> Ability.INT
+				"WIS", "WISDOM"        -> Ability.WIS
+				"CHA", "CHARISMA"      -> Ability.CHA
+				else -> throw Exception("String \"$str\" cannot be parsed to an Ability.")
+			}
 	}
 }
 

@@ -91,13 +91,42 @@ public fun loadHero(filepath: String) : Hero {
 
 			/* Skills => list [list [name, is-expert, source]].
 			 * Fill proficiencies. */
-			obj.getJSONArray("profiencies").let { array ->
-				array.forEach<JSONObject> { jsonSkill ->
-					this.setProficiencies(
-						skill = jsonSkill.getString("skill-name"),
-						reason = jsonSkill.getString("skill-source"),
-						asExpert = jsonSkill.optBoolean("is-expert", false))
+			obj.getJSONArray("proficiencies").forEach<JSONObject> {
+				var skillName = it.getString("skill-name")
+				var level = when (it.optBoolean("is-expert", false)) {
+					true -> SimpleProficiency.E
+					else -> SimpleProficiency.P
 				}
+				var skillSource = it.getString("skill-source")
+
+				try {
+					val skill: SimpleSkill = (
+						SimpleSkill.DEFAULT_SKILLS.find { it.name == skillName }
+						?: SimpleSkill(name = skillName, ability = Ability.fromString(it.getString("custom-attribute")))
+					)
+
+					log.debug("Set proficiencies: $it => matching SimpleSkill ${skill}")
+					skills[skill] = Pair(level, skillSource)
+
+				} catch (e: Exception) {
+					log.error("Could set a skill ($skillName) given by $it.")
+					log.error("Caught Exception: $e")
+				}
+			}
+
+			/* Skills => list [list [name, is-expert, source]].
+			 * Fill proficiencies. */
+			obj.getJSONArray("tool-proficiencies").forEach<JSONObject> {
+				val tool = it.optString("tool-name") to it.optString("tool-category")
+				var level = when (it.optBoolean("is-expert", false)) {
+					true -> SimpleProficiency.E
+					else -> SimpleProficiency.P
+				}
+				var skillSource = it.getString("skill-source")
+
+				toolProficiencies[tool] = level to skillSource
+
+				log.debug("New tool proficiency: $tool : ($level, $skillSource)")
 			}
 
 			/* Languages => list [string]. */
@@ -215,15 +244,15 @@ public fun loadHero(filepath: String) : Hero {
 			// XXX DELETE ME: Item Catalog => repository of item, identifier := name
 			val itemCatalog: Map<String, Triple<String, Double, Int>> = mapOf (
 				"Copper Coin"   to Triple("Currency", 0.02, 1),
-				"Silver Coin"   to Triple("Currency", 0.02, SimpleItem.SC_TO_CC),
-				"Gold Coin"     to Triple("Currency", 0.02, SimpleItem.GC_TO_CC),
-				"Electrum Coin" to Triple("Currency", 0.02, SimpleItem.EC_TO_CC),
-				"Platinum Coin" to Triple("Currency", 0.02, SimpleItem.PC_TO_CC),
+				"Silver Coin"   to Triple("Currency", 0.02, SimpleItem.SP_TO_CP),
+				"Gold Coin"     to Triple("Currency", 0.02, SimpleItem.GP_TO_CP),
+				"Electrum Coin" to Triple("Currency", 0.02, SimpleItem.EP_TO_CP),
+				"Platinum Coin" to Triple("Currency", 0.02, SimpleItem.PP_TO_CP),
 
-				"Mage Armor Vest" to Triple("Clothing",  3.0, SimpleItem.SC_TO_CC * 5),
+				"Mage Armor Vest" to Triple("Clothing",  3.0, SimpleItem.SP_TO_CP * 5),
 
 				"Ember Collar" to Triple("Artefact",  0.0, 0),
-				"Ring of Spell Storing" to Triple("Ring",  0.0, SimpleItem.GC_TO_CC * 20000),
+				"Ring of Spell Storing" to Triple("Ring",  0.0, SimpleItem.GP_TO_CP * 20000),
 				"Focus (pet collar)" to Triple("Arcane Focus",  1.0, 0),
 				"Potion of Greater Healing" to Triple("Potion",  0.0, 0),
 				"Sword of Answering" to Triple("Weapon",  0.0, 0),
@@ -232,8 +261,10 @@ public fun loadHero(filepath: String) : Hero {
 
 				"Ball"   to Triple("Miscelleanous", 0.01, 1),
 
+				"Dagger" to Triple("Simple Meelee Weapon", 1.0, 4), // 1d4 piercing, finesse, simple melee, throwable
+
 				"Flask"  to Triple("Container", 1.0, 2), // can hold 1 pint of liquid (0.00056826125 m^3 = 568.26125 ml)
-				"Oil"    to Triple("Miscelleanous", 1.0, SimpleItem.SC_TO_CC), // 1lb oil is worth 1sp
+				"Oil"    to Triple("Miscelleanous", 1.0, SimpleItem.SP_TO_CP), // 1lb oil is worth 1sp
 			)
 
 			/* Pack the inventory. */
