@@ -94,7 +94,6 @@ class CharacterLoaderTest {
 			- summed weight: ${inventory.weight()} / ${maxCarriageWeight()} lb
 			- summed value: ${inventory.copperValue()} cp
 			> DEBUG INVENTORY: $inventory
-			- ${inventory.printNested().split("\n").joinToString("\n\t\t\t")}
 
 			""".trimIndent()
 			)
@@ -204,7 +203,6 @@ class CharacterLoaderTest {
 		// - summed weight: ${hero.inventory.weight()} / ${maxCarriageWeight()} lb
 		// - summed value: ${hero.inventory.copperValue()} cp
 		// > DEBUG INVENTORY: $inventory
-		// - ${hero.inventory.printNested().split("\n").joinToString("\n\t\t\t")}
 
 		log.info("Test: testLoading: OK!")
 	}
