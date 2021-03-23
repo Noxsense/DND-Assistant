@@ -669,55 +669,8 @@ data class SimpleSpell(
 	}
 }
 
-/** Print a pretty / nested string of a simple item collection. */
-public fun Collection<Pair<SimpleItem, String>>.printNested() : String {
-	// group items by storage place.
-	val bagsWithContent = this.groupBy { it.second }
-
-	if (bagsWithContent.size < 1 || !bagsWithContent.containsKey("")) {
-		return "No Items held or worn, therefore no bags are carried as well."
-	}
-
-	val directlyCarried = bagsWithContent[""]!!
-
-	/* Pretty print:
-	 * - nested
-	 * - sum up same objects (if they don't carry anything)
-	 */
-	lateinit var printNestedBags: ((List<Pair<SimpleItem, String>>, Int) -> String)
-	printNestedBags = { items, level ->
-		val (bagsPre, nobagsPre) = items.partition {
-			(i,_) -> i.identifier in bagsWithContent.keys
-		}
-
-		// indentation of each nesting level
-		val itemSep = "\n" + "\t".repeat(level)
-
-		// sum up same objects, not containing anything.
-		val nobags = nobagsPre.groupBy { (i, _) -> i.name }.toList()
-			.joinToString(itemSep, itemSep) { (name, allSame) ->
-				"- (${allSame.size}x) $name"
-			}
-
-		// print nested bags.
-		val bags = bagsPre
-			.joinToString(itemSep, itemSep) { (it, _) ->
-				(bagsWithContent[it.identifier]!!.let { nestedBag ->
-					("+ " + it.name
-					+ " (carries: ${nestedBag.size}, ${nestedBag.weight()} lb)"
-					+ printNestedBags(nestedBag, level + 1))
-				})
-			}
-
-		((if (nobagsPre.size > 0) nobags else "") // show summed items
-		+ (if (bagsPre.size > 0) bags else "") // show carrying items
-		)
-	}
-
-	return ("Worn / Held"
-		+ " (${directlyCarried.size} items, ${directlyCarried.weight()})"
-		+ printNestedBags(directlyCarried, 1)
-		)
+public fun Collection<Pair<SimpleItem, String>>.getStorageTree() : Map<String, List<String>> {
+	return mapOf()
 }
 
 /** Get the Weight (Double, Pounds) of the collection of items.
