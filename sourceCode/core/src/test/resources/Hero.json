@@ -6,38 +6,38 @@
 
   "race": {"race-name": "Dog", "subrace-name": "Bantam Dog"},
   "level": 14,
-  "experience": {"num": 0, "type": "milestone"},
+  "experience": {"points": 0, "type": "milestone"},
 
   "hitpoints": {
     "max": 109,
-    "current": 25,
-    "temporary-offset": 0
+    "now": 25,
+    "tmp": 0
   },
+
+  "available-hitdice": { "d6": 6 },
 
   "deathsaves": [],
 
-  "attributes": { "STR": 7, "DEX": 14, "CON": 18, "INT": 13, "WIS": 13, "CHA": 20 },
+  "abilities": { "STR": 7, "DEX": 14, "CON": 18, "INT": 13, "WIS": 13, "CHA": 20 },
 
   "save-proficiencies": ["CON", "CHA"],
 
-  "classes": [
-    {"class-name": "Sorcerer", "subclass-name": "Divine Soul", "class-level": 12},
-    {"class-name": "Monk", "class-level": 2},
-    {"class-name": "Monk", "subclass-name": "Shadow Hand", "class-level": 1}
+  "klasses": [
+    {"klass-name": "Sorcerer", "subklass-name": "Divine Soul", "klass-level": 12},
+    {"klass-name": "Monk", "klass-level": 2},
+    {"klass-name": "Monk", "subklass-name": "Shadow Hand", "klass-level": 1}
   ],
 
   "languages": ["Common", "Canine", "Giant", "Celestial", "Elvish"],
 
-  "armor": { "armor-class": 12, "armor-sources": ["(naked) base: 10 + DEX", "Spell: Mage Armor, cooldown: 7h 30min, override base: 13 + DEX"]   },
+  "armor-sources": ["(naked) base: 10 + DEX", "Spell: Mage Armor, cooldown: 7h 30min, override base: 13 + DEX"],
 
   "speed": [
     {"movement-name": "walking", "speed-in-feet": 35},
     {"movement-name": "flying", "speed-in-feet": 30}
   ],
 
-  "available-hitdice": { "d6": 6 },
-
-  "proficiencies":
+  "skills":
    [ {"skill-name": "Animal Handling", "is-expert": false, "skill-source": "Pet (Background)"}
    , {"skill-name": "Stealth", "is-expert": false, "skill-source": "Pet (Background)"}
    , {"skill-name": "Insight", "is-expert": false, "skill-source": "Race"}
@@ -47,11 +47,9 @@
    , {"skill-name": "Puppy Eyes", "is-expert": false, "skill-source": "Pet (Background)", "custom-attribute": "CHA"}
   ],
 
-
-
-  "tool-proficiencies":
-    [ {"tool-category": "Melee Weaopon", "is-expert": false, "skill-source": "Rouge"}
-    , {"tool-name": "Poisoneer Kit", "is-expert": false, "skill-source": "Rouge"}
+  "tools":
+    [ {"tool-category": "Melee Weaopon", "is-expert": false, "tool-source": "Rouge"}
+    , {"tool-name": "Poisoneer Kit", "is-expert": false, "tool-source": "Rouge"}
     ],
 
   "base-attack": [{"name": "Bite", "piercing": "1d6"}],
@@ -77,7 +75,7 @@
 
     , {"klass-trait-name": "Favored by the Gods",  "trait-source": "Class Trait (Sorcerer; Divine Soul)", "count": { "max": 1, "recharge": "any rest"}}
     , {"klass-trait-name": "Otherwordly Wings",    "trait-source": "Class Trait (Sorcerer; Divine Soul)", "passive": "Bonus Speeed if cast" }
-    , {"klass-trait-name": "Sorcery Points",       "trait-source": "Class Trait (Sorcerer: Divine Soul)", "count": { "max": 15, "recharge": "longrest", "current": 6}}
+    , {"klass-trait-name": "Sorcery Points",       "trait-source": "Class Trait (Sorcerer: Divine Soul)", "count": { "max": 15, "recharge": "longrest", "now": 6}}
     , {"klass-trait-name": "Heightened Metamagic", "trait-source": "Class Trait (Sorcerer: Divine Soul)", "cost": "3 Sorcery Points" }
     , {"klass-trait-name": "Quickened Metamagic",  "trait-source": "Class Trait (Sorcerer: Divine Soul)", "cost": "2 Sorcery Points" }
     , {"klass-trait-name": "Subtle Metamagic",     "trait-source": "Class Trait (Sorcerer: Divine Soul)", "cost": "1 Sorcery Points" }
