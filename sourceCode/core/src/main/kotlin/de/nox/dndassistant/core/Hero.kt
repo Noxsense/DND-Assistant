@@ -5,7 +5,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /** Refactor IDEA the PlayerCharacter. */
-class Hero(player: String?, name: String, race: Pair<String, String>) {
+class Hero(name: String, race: Pair<String, String>, player: String? = null ) {
 	companion object {
 		private val log = LoggerFactory.getLogger("Hero")
 	}
@@ -15,21 +15,21 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 		= "$name (${race.first} (${race.second}), lvl. $level)"
 
 	/* (Fixed) Race. */
-	val race: Pair<String, String> = race
+	public val race: Pair<String, String> = race
 
 	/* (Variable) name and level. */
-	var name: String = name
+	public var name: String = name
 		set(value) {
 			field = value.trim() // trimmed name.
 		}
 
 	/* level and experience and resulting proficiency bonus. */
-	var level = 1
+	public var level = 1
 		set(value) {
 			field = if (value < 1) 1 else value // not smaller than 1
 		}
 
-	val proficiencyBonus: Int get() = when {
+	public val proficiencyBonus: Int get() = when {
 		level >= 17 -> +6
 		level >= 13 -> +5
 		level >= 9 -> +4
@@ -37,7 +37,7 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 		else -> +2
 	}
 
-	var experience: Experience = Experience()
+	public var experience: Experience = Experience()
 
 	/** Experience a Hero can gain. */
 	public class Experience(var points: Int = 0, var method: String = "milestone") {
@@ -57,38 +57,38 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 	}
 
 	// play-game focussed attributes, variable.
-	var player: String? = player
+	public var player: String? = player
 
 	// "collected" inspiration points
-	var inspiration: Int = 0
+	public var inspiration: Int = 0
 		set(value) {
 			field = if (value < 0) 0 else value // prohibit smaller than 0
 		}
 
 	// movement speeds ("normal", walking, jumping, swimming, etc. ...)
-	var speed: MutableMap<String, Int> = mutableMapOf(
+	public var speed: MutableMap<String, Int> = mutableMapOf(
 		"walking" to 30 // in feet
 	)
 
 	// walking or normal / base speed
-	var walkingSpeed: Int
+	public var walkingSpeed: Int
 		get() = speed["walking"] ?: 30
 		set(value) { speed["walking"] = value }
 
-	var armorSources: List<String> = listOf()
-	val armorClass: Int // XXX get Smror class, depending on clothings and abilities. ???
+	public var armorSources: List<String> = listOf()
+	public val armorClass: Int // XXX get Smror class, depending on clothings and abilities. ???
 		get() = naturalBaseArmorClass
 		// else  armorSources.map { 1 }.reduce { b, e -> b + e } // sum up all sources
 		// private set
-	val naturalBaseArmorClass: Int get() = 10 + abilityModifier(Ability.DEX)
+	public val naturalBaseArmorClass: Int get() = 10 + abilityModifier(Ability.DEX)
 
 	/* Get the current relation of current "hitpoints" and temporary maximal hitpoints. */
-	val hitpoints: Pair<Int, Int> get() = (hitpointsNow + hitpointsTmp) to (hitpointsMax + hitpointsTmp)
+	public val hitpoints: Pair<Int, Int> get() = (hitpointsNow + hitpointsTmp) to (hitpointsMax + hitpointsTmp)
 
 	// hitpoints and life
-	var hitpointsMax: Int = 0 // maximal hit points
-	var hitpointsTmp: Int = 0 // (optional) temporary offset
-	var hitpointsNow: Int = 0 // current hit points
+	public var hitpointsMax: Int = 0 // maximal hit points
+	public var hitpointsTmp: Int = 0 // (optional) temporary offset
+	public var hitpointsNow: Int = 0 // current hit points
 		set (value) {
 			when {
 				/* Hit points reduce: "Damaged". */
@@ -307,9 +307,6 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 	public fun Int?.getModifier() : Int
 		= if (this == null) 0 else floor((this - 10) / 2.0).toInt()
 
-	/* Saving Throw Proficiencies, by base klass, race and feats. */
-	var saveProficiences: List<Ability> = listOf()
-
 	/** Get the pure ability value. */
 	public fun ability(a: Ability) : Int
 		= abilities.get(a)?.first ?: 10
@@ -324,7 +321,7 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 		= floor((ability(a) - 10) / 2.0).toInt()
 
 	/** Lists proficient skills and why tney are proficient. */
-	var skills: MutableMap<SimpleSkill, Pair<SimpleProficiency, String>> = mutableMapOf()
+	public var skills: MutableMap<SimpleSkill, Pair<SimpleProficiency, String>> = mutableMapOf()
 		private set
 
 	/** Get a skill value. */
@@ -339,7 +336,7 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 	/** Lists proficiencies for tools or weapons. A tool is given by it's name or the category.
 	 * Proficiencies can be <proficient> or <expert>.
 	 * As with skills, the reason why the hero is proficicient with the tool is also stored.*/
-	var toolProficiencies: MutableMap<Pair<String, String>, Pair<SimpleProficiency, String>> = mutableMapOf()
+	public var tools: MutableMap<Pair<String, String>, Pair<SimpleProficiency, String>> = mutableMapOf()
 		private set
 
 	/** Check if the Hero can proficiently use an item. */
@@ -348,14 +345,14 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 
 	/** Get optional proficiency for a tool or its category. */
 	public fun getToolProficiency(item: SimpleItem)
-		= this.toolProficiencies.toList().find { (tool, _) ->
+		= this.tools.toList().find { (tool, _) ->
 			tool.first == item.name || tool.second == item.category
 		}
 
 	/* Classes and skills and proficiencies */
 
 	/* Occupations of the Hero. */
-	var klasses: MutableList<Triple<String, String?, Int>> = mutableListOf()
+	public var klasses: MutableList<Triple<String, String?, Int>> = mutableListOf()
 		private set
 
 	public fun setBaseKlass(klass: String, subklass: String? = null, klasslevel: Int = 1) {
@@ -408,23 +405,23 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 		log.debug("Updated now klass: ${klasses[if (i < 0) klasses.size - 1 else i]}")
 	}
 
-	val hitdiceMax: Map<String, Int> get()
+	public val hitdiceMax: Map<String, Int> get()
 		= klasses.map { (klass, sub, lvl) -> "Die($klass)" to lvl }.toMap()
 
-	var hitdice: MutableMap<String, Int> = mutableMapOf() // available hitdice
+	public var hitdice: MutableMap<String, Int> = mutableMapOf() // available hitdice
 		// private set
 
 	/* Languages which can be spoken, written and understood. */
-	var languages: List<String> = listOf()
+	public var languages: List<String> = listOf()
 
 
 	// collection of feats, class features, race features, special items' abilities and custom counters.
 	// how to influence the hero when having these traits?
 	// like a temporary equipped item or so.
-	var specialities: List<Speciality> = listOf()
+	public var specialities: List<Speciality> = listOf()
 
 	// TODO: difference between having an item equipped and as long as there the effect or being born with the effect/speciality?
-	var conditions: List<Effect> = listOf()
+	public var conditions: List<Effect> = listOf()
 		private set
 
 	// TODO (2021-03-16) is a condition (like PRONE, bewitched with 'Mage Armor') a (timed) speciality?
@@ -432,18 +429,18 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 	// TODO (2021-03-16) is an equipped spell like a equipped speciality?
 
 	/** List of spells which are currently equipped. */
-	val spellsPrepared: Set<Pair<SimpleSpell, String>> get() = spells.filter { it.value }.keys
+	public val spellsPrepared: Set<Pair<SimpleSpell, String>> get() = spells.filter { it.value }.keys
 
-	// TODO restrictions of max 14 spells, max 6 cantrips, etc...
-	val maxPreparedSpells: List<Int>
+	// TODO restrictions of max 14 spells, max 6 cantrips or infinitely many, etc...
+	public val maxPreparedSpells: List<Int>
 		get() = specialities.filter { false }.map { 1 } // TODO define max spell count depended by specialities?
-		// => maxPreparedSpells[0] = Infitiny
+		// => maxPreparedSpells[0] = Infitiny or 6
 		// => maxPreparedSpells[1] = 13 ...
 
 	/** List of spells, which can be equipped. Given by klasses, race or finding scrolls.
 	 * The value (Boolean) represents, if the spell is currently prepared or not. */
 	// var spells: MutableMap<Pair<String, String>, Boolean> = mutableMapOf()
-	var spells: Map<Pair<SimpleSpell, String>, Boolean> = mapOf()
+	public var spells: Map<Pair<SimpleSpell, String>, Boolean> = mapOf()
 		private set
 
 	/** Prepare a spell. It must be from the preparable list.
@@ -488,7 +485,7 @@ class Hero(player: String?, name: String, race: Pair<String, String>) {
 	/** Flat hierarchy of which items are currently carried,
 	 * linked with how they are carried (with hierarchy).
 	 * If the storage reference is empty, it is directly worn / held by the Hero. */
-	var inventory: MutableList<Pair<SimpleItem, String>> = mutableListOf()
+	public var inventory: MutableList<Pair<SimpleItem, String>> = mutableListOf()
 		private set
 
 	// eg. clothes are worn
@@ -683,6 +680,18 @@ public fun Collection<Pair<SimpleItem, String>>.weight(storage: String? = null) 
 public fun Collection<Pair<SimpleItem, String>>.copperValue(storage: String? = null) : Int
 	= this.fold(0) { b, i -> b + (if (storage == null || storage == i.second) i.first.copperValue else 0) }
 
+/** Check if an item collection contains a certain item (or of its kind) give by its name. */
+public operator fun Collection<Pair<SimpleItem, String>>.contains(itemName: String) : Boolean
+	= this.getItemByName(itemName) != null
+
+/** Check if an item collection contains a certain item. */
+public operator fun Collection<Pair<SimpleItem, String>>.contains(item: SimpleItem) : Boolean
+	= this.getItemByID(item.identifier) != null
+
+/** Check if an item collection contains a certain item in the given storage. */
+public operator fun Collection<Pair<SimpleItem, String>>.contains(itemStorage: Pair<SimpleItem, String>) : Boolean
+	= this.getItemByName(itemStorage.first.identifier)?.second == itemStorage.second
+
 /** Find the item by name. @return Item and its storage. */
 public fun Collection<Pair<SimpleItem, String>>.getItemByName(name: String) : Pair<SimpleItem, String>?
 	= this.find { (i, _) -> i.name == name }
@@ -690,6 +699,10 @@ public fun Collection<Pair<SimpleItem, String>>.getItemByName(name: String) : Pa
 /** Find the item by name. @return Item and its storage. */
 public fun Collection<Pair<SimpleItem, String>>.getItemByID(identifier: String) : Pair<SimpleItem, String>?
 	= this.find { (i, _) -> i.identifier == identifier }
+
+/** Check if an item is a storage inside the given collection. */
+public fun Collection<Pair<SimpleItem, String>>.isStoring(item: SimpleItem) : Boolean
+	= this.isStoringItemsByID(item.identifier)
 
 /** Check if an item has other items containing / attached on (aka serves as bag). */
 public fun Collection<Pair<SimpleItem, String>>.isStoringItemsByID(identifier: String) : Boolean
@@ -767,14 +780,21 @@ public fun MutableCollection<Pair<SimpleItem, String>>.dropItem(item: SimpleItem
  * Additionally partical items like a bag of sand an be divided (@see #devidable).
  * A SimpleItem also holds an identifier (@see #identifier), to specify a certain weapon or item is used, dropped or etc, and not all of their kind.
  */
-data class SimpleItem(val name: String, val identifier: String, val category: String, val weight: Double, val copperValue: Int, val dividable: Boolean = false) {
+public data class SimpleItem(val name: String, val identifier: String, val category: String, val weight: Double, val copperValue: Int, val dividable: Boolean = false) {
 	companion object {
 		val CP_TO_CP : Int = 1; // copper piece to copper piece
 		val SP_TO_CP : Int = 10; // silver piece to copper piece
 		val GP_TO_CP : Int = 50; // gold piece to copper piece
 		val EP_TO_CP : Int = 100; // electrum piece to copper piece
 		val PP_TO_CP : Int = 1000; // platinum piece to copper piece
+
+		// Initiator for Coins / Currency Pieces.
+		// private fun Coin(t: String) : SimpleItem = SimpleItem("$t Coin", "Currency", 0.02, SimpleItem.CP_TO_CP * when (t[0]) { 'C' -> 1; 'S' -> 10; 'G' -> 50; 'E' -> 100;'P' -> 1000; else -> 0)
+		//
 	}
+
+	override fun equals(other: Any?)
+		= other != null && other is SimpleItem && other.name == this.name && other.category == this.category
 
 	override fun toString() = "$name [$identifier]"
 
@@ -811,6 +831,10 @@ abstract class Speciality(val name: String, val count: Count?, val description: 
 	override fun toString() : String
 		= name + if (count != null) " { counted: $count }" else ""
 
+	public override fun equals(other: Any?) : Boolean
+		= (other != null && other is Speciality && other.name == this.name && other.description == this.description)
+		.also { "called Speciality($this).equals($other)"}
+
 	/** Reset counter:Set Current to max. */
 	public fun resetCounter() = count?.apply { current = max }
 
@@ -839,32 +863,50 @@ abstract class Speciality(val name: String, val count: Count?, val description: 
 /** Effect on the Hero, maybe by being pushed or bewitched or other reasons.
  * @param seconds, if given, the time will eat up the effect, otherwise the player or enemy must undo it.
  * @param removable if the hero themselves can remove the effect or if other methods (like remove curse or so) must be done.'*/
-class Effect(name: String, seconds: Int = 0, val removable: Boolean = true, description: String) : Speciality(name, Speciality.Count(recharge = "", max = seconds, current = seconds, loaded = null), description);
+class Effect(name: String, seconds: Int = 0, val removable: Boolean = true, description: String) : Speciality(name, Speciality.Count(recharge = "", max = seconds, current = seconds, loaded = null), description) {
+	public override fun equals(other: Any?)
+		= other != null && other is Effect && other.name == this.name && other.description == this.description && other.removable == this.removable
+}
 
 // TODO should it link to it's klass or the klass to the trait or double linked?
 /** KlassTrait given by a klass and subklass on a certain klass level.
  * A Klass Trait may give special abilities, improvements or resources to the Hero.*/
-class KlassTrait(name: String, val klass: Triple<String, String, Int>, count: Count?, description: String) : Speciality(name, count, description)
+class KlassTrait(name: String, val klass: Triple<String, String, Int>, count: Count? = null, description: String = "") : Speciality(name, count, description) {
+	public override fun equals(other: Any?)
+		= other != null && other is KlassTrait && other.name == this.name && other.description == this.description
+}
 
 // TODO should it link to it's klass or the klass to the trait or double linked?
 /** RaceFeature, given by the race and certain Hero Levels.
  * A race feature may give special abilities, improvements or resources. */
-class RaceFeature(name: String, val race: Pair<String, String>, val level: Int = 1, count: Count?) : Speciality(name, count, "");
+class RaceFeature(name: String, val race: Pair<String, String>, val level: Int = 1, count: Count? = null, description: String = "") : Speciality(name, count, "") {
+	public override fun equals(other: Any?)
+		= other != null && other is RaceFeature && other.name == this.name && other.description == this.description
+}
 
 // TODO should it link to it's klass or the klass to the trait or double linked?
 /** A Feat which can be optionally gained by certain circumstances.
  * It may give certain sepcial abilities, improvements or resources. */
-class Feat(name: String, count: Count?) : Speciality(name, count, "");
+class Feat(name: String, count: Count? = null, description: String = "") : Speciality(name, count, description) {
+	public override fun equals(other: Any?)
+		= other != null && other is Feat && other.name == this.name && other.description == this.description
+}
 
 // TODO should it link to it's klass or the klass to the trait or double linked?
 // eg. Mage Ring with 5 loaded spells or combinations of summing up a level 5 spell
 // eg. each atack with it grants +3 attack bonus and +3 attack damage.
 /** An ItemFeature can be hold as lomg as the corresponding Item is held and probably atuned by the Hero.
  * It may give certain improvements, abilities and resources. */
-class ItemFeature(name: String, count: Count?) : Speciality(name, count, "");
+class ItemFeature(name: String, count: Count? = null, description: String = "") : Speciality(name, count, description) {
+	public override fun equals(other: Any?)
+		= other != null && other is ItemFeature && other.name == this.name && other.description == this.description
+}
 
 // custom counter like: defeated dragons or days in this campaign
 /** A CustomCount is a counter or countdown made by the Hero's Player to get track of personal and other ideas.
  * For example encountered Dragons or days trained with a unproficient weapon. */
-class CustomCount(name: String, count: Count?) : Speciality(name, count, "");
+class CustomCount(name: String, count: Count? = null, description: String = "") : Speciality(name, count, description) {
+	public override fun equals(other: Any?)
+		= other != null && other is CustomCount && other.name == this.name && other.description == this.description
+}
 

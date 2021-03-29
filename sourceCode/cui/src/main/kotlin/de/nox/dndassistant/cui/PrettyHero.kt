@@ -69,7 +69,7 @@ public fun Hero.toMarkdown() : String
 		}}
 
 		### Tools:
-		${toolProficiencies.toList().joinToString("\n${indent}* ","* "){ (tool, reason) ->
+		${tools.toList().joinToString("\n${indent}* ","* "){ (tool, reason) ->
 			val (toolName, toolCategory) = tool
 			val (proficient, _) = reason
 			(
