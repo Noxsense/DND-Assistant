@@ -289,7 +289,158 @@ public fun Hero.Companion.fromJSON(jsonStr: String) : Hero {
 
 /** Write the Hero to a JSON String. */
 public fun Hero.toJSON(indentSpaces: Int = -1) : String
-	= "{ \"TODO\": \"\" }"
+	= this.let { hero ->
+		JSONObject().apply {
+			put("name", hero.name)
+			put("race", JSONObject(mutableMapOf(
+				"race-name" to hero.race.first,
+				"subrace-name" to hero.race.second,
+			)))
+
+			put("level", hero.level)
+			put("experience", JSONObject(mutableMapOf(
+				"points" to hero.experience.points,
+				"type" to hero.experience.method,
+			)))
+
+			putOpt("player", player) // puts optionally (if not null)
+			put("inspiration", hero.inspiration)
+
+			put("hitpoints", JSONObject(mutableMapOf(
+				"max" to hero.hitpointsMax,
+				"tmp" to hero.hitpointsTmp,
+				"now" to hero.hitpointsNow,
+			)))
+
+			put("deathsaves", "XXX type of death saves.") // TODO
+
+			// leftover hitdice, of all max (calculated by Klass levels)
+			put("available-hitdice", JSONObject(hero.hitdice.toMutableMap()))
+
+			// var speed: MutableMap<String, Int>
+			// var walkingSpeed: Int
+			put("speed", hero.speed.toList().map { (name, value) ->
+				JSONObject(mapOf("movement-name" to name, "speed-in-feet" to value))
+			})
+
+			// Ability STR, DEX, CON, INT, WIS, CHA
+			put("abilities", JSONObject(Ability.values().associateWith { a -> hero.ability(a) }))
+			put("save-proficiencies", Ability.values().filter { a -> hero.isSavingThrowProficient(a) })
+
+			// var klasses: MutableList<Triple<String, String?, Int>>
+			put("klasses", hero.klasses.map { (klass, sub, lvl) ->
+				JSONObject(mutableMapOf(
+					"klass-name" to klass,
+					"subklass-name" to sub,
+					"klass-level" to lvl,
+				))
+			})
+
+			// var skills: MutableMap<SimpleSkill, Pair<SimpleProficiency, String>>
+			put("skills", hero.skills.toList().map { (skill, prof) ->
+				JSONObject().apply {
+					put("skill-name", skill.name)
+					put("is-expert", prof.first == SimpleProficiency.E)
+
+					put("skill-source", prof.second)  // why proficient
+
+					if (skill !in SimpleSkill.DEFAULT_SKILLS) {
+						/* Custom Skill's Ability. If default skip (redudant info). */
+						put("custom-attribute", skill.ability)
+					}
+				}
+			})
+
+			// var tools: MutableMap<Pair<String, String>, Pair<SimpleProficiency, String>>
+			put("tools", JSONArray(hero.tools.toList().map { (tool, prof) ->
+				JSONObject().apply {
+					when {
+						tool.first != "" -> put("tool-name", tool.first)
+						else -> put("tool-category", tool.second)
+					}
+					put("is-expert", prof.first == SimpleProficiency.E)
+					put("tool-source", prof.second)  // why proficient
+				}
+			}))
+
+			// var languages: List<String>
+			put("languages", hero.languages)
+
+			// var specialities: List<Speciality>
+			// var conditions: List<Effect>
+			// TODO (imeplemt me)
+
+
+			put("traits", hero.specialities.map { speciality -> JSONObject().apply {
+				/* Name Type indicating the Code's Type.*/
+				put(when (speciality) {
+					is RaceFeature -> "race-feature-name"
+					is KlassTrait -> "klass-trait-name"
+					is Feat -> "feat-name"
+					is ItemFeature -> "item-feature-name"
+					else -> "custom-name"
+				}, speciality.name)
+
+				put("description", speciality.description)
+				put("count", speciality.count)
+			}})
+
+			// var spells: Map<Pair<SimpleSpell, String>, Boolean>
+			// val maxPreparedSpells: List<Int>  // depends on klasses, race and feats
+			// val spellsPrepared: Set<Pair<SimpleSpell, String>>  // depends on spell
+
+			// var armorSources: List<String>
+			// val armorClass: Int  // depends on feats, spells and equipped clothes
+			// val naturalBaseArmorClass: Int // depends on feats and spells
+			// TODO
+			put("armor-sources", listOf("naked"))
+
+			// var inventory: MutableList<Pair<SimpleItem, String>>
+			/* Just save the items name, identifer, ouccurence time (per storage).
+			 * The Item should be in the item catalogue. */
+			put("inventory", hero.inventory
+				// grouping: stored, by item name and of it is a storage itself.
+				// for all with triple.third == true (storage itself): store with identifier
+				.groupBy { (item, storageID) -> Triple(item.name, storageID, hero.inventory.isStoring(item)) }
+				.toList()
+				// part if is-a-storage or one-of-many-same
+				.partition { (triple, items) -> triple.third == false && items.size > 1 }
+				.let { (summableWithCount, necessarilyIdenfiable) ->
+
+					/* List items, which can be compressed to be listed as sums of the item.
+					 * (e.g. 6x Gold Pieces) */
+					(summableWithCount
+						// count amount of items
+						.map { (tri, its) -> Triple(tri.first, tri.second, its.size) }
+						// to JSON
+						.map { (itemName, storageID, count) -> JSONObject(mapOf(
+							"item-name" to itemName,
+							"amount" to count,
+							"storage" to storageID,
+						))}
+					+
+
+					/* List items, which needs to be identifiable
+					 * (e.g. Pouch #5 with Special Gems) */
+					necessarilyIdenfiable
+						// just the items and their storages again.
+						.flatMap { it.second }
+						// to JSON
+						.map { (item, storageID) -> JSONObject(mapOf(
+							"item-name" to item.name,
+							"identifier" to item.identifier,
+							"storage" to storageID,
+						))}
+					) // list or JSONObject objects
+				}
+			)
+
+			log.debug(this)
+
+			// TODO alternative ? log.debug("alternatively: ${JSONObject(hero)}") // looks too stupid.
+
+		}.let { jo -> if (indentSpaces < 0) jo.toString() else jo.toString(indentSpaces) }
+	}
 
 /** Save a player character as JSON to file.
   * @throws FileNotFoundException
