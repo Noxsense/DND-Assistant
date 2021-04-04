@@ -220,57 +220,29 @@ public fun Hero.Companion.fromJSON(jsonStr: String) : Hero {
 			}
 		}
 
-		// XXX DELETE ME: Item Catalog => repository of item, identifier := name
-		val itemCatalog: Map<String, Triple<String, Double, Int>> = mapOf (
-			"Copper Coin"   to Triple("Currency", 0.02, 1),
-			"Silver Coin"   to Triple("Currency", 0.02, SimpleItem.SP_TO_CP),
-			"Gold Coin"     to Triple("Currency", 0.02, SimpleItem.GP_TO_CP),
-			"Electrum Coin" to Triple("Currency", 0.02, SimpleItem.EP_TO_CP),
-			"Platinum Coin" to Triple("Currency", 0.02, SimpleItem.PP_TO_CP),
-
-			"Mage Armor Vest" to Triple("Clothing",  3.0, SimpleItem.SP_TO_CP * 5),
-
-			"Ember Collar" to Triple("Artefact",  0.0, 0),
-			"Ring of Spell Storing" to Triple("Ring",  0.0, SimpleItem.GP_TO_CP * 20000),
-			"Focus (pet collar)" to Triple("Arcane Focus",  1.0, 0),
-			"Potion of Greater Healing" to Triple("Potion",  0.0, 0),
-			"Sword of Answering" to Triple("Weapon",  0.0, 0),
-
-			"Backpack" to Triple("Adventuring Gear", 1.0, 0),
-
-			"Pouch"  to Triple("Adventuring Gear", 1.0, 0), // can hold 0.2 ft^3 or 6 lb
-
-			"Ball"   to Triple("Miscelleanous", 0.01, 1),
-
-			"Dagger" to Triple("Simple Meelee Weapon", 1.0, 4), // 1d4 piercing, finesse, simple melee, throwable
-
-			"Flask"  to Triple("Container", 1.0, 2), // can hold 1 pint of liquid (0.00056826125 m^3 = 568.26125 ml)
-			"Oil"    to Triple("Miscelleanous", 1.0, SimpleItem.SP_TO_CP), // 1lb oil is worth 1sp
-		)
-
 		/* Pack the inventory. */
-		obj.getJSONArray("inventory").forEach<JSONObject> { preItem ->
+		obj.getJSONArray("inventory").forEach<JSONObject> { preItemObj ->
 
-			val itemname = preItem.getString("item-name")
+			val itemname = preItemObj.getString("item-name")
 
 			/* Get Identifier for one special item or
 			 * the amount of items for "newly created" copies."
 			 * If a the item is dividable and a weight is given, use the new weight.
 			 */
-			val identifier = preItem.optStringNull("identifier")
-			val amount = if (identifier != null) 1 else preItem.optInt("amount", 1)
-			val optWeight = preItem.opt("weight-lb") as? Double
+			val identifier = preItemObj.optStringNull("identifier")
+			val amount = if (identifier != null) 1 else preItemObj.optInt("amount", 1)
+			val optWeight = preItemObj.opt("weight-lb") as? Double
 
 			/* Get x copies from the item catalog. */
-			val itemProp = itemCatalog.get(itemname)
+			val preItem = SimpleItem.Catalog.get(itemname)
 
 			/* Reference to another item to "combine into" */
-			val storage = preItem.optString("storage", "")
+			val storage = preItemObj.optString("storage", "")
 
-			if (itemProp != null && amount > 0) {
+			if (preItem != null && amount > 0) {
 				for (i in 0 until amount) {
 					// force for late storage resolving / linking
-					val item = itemProp.let { (category, weight, price) ->
+					val item = preItem.let { (category, weight, price) ->
 						SimpleItem(
 							name = itemname,
 							identifier = identifier ?: "$itemname@${inventory.size}",
@@ -462,6 +434,40 @@ public fun loadHero(filepath: String) : Hero {
 
 	return Hero.fromJSON(txt) // parse the hero
 }
+
+/** Load the Text from a given filepath.
+  * @throws FileNotFoundException
+  */
+public fun readText(filepath: String) : String
+	= (File(filepath).bufferedReader() as BufferedReader).use { it.readText() }
+
+/** Load an JSON Array to a Map of Pre Items. */
+public fun loadSimpleItemCatalog(jsonStr: String) : Map<String, PreSimpleItem>
+	= (JSONTokener(jsonStr).nextValue() as JSONArray)
+		.toList<JSONObject>().map {
+			val key = it.getString("item-name")
+			val attributes = PreSimpleItem(
+				it.optString("item-category", "Miscelleanous"),
+				it.optDouble("item-weight", 1.0),
+				it.optInt("item-copper-value", 0),
+				it.optBoolean("item-dividable", false),
+			)
+			key to attributes
+		}
+		.toMap()
+		.also { SimpleItem.Catalog += (it) } // store to shared item catalog
+
+/** Store the SimpleItem catatalog into a JSON Array String. */
+public fun SimpleItem.Companion.storeCatalog() : String
+	= JSONArray(SimpleItem.Catalog.toList().map { (itemName, preItem) ->
+		JSONObject(mapOf(
+			"item-name" to itemName,
+			"item-category" to preItem.category,
+			"item-weight" to preItem.weight,
+			"item-copper-value" to preItem.copperValue,
+			"item-dividable" to preItem.dividable,
+		))
+	}).toString()
 
 @Suppress("UNCHECKED_CAST")
 private fun <T> JSONArray.toList() : List<T>

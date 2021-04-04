@@ -15,38 +15,40 @@ class CharacterLoaderTest {
 
 	private val log = LoggerFactory.getLogger("Hero-Loader-Test")
 
-	private val itemCatalog: Map<String, Triple<String, Double, Int>> = mapOf (
-		"Copper Coin"   to Triple("Currency", 0.02, 1),
-		"Silver Coin"   to Triple("Currency", 0.02, SimpleItem.SP_TO_CP),
-		"Gold Coin"     to Triple("Currency", 0.02, SimpleItem.GP_TO_CP),
-		"Electrum Coin" to Triple("Currency", 0.02, SimpleItem.EP_TO_CP),
-		"Platinum Coin" to Triple("Currency", 0.02, SimpleItem.PP_TO_CP),
+	private val testItemCatalog: Map<String, PreSimpleItem> = mapOf (
+		"Copper Coin"   to PreSimpleItem("Currency", 0.02, 1, false),
+		"Silver Coin"   to PreSimpleItem("Currency", 0.02, SimpleItem.SP_TO_CP, false),
+		"Gold Coin"     to PreSimpleItem("Currency", 0.02, SimpleItem.GP_TO_CP, false),
+		"Electrum Coin" to PreSimpleItem("Currency", 0.02, SimpleItem.EP_TO_CP, false),
+		"Platinum Coin" to PreSimpleItem("Currency", 0.02, SimpleItem.PP_TO_CP, false),
 
-		"Mage Armor Vest" to Triple("Clothing",  3.0, SimpleItem.SP_TO_CP * 5),
+		"Mage Armor Vest" to PreSimpleItem("Clothing",  3.0, SimpleItem.SP_TO_CP * 5, false),
 
-		"Ember Collar" to Triple("Artefact",  0.0, 0),
-		"Ring of Spell Storing" to Triple("Ring",  0.0, SimpleItem.GP_TO_CP * 20000),
-		"Focus (pet collar)" to Triple("Arcane Focus",  1.0, 0),
-		"Potion of Greater Healing" to Triple("Potion",  0.0, 0),
-		"Sword of Answering" to Triple("Weapon",  0.0, 0),
+		"Ember Collar" to PreSimpleItem("Artefact",  0.0, 0, false),
+		"Ring of Spell Storing" to PreSimpleItem("Ring",  0.0, SimpleItem.GP_TO_CP * 20000, false),
+		"Focus (pet collar)" to PreSimpleItem("Arcane Focus",  1.0, 0, false),
+		"Potion of Greater Healing" to PreSimpleItem("Potion",  0.0, 0, true),
+		"Sword of Answering" to PreSimpleItem("Weapon",  0.0, 0, false),
 
-		"Pouch"  to Triple("Adventuring Gear", 1.0, 0), // can hold 0.2 ft^3 or 6 lb
+		"Pouch"  to PreSimpleItem("Adventuring Gear", 1.0, 0, false), // can hold 0.2 ft^3 or 6 lb
 
-		"Ball"   to Triple("Miscelleanous", 0.01, 1),
+		"Ball"   to PreSimpleItem("Miscelleanous", 0.01, 1, false),
 
-		"Dagger" to Triple("Simple Meelee Weapon", 1.0, 4), // 1d4 piercing, finesse, simple melee, throwable
+		"Dagger" to PreSimpleItem("Simple Meelee Weapon", 1.0, 4, false), // 1d4 piercing, finesse, simple melee, throwable
 
-		"Flask"  to Triple("Container", 1.0, 2), // can hold 1 pint of liquid (0.00056826125 m^3 = 568.26125 ml)
-		"Oil"    to Triple("Miscelleanous", 1.0, SimpleItem.SP_TO_CP), // 1lb oil is worth 1sp
+		"Flask"  to PreSimpleItem("Container", 1.0, 2, false), // can hold 1 pint of liquid (0.00056826125 m^3 = 568.26125 ml)
+		"Oil"    to PreSimpleItem("Miscelleanous", 1.0, SimpleItem.SP_TO_CP, false) // 1lb oil is worth 1sp
 	)
 
-	private fun Map<String, Triple<String, Double, Int>>.getItem(name: String, id: String)
-		= this.get(name)?.let { (category, weight, coppers) -> SimpleItem(
-				name = name,
-				identifier = id,
-				category = category,
-				weight = weight,
-				copperValue = coppers,
+	// get from testItemCatalog
+	private fun Map<String, PreSimpleItem>.getItem(name: String, id: String)
+		= this.get(name)?.let { (category, weight, coppers, dividable) -> SimpleItem(
+			name = name,
+			identifier = id,
+			category = category,
+			weight = weight,
+			copperValue = coppers,
+			dividable = dividable,
 			)
 		}
 
@@ -136,24 +138,24 @@ class CharacterLoaderTest {
 		log.debug(spells)
 
 		// var inventory: MutableList<Pair<SimpleItem, String>>
-		inventory.plusAssign(itemCatalog.getItem("Dagger", "Dagger@0")!! to "")
+		inventory.plusAssign(testItemCatalog.getItem("Dagger", "Dagger@0")!! to "")
 		inventory.plusAssign(SimpleItem("Backpack", "Backpack@0", "Adventuring Gear", 1.0, 0, false) to "")
 
-		inventory.plusAssign(itemCatalog.getItem("Sword of Answering", "SoA@0")!! to "Backpack@0")
+		inventory.plusAssign(testItemCatalog.getItem("Sword of Answering", "SoA@0")!! to "Backpack@0")
 
-		inventory.plusAssign(itemCatalog.getItem("Pouch", "Pouch@0")!! to "Backpack@0")
+		inventory.plusAssign(testItemCatalog.getItem("Pouch", "Pouch@0")!! to "Backpack@0")
 		(0 .. 5).forEach {
-			inventory.plusAssign(itemCatalog.getItem("Silver Coin", "SP@$it")!! to "Pouch@0")
+			inventory.plusAssign(testItemCatalog.getItem("Silver Coin", "SP@$it")!! to "Pouch@0")
 		}
 
-		inventory.plusAssign(itemCatalog.getItem("Gold Coin", "GP@0")!! to "Pouch@0")
+		inventory.plusAssign(testItemCatalog.getItem("Gold Coin", "GP@0")!! to "Pouch@0")
 
-		inventory.plusAssign(itemCatalog.getItem("Pouch", "Pouch@1")!! to "Backpack@0")
+		inventory.plusAssign(testItemCatalog.getItem("Pouch", "Pouch@1")!! to "Backpack@0")
 		(1 .. 3).forEach {
-			inventory.plusAssign(itemCatalog.getItem("Gold Coin", "GP@$it")!! to "Pouch@1")
+			inventory.plusAssign(testItemCatalog.getItem("Gold Coin", "GP@$it")!! to "Pouch@1")
 		}
 
-		inventory.plusAssign(itemCatalog.getItem("Pouch", "Pouch@Empty")!! to "Backpack@0")
+		inventory.plusAssign(testItemCatalog.getItem("Pouch", "Pouch@Empty")!! to "Backpack@0")
 
 		log.debug(inventory)
 	}
@@ -271,17 +273,17 @@ class CharacterLoaderTest {
 		// [design question / idea] - being bewitched by Confusing: Doing random stuff
 		// [design question / idea] - exhaustion points: 1
 
-		"Hero's Max Carrying Capacity: STR * 15 = 7 * 15"
-			.assertEquals(hero.ability(Ability.STR) * 15.0, hero.maxCarriageWeight())
+		// "Hero's Max Carrying Capacity: STR * 15 = 7 * 15"
+		// 	.assertEquals(hero.ability(Ability.STR) * 15.0, hero.maxCarriageWeight())
 
-		"Hero's Inventory: Count of items"
-			.assertEquals(13 + 1 /*oil*/ + 2500 /*gp*/, hero.inventory.size)
+		// "Hero's Inventory: Count of items"
+		// 	.assertEquals(13 + 1 /*oil*/ + 2500 /*gp*/, hero.inventory.size)
 
-		"Hero's Inventory: Summed weight (more than 2.5k GP (0.01 lb)"
-			.assertEquals(true, 25.0 <= hero.inventory.weight())
+		// "Hero's Inventory: Summed weight (more than 2.5k GP (0.01 lb)"
+		// 	.assertEquals(true, 25.0 <= hero.inventory.weight())
 
-		"Hero's Inventory: Summed value (more than 2.5k GP (50 cp)"
-			.assertEquals(true, 2500 * SimpleItem.GP_TO_CP <= hero.inventory.copperValue())
+		// "Hero's Inventory: Summed value (more than 2.5k GP (50 cp)"
+		// 	.assertEquals(true, 2500 * SimpleItem.GP_TO_CP <= hero.inventory.copperValue())
 
 		// TODO (2021-03-23) test
 		// Inventory:
@@ -305,6 +307,12 @@ class CharacterLoaderTest {
 		log.debug("Example Hero to Hero.json:\n" + heroJSON)
 
 		File("/tmp/HeroJSON.json").writeText(heroJSON)
+
+		// load SimpleItem.Catalog for loading equipped SimpleItem
+		SimpleItem.Catalog = testItemCatalog + mapOf(
+			// custom items.
+			"Backpack" to PreSimpleItem("Adventuring Gear", 1.0, 0, false),
+		)
 
 		// heroJSON resored to a (new) Hero.
 		val restoredHero = Hero.fromJSON(heroJSON)
@@ -409,13 +417,38 @@ class CharacterLoaderTest {
 			val a = expected.sortedBy { it.second }
 			val b = restored.sortedBy { it.second }
 
-			a.forEach { log.debug("Check $it in recevied: ${it in b}") }
-			b.forEach { log.debug("Check $it in given:    ${it in a}") }
-
 			a.all { it in b } && b.all { it in a }
 		}
 
 		log.info("Test: testLoading: OK!")
+	}
+
+	@Test
+	fun testLoadCatalog() {
+		log.info("Test.testLoadCatalog() / loadSimpleItemCatalog")
+		var filepath = File("src/test/resources/ItemCatalog.json").getAbsolutePath()
+		val txt = readText(filepath)
+
+		// start with an empty SimpleItem.Catalog.
+		SimpleItem.Catalog = mapOf()
+		val catalogBeforeCount = 0
+
+		"Start with empty SimpleItem.Catalog"
+			.assertEquals(0, SimpleItem.Catalog.size)
+
+		// load from file.
+		val catalog = loadSimpleItemCatalog(txt)
+
+		"Loaded File successfully"
+			.assertEquals(true, catalog.size > 0)
+
+		"Loaded also into SimpleItem.Catalog (greater than 0)"
+			.assertEquals(true, SimpleItem.Catalog.size > 0)
+
+		"All file loaded catalog items are now in SimpleItem.Catalog"
+			.assertEquals(true, SimpleItem.Catalog.keys.containsAll(catalog.keys))
+
+		log.info("Test.testLoadCatalog() DONE")
 	}
 
 	private fun <T> String.assertEquals(expected: T, actual: T)

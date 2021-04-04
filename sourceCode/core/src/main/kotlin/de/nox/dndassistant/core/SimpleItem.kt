@@ -20,6 +20,30 @@ public data class SimpleItem(val name: String, val identifier: String, val categ
 		// Initiator for Coins / Currency Pieces.
 		// private fun Coin(t: String) : SimpleItem = SimpleItem("$t Coin", "Currency", 0.02, SimpleItem.CP_TO_CP * when (t[0]) { 'C' -> 1; 'S' -> 10; 'G' -> 50; 'E' -> 100;'P' -> 1000; else -> 0)
 		//
+
+		var Catalog: Map<String, PreSimpleItem> = mapOf()
+
+		/** All known Identifier, given by newItem. */
+		private var identifiers: MutableSet<String> = mutableSetOf()
+
+		/** Try to get a new instance for the item, with an optional identifier. */
+		public fun newItem(name: String, identifier: String? = null) : SimpleItem?
+			= Catalog.get(name)?.let { pre ->
+
+				var x = identifiers.size
+				var uniqueID = identifier ?: "${name}@${x + 1}" // custom ID or counted by known identifiers.
+
+				// get an unique ID.
+				// TODO (2021-04-03) better unique ids.
+				while (uniqueID in identifiers) {
+					x += 1
+					uniqueID = "${name}@${x + 1}" // increase the appendix number
+				}
+
+				identifiers.plusAssign(uniqueID) // store new ID.
+
+				SimpleItem(name, uniqueID, pre.category, pre.weight, pre.copperValue, pre.dividable)
+			}
 	}
 
 	override fun equals(other: Any?)
@@ -33,6 +57,8 @@ public data class SimpleItem(val name: String, val identifier: String, val categ
 	public fun sameByNameAndIdentifier(other: SimpleItem) : Boolean
 		= this.sameByName(other) && this.identifier == other.identifier
 }
+
+data class PreSimpleItem(val category: String, val weight: Double, val copperValue: Int, val dividable: Boolean);
 
 
 // val cc = SimpleItem(  "Copper Coin", category: "Currency", 0.02, 1)
