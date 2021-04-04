@@ -1,0 +1,19 @@
+[ { "item-name": "Copper Piece", "item-category": "Currency", "item-weight": 0.02, "item-copper-value": 1 }
+, { "item-name": "Silver Piece", "item-category": "Currency", "item-weight": 0.02, "item-copper-value": 10 }
+, { "item-name": "Gold Piece", "item-category": "Currency", "item-weight": 0.02, "item-copper-value": 50 }
+, { "item-name": "Electrum Piece", "item-category": "Currency", "item-weight": 0.02, "item-copper-value": 100 }
+, { "item-name": "Platinum Piece", "item-category": "Currency", "item-weight": 0.02, "item-copper-value":  1000 }
+
+, { "item-name": "Mage Armor West", "item-category": "Clothing", "item-weight":  3.0, "item-copper-value":  50 }
+, { "item-name": "Ember Collar", "item-category": "Artefact", "item-weight":  0.0, "item-copper-value":  0 }
+, { "item-name": "Ring of Store Spelling", "item-category": "Ring", "item-weight":  0.0, "item-copper-value":  1000000 }
+, { "item-name": "Focus (pet collar)", "item-category": "Arcane Focus",  "item-weight": 1.0, "item-copper-value": 0 }
+, { "item-name": "Potion of Greater Healing", "item-category": "Potion", "item-weight":  0.0, "item-copper-value":  0 }
+, { "item-name": "Sword of Answering", "item-category": "Martial Meelee Weapon", "item-weight":  0.0, "item-copper-value":  0 }
+
+, { "item-name": "Ball", "item-category": "Miscelleanous", "item-weight": 0.01, "item-copper-value":  1 }
+
+, { "item-name": "Dagger", "item-category": "Simple Meelee Weapon", "item-weight": 1.0, "item-copper-value":  4 }
+, { "item-name": "Bagpack", "item-category": "Adventuring Gear", "item-weight": 1.0, "item-copper-value":  2 }
+, { "item-name": "Oil", "item-category": "Miscelleanous", "item-weight": 1.0, "item-copper-value":  10 }
+]
