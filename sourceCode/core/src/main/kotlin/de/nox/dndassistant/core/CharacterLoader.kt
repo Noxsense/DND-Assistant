@@ -39,19 +39,26 @@ public fun Hero.Companion.fromJSON(jsonStr: String) : Hero {
 		this.inspiration = obj.getInt("inspiration")
 
 		/* Expirience points. */
-		obj.getJSONObject("experience").also { xp ->
+		obj.getJSONObject("experience").let { xp ->
 			experience = Hero.Experience(points = xp.getInt("points"), method = xp.getString("type"))
 		}
 
 		/* Hitpoints => object {max, now, temporary} */
-		obj.getJSONObject("hitpoints").also { hp ->
+		obj.getJSONObject("hitpoints").let { hp ->
 			hitpointsMax = hp.getInt("max")
 			hitpointsNow = hp.getInt("now")
 			hitpointsTmp = hp.getInt("tmp")
 		}
 
+		obj.getJSONArray("deathsaves").forEach<Boolean> { deathsaveSuccess ->
+			when {
+				deathsaveSuccess -> deathsaves.addSuccess()
+				else -> deathsaves.addFailure()
+			}
+		}
+
 		/* Abilities. */
-		obj.getJSONObject("abilities").also { abs ->
+		obj.getJSONObject("abilities").let { abs ->
 			val saves = obj.getJSONArray("save-proficiencies")
 				.map<String, String> { "$it" }
 
@@ -284,7 +291,7 @@ public fun Hero.toJSON(indentSpaces: Int = -1) : String
 				"now" to hero.hitpointsNow,
 			)))
 
-			put("deathsaves", "XXX type of death saves.") // TODO
+			put("deathsaves", hero.deathsaves.toList()) // TODO
 
 			// leftover hitdice, of all max (calculated by Klass levels)
 			put("available-hitdice", JSONObject(hero.hitdice.toMutableMap()))
