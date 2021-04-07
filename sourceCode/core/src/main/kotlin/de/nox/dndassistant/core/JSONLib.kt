@@ -487,6 +487,65 @@ public fun SimpleItem.Companion.storeCatalog() : String
 		))
 	}).toString()
 
+/** Create a JSON string that represents the simple spell. */
+public fun SimpleSpell.toJSON() : String
+	= JSONObject(this).toString()
+
+/** Create a JSON for a whole SimpleSpell list. */
+public fun Collection<SimpleSpell>.toJSON() : String
+	= JSONArray(this).toString()
+
+/** Try to load a SimpleSpell from the JSON string.
+ * @throws JSONException if the json string cannot be read.
+ */
+public fun SimpleSpell.Companion.fromJSON(jsonStr: String) : SimpleSpell
+	= ((JSONTokener(jsonStr).nextValue()) as JSONObject).let { json ->
+		SimpleSpell(
+			json.getString("name"),
+			json.getString("school"),
+			json.getString("castingTime"),
+			json.optBoolean("ritual", false),
+
+			// component object (SimpleSpell.Components)
+			json.getJSONObject("components").let { componentObj ->
+				SimpleSpell.Components(
+					componentObj.optBoolean("verbal", false),
+					componentObj.optBoolean("somatic", false),
+					componentObj.optJSONArray("materialGP")?.toList<JSONObject>()?.map { materialObj ->
+						// list of items, and their least worth value
+						materialObj.getString("first") to materialObj.getInt("second")
+					}?: listOf(),
+				)
+			},
+
+			json.getString("range"),
+			json.getString("duration"),
+			json.optBoolean("concentration", false),
+			json.getString("description"),
+
+			// Level mapped to List of Effects (their titles, their updated values)
+			json.getJSONObject("levels").let { levelObj ->
+				levelObj.keys().asSequence()
+					.map { level ->
+						// json effect obj: Maps Name to Any
+						val effectsObj = levelObj.getJSONObject(level.toString())
+						val effects = effectsObj.keys().asSequence().associateWith { name -> effectsObj.get(name) }
+
+						// associate level to effects
+						level.toInt() to effects
+					}.toMap()
+			},
+
+			json.optBoolean("optAttackRoll", false),
+			json.optBoolean("optSpellDC", false),
+
+			// list of klasses / subklasses
+			json.optJSONArray("klasses")?.toList<JSONObject>()?.map {
+				it.getString("first") to it.getString("second")
+			}?.toSet() ?: setOf()
+		)
+	}
+
 @Suppress("UNCHECKED_CAST")
 private fun <T> JSONArray.toList() : List<T>
 	= (0 until length()).map { get(it) as T }
