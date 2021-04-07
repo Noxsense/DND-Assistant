@@ -10,6 +10,9 @@ import kotlin.math.abs
 import java.io.File
 
 import org.json.JSONException
+import org.json.JSONTokener
+import org.json.JSONArray
+import org.json.JSONObject
 
 class JSONLibTest {
 
@@ -452,6 +455,35 @@ class JSONLibTest {
 			.assertEquals(true, SimpleItem.Catalog.keys.containsAll(catalog.keys))
 
 		log.info("Test.testLoadCatalog() DONE")
+	}
+
+	@Test
+	fun loadSimpleSpells() {
+		log.info("Test.loadSimpleSpells() / SimpleSpell.toJSON(), SimpleSpell.Companion.fromJSON()")
+
+		val spells = listOf(
+			SimpleSpell(name = "Simple Spell",                     school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VSM(listOf("Piece of cured Leather" to 0)),       range = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(1 to mapOf()), optAttackRoll = false, optSpellDC = false),
+			SimpleSpell(name = "Concentration Spell",              school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VSM(listOf("Small Block of Granite" to 0)),       range = "Touch",               duration = "10 min",        concentration =  true, description = "?", levels = mapOf(5 to mapOf()), optAttackRoll = false, optSpellDC = false),
+			SimpleSpell(name = "Levelling Spell",                  school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VS,                                               range = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = (6 .. 9).map { l -> l to mapOf("Heal" to "${(l + 1)*10} hp")}.toMap(), optAttackRoll = false, optSpellDC = false),
+			SimpleSpell(name = "Levelling Cantrip",                school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VS,                                               range = "120 ft",              duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(0 to mapOf("Attack-Damage" to "1d10 (fire)"), -5 to mapOf("Attack-Damage" to "2d10 (fire)"), -11 to mapOf("Attack-Damage" to "3d10 (fire)"), -17 to mapOf("Attack-Damage" to "4d10 (fire)")), optAttackRoll = true, optSpellDC = false),
+			SimpleSpell(name = "Ritual Spell",                     school = "???", castingTime = "1 act", ritual =  true, components = SimpleSpell.Components.VS,                                               range = "self + globe (30ft)", duration = "10 min",        concentration = false, description = "?", levels = mapOf(1 to mapOf()), optAttackRoll = false, optSpellDC = false),
+			SimpleSpell(name = "Spell with Materials (GP) Needed", school = "???", castingTime = "1 h",   ritual = false, components = SimpleSpell.Components.VSM(listOf("Diamond" to 1000, "Vessel" to 2000)), range = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(8 to mapOf()), optAttackRoll = false, optSpellDC = false),
+		)
+
+		val spellsJSON = spells.toJSON()
+
+		File("/tmp/Spells.json").writeText(spellsJSON) // XXX
+
+		val spellsFromJSON = (JSONTokener(spellsJSON).nextValue() as JSONArray).let { array ->
+			(0 until array.length()).map { i -> SimpleSpell.fromJSON(array.getJSONObject(i).toString()) }
+		}
+
+		// to JSON and back.
+		assertTrue(spellsFromJSON.containsAll(spells))
+		assertTrue(spells.containsAll(spellsFromJSON))
+
+
+		log.info("Test.loadSimpleSpells() DONE")
 	}
 
 	private fun <T> String.assertEquals(expected: T, actual: T)
