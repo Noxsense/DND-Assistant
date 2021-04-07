@@ -11,7 +11,7 @@ import java.io.File
 
 import org.json.JSONException
 
-class CharacterLoaderTest {
+class JSONLibTest {
 
 	private val log = LoggerFactory.getLogger("Hero-Loader-Test")
 
@@ -88,6 +88,9 @@ class CharacterLoaderTest {
 		hitpointsMax = 109
 		hitpointsTmp = 5 // buffer
 		hitpointsNow = 24
+
+		deathsaves.addFailure()
+		deathsaves.addSuccess(critical = true)
 
 		// var klasses: MutableList<Triple<String, String?, Int>>
 
@@ -306,6 +309,7 @@ class CharacterLoaderTest {
 
 		log.debug("Example Hero to Hero.json:\n" + heroJSON)
 
+		// write to file.
 		File("/tmp/HeroJSON.json").writeText(heroJSON)
 
 		// load SimpleItem.Catalog for loading equipped SimpleItem
@@ -431,7 +435,6 @@ class CharacterLoaderTest {
 
 		// start with an empty SimpleItem.Catalog.
 		SimpleItem.Catalog = mapOf()
-		val catalogBeforeCount = 0
 
 		"Start with empty SimpleItem.Catalog"
 			.assertEquals(0, SimpleItem.Catalog.size)
