@@ -349,6 +349,17 @@ public fun Hero.toJSON(indentSpaces: Int = -1) : String
 			// var conditions: List<Effect>
 			// TODO (imeplemt me)
 
+				// - Feat(name: String, count: Count?, description: String)
+				// - KlassTrait(name: String, val klass: Triple<String, String, Int>, count: Count?, description: String)
+				// - RaceFeature(name: String, val race: Pair<String, String>, val level: Int, count: Count?, description: String)
+				// - ItemFeature(name: String, count: Count?, description: String)
+				// - CustomCount(name: String, count: Count?, description: String)
+
+				// TODO later human interface: setting klasses or leveling up should add the option to auto add the specialities, without duplicating
+
+				// - Prone / grapelled
+				// - under spell influence
+				// - Effect(name: String, seconds: Int, val removable: Boolean, description: String)
 
 			put("traits", hero.specialities.map { speciality -> JSONObject().apply {
 				/* Name Type indicating the Code's Type.*/
