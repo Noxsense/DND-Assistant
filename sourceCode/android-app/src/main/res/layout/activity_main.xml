@@ -209,14 +209,6 @@
           layout="@layout/content_attacks"
           />
         <include
-          android:id="@+id/content_spells"
-          android:layout_height="match_parent"
-          android:layout_width="match_parent"
-          android:padding="10sp"
-          android:visibility="gone"
-          layout="@layout/content_spells"
-          />
-        <include
           android:id="@+id/content_classes"
           android:layout_height="match_parent"
           android:layout_width="match_parent"
@@ -231,14 +223,6 @@
           android:padding="10sp"
           android:visibility="gone"
           layout="@layout/content_inventory"
-          />
-        <include
-          android:id="@+id/content_race_background"
-          android:layout_height="match_parent"
-          android:layout_width="match_parent"
-          android:padding="10sp"
-          android:visibility="gone"
-          layout="@layout/content_race_background"
           />
         <include
           android:id="@+id/content_rolls"

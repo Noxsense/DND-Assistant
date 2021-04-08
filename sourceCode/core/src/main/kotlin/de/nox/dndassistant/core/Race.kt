@@ -6,7 +6,7 @@ data class Race(
 	val abilityScoreIncrease: Map<Ability, Int> = mapOf(),
 	val age: Map<String, Int> = mapOf("adult" to 18),
 	val alignment: String = "neutral",
-	val size: Size = Size.MEDIUM,
+	val size: String = "Size.MEDIUM",
 	val sizeDescription: String = "ca. 180m high, ca. 75kg",
 	val speed: Map<String, Int> = mapOf("walking" to 30),
 	val languages: List<String> = listOf("Common"),

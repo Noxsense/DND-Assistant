@@ -17,7 +17,6 @@ import androidx.appcompat.widget.AppCompatTextView
 import de.nox.dndassistant.core.Ability
 import de.nox.dndassistant.core.Logger
 import de.nox.dndassistant.core.Condition
-import de.nox.dndassistant.core.PlayerCharacter
 import de.nox.dndassistant.core.DiceTerm
 
 /**
@@ -39,28 +38,24 @@ public class HitpointView : LinearLayout {
 
 	constructor(c: Context, attrs: AttributeSet? = null) : super(c, attrs);
 
-	// TODO (2020-10-20) detach from this class and move to shared lib.
-	/** Attached character. */
-	private val character: PlayerCharacter get() = CharacterManager.INSTANCE.character
-
 	/* Quick shorcut: Hit Points. */
-	private val hpBase: Int get() = character.hitpoints
-	private val hpCurrent: Int get() = character.current.hitpoints
-	private val hpTemporary: Int get() = character.current.hitpointsTMP
-	private val hpMaximal: Int get() = character.current.hitpointsMax
+	private val hpBase: Int get() = 0 // character.hitpoints
+	private val hpCurrent: Int get() = 0 // character.current.hitpoints
+	private val hpTemporary: Int get() = 0 // character.current.hitpointsTMP
+	private val hpMaximal: Int get() = 0 // character.current.hitpointsMax
 
 	/* Quick shorcut: Hit dice. */
-	private val hitdiceAll: List<Int> get() = character.hitdice.map { it.value }
-	private val hitdiceCurrent: List<Int> get() = character.current.hitdice.map { it.value }
+	private val hitdiceAll: List<Int> get() = listOf()
+	private val hitdiceCurrent: List<Int> get() = listOf()
 
 	/* Quick shorcut: Conditions dice. */
-	private val conditions: Map<Condition, Int> get() = character.current.conditions
+	private val conditions: Map<Condition, Int> get() = mapOf()
 
 	/* Quick rest functions. */
-	private fun restLong() = character.current.restLong()
-	private fun restShort(d: Int, heal: Int) = character.current.restShort(listOf(DiceTerm.Die(d)), heal)
-	private fun heal(hp: Int) = character.current.heal(hp)
-	private fun takeHit(hp: Int, crit: Boolean) = character.current.takeHit(hp, crit)
+	private fun restLong() {}
+	private fun restShort(d: Int, heal: Int) {}
+	private fun heal(hp: Int) {}
+	private fun takeHit(hp: Int, crit: Boolean) {}
 
 	/** Hit point preview.
 	 * Also click handler top open content,
@@ -90,7 +85,7 @@ public class HitpointView : LinearLayout {
 			log.debug("Initiated Content / ViewGroup")
 
 			/* load sub views. */
-			acView.text = "AC: ${character.armorClass}"
+			acView.text = "AC: <AC>"
 
 			/* initiate hit dice. */
 			restView // lazy initiate
@@ -107,7 +102,7 @@ public class HitpointView : LinearLayout {
 		}
 	}
 
-	/** Show the current character state. */
+	/** Show the current hero state. */
 	public fun displayNow() {
 		log.debug("Loaded $preview")
 		log.debug("Loaded $content")
@@ -183,7 +178,7 @@ public class HitpointView : LinearLayout {
 	/** OnClickListener: Modify the hitpoints by the hitpoint_modifier. */
 	private val hpModifying: View.OnClickListener
 		= View.OnClickListener { view ->
-			log.debug("Heal or damage the character.")
+			log.debug("Heal or damage the Hero.")
 
 			/* Values and parameters. */
 			val hp = hpModifyingNum
@@ -230,7 +225,7 @@ public class HitpointView : LinearLayout {
 		log.debug("Toggle Fold, now: $folded")
 	}
 
-	/** Show attached character's current health in health bar. */
+	/** Show attached hero's current health in health bar. */
 	fun displayCurrentHealth() {
 		/* Display the hitpoints in bar format. */
 		preview.apply {
@@ -256,9 +251,7 @@ public class HitpointView : LinearLayout {
 		val fail: String = getContext().getString(R.string.deathfail)
 		val success: String = getContext().getString(R.string.deathsuccess)
 
-		deathFightView.text = (
-			fail.repeat(character.current.deathsaveFail)
-			+ success.repeat(character.current.deathsaveSuccess))
+		deathFightView.text = "" // XXX
 	}
 
 	/** Display and control for armor class. */
@@ -281,7 +274,7 @@ public class HitpointView : LinearLayout {
 	/** Long rest. On Click, a long rest is done. Front end will be updated. */
 	private val longrestView: TextView by lazy {
 		findViewById<TextView>(R.id.longrest).also { restL ->
-			/* OnClick: Let the character rest long. */
+			/* OnClick: Let the hero rest long. */
 			restL.setOnClickListener {
 				log.info("Long rest, 8h.")
 
@@ -313,12 +306,12 @@ public class HitpointView : LinearLayout {
 	}
 
 	/** List of all hit dice:
-	 * OnClick, the character rests shortly and spends the selected die. */
+	 * OnClick, the hero rests shortly and spends the selected die. */
 	private var shortrestViews: List<HitdieView> = listOf()
 
 	/** Display the hitdice which are given by the list.
 	 * Set their available status according to the available list.
-	 * By default: the current character's hitdice. */
+	 * By default: the current hero's hitdice. */
 	public fun displayHitdice(
 		hitdice: List<Int> = hitdiceAll,
 		available: List<Int> = hitdiceCurrent
@@ -414,7 +407,7 @@ public class HitpointView : LinearLayout {
 	/** Hidden Constitution Modifier for the hit die rest (short rest). */
 	private val conModHack = TextView(getContext()).also {
 		it.visibility = View.GONE
-		it.text = "${character.abilityModifier(Ability.CON)}"
+		it.text = "MOD (CON)"
 	}
 
 	/** Drawable for a HitdieView. */

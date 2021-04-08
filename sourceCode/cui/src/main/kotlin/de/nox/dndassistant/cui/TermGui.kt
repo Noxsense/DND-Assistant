@@ -45,6 +45,9 @@ object LoggerFactory {
 			private fun now(): String
 				= LocalDateTime.now().format(formatter)
 
+			override fun getLoggingLevel() : LoggingLevel
+				= LoggerFactory.LOG_LEVEL
+
 			override fun displayLevel(t: LoggingLevel) {
 				LOG_LEVEL = t
 			}

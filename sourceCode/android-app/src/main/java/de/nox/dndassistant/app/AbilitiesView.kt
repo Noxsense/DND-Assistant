@@ -15,7 +15,6 @@ import de.nox.dndassistant.core.Logger
 import de.nox.dndassistant.core.D20
 import de.nox.dndassistant.core.Ability
 import de.nox.dndassistant.core.Proficiency
-import de.nox.dndassistant.core.PlayerCharacter
 
 public class AbilitiesView : LinearLayout {
 
@@ -53,22 +52,22 @@ public class AbilitiesView : LinearLayout {
 	}
 
 	/** Get all known abilities for the requesting player character. */
-	public fun setScores(pc: PlayerCharacter) {
+	public fun setScores(scores: Map<Ability, Pair<Int, Boolean>>) {
 		/* Own Proficiency bonus, a bit hacked as hidden text view?. */
-		setProficiency(pc.proficiencyBonus)
+		setProficiency(0) // XXX
 
 		/* Add values for ability scores. */
 		abilityList.forEach { a ->
-			val score = pc.abilityScore(a)
-			val save = pc.getProficiencyFor(a)
+			val score = scores.get(a)?.first ?: 10 // XXX
+			val save = scores.get(a)?.second ?: false // XXX
 
 			// set score.
 			setScore(a, score)
-			log.debug("Set score for PC ${pc.name}: $a.")
+			log.debug("Set score for PC <NAME>: $a.")
 
 			// set saving throw.
-			setSavingThrow(a, save.first != Proficiency.NONE)
-			log.debug("Set saving throw PC ${pc.name}: $a?")
+			setSavingThrow(a, save)
+			log.debug("Set saving throw PC <NAME>: $a?")
 		}
 	}
 

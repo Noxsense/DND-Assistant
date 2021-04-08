@@ -12,6 +12,15 @@ public object LoggerFactory {
 }
 
 public class AndroidLogger(val tag: String) : Logger {
+
+	private var LOG_LEVEL: LoggingLevel = LoggingLevel.INFO
+
+	override fun getLoggingLevel() = LOG_LEVEL
+
+	override fun displayLevel(t: LoggingLevel) {
+		LOG_LEVEL = t
+	}
+
 	override fun log(t: LoggingLevel, msg: Any?) {
 		when (t) {
 			LoggingLevel.ERROR -> Log.e(tag, "${msg}")
