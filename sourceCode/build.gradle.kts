@@ -41,3 +41,17 @@ allprojects {
 tasks.create<Delete>("clean") {
   delete(rootProject.buildDir)
 }
+
+open class GreetingTask: DefaultTask() {
+  @TaskAction
+  fun greet() {
+    println("Hello greettings, https://docs.gradle.org/current/userguide/custom_tasks.html")
+  }
+}
+
+tasks.register("runDebug", Exec::class) {
+  dependsOn(":android-app:installDebug")
+  description = "Install the app"
+  group = "build" // to display
+  commandLine = "adb shell am start -n de.nox.dndassistant.app.debug/de.nox.dndassistant.app.MainActivity -a android.intent.action.MAIN -c android.intent.category.LAUNCHER".split(" ")
+}

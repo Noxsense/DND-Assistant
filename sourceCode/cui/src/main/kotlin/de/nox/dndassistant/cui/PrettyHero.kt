@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter
 
 import de.nox.dndassistant.core.*
 
+/** Extending method: Hero to pretty Markdown (text based human readable format).*/
 public fun Hero.toMarkdown() : String
 	= this.run {
 		val indent = "\t\t" // to trim off and everything is equally long.

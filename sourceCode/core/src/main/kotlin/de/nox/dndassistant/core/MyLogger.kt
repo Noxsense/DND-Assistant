@@ -14,6 +14,8 @@ public object LoggerFactory {
 			private fun now(): String
 				= "%-19s".format(System.currentTimeMillis()) // yyyy-mm-dd HH:MM:SS
 
+			override fun getLoggingLevel() = LoggerFactory.LOG_LEVEL
+
 			override fun displayLevel(t: LoggingLevel) {
 				LoggerFactory.LOG_LEVEL = t
 			}
@@ -37,6 +39,7 @@ interface Logger {
 	abstract fun log(t: LoggingLevel, msg: Any?)
 
 	fun displayLevel(t: LoggingLevel)
+	fun getLoggingLevel() : LoggingLevel
 
 	fun error(msg: Any?) = log(LoggingLevel.ERROR, msg)
 	fun info(msg: Any?) = log(LoggingLevel.INFO, msg)
