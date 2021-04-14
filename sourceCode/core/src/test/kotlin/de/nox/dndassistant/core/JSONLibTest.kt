@@ -143,11 +143,20 @@ class JSONLibTest {
 		// val spellsPrepared: Set<Pair<SimpleSpell, String>>  // depends on spell
 		log.debug(spells)
 
+		// var attacks: MutableMap<Attack, String>
+		attacks[Attack("Unarmed Strike", listOf(Attack.Damage(DamageType.BLUDGEONING, "1d3 + DEX")))] = "d20 + STR"
+
+		attacks[Attack("Some Spell as Source", DamageType.BLUDGEONING, "1d8 + CHA")] = "d20 + CHA"
+		attacks[Attack("Some other Spell as Source", DamageType.BLUDGEONING, "12d6", 120, "20ft radius")] = "DC 18 (DEX)" // hits anyways, if in range or so.
+
 		// var inventory: MutableList<Pair<SimpleItem, String>>
 		inventory.plusAssign(testItemCatalog.getItem("Dagger", "Dagger@0")!! to "")
 		inventory.plusAssign(SimpleItem("Backpack", "Backpack@0", "Adventuring Gear", 1.0, 0, false) to "")
 
 		inventory.plusAssign(testItemCatalog.getItem("Sword of Answering", "SoA@0")!! to "Backpack@0")
+
+		// add attack for item.
+		attacks[Attack(inventory.getItemByName("Sword of Answering")!!.first, DamageType.SLASHING, "1d8 + 3 + STR + proficiencyBonus")] = "1d20 + 3 + STR + proficiencyBonus"
 
 		inventory.plusAssign(testItemCatalog.getItem("Pouch", "Pouch@0")!! to "Backpack@0")
 		(0 .. 5).forEach {
@@ -404,7 +413,7 @@ class JSONLibTest {
 			.assertEquals(exampleHero.languages, restoredHero.languages)
 
 		// TODO (comparing test, comparable Speciality Lists.)
-		// "Hero's specialities".assertSameByContent(exampleHero.specialities, restoredHero.specialities)
+		// "Hero's specialities".assertEqualsBy(exampleHero.specialities, restoredHero.specialities) { false }
 
 		"Hero's conditions"
 			.assertEquals(exampleHero.conditions, restoredHero.conditions)
@@ -420,12 +429,22 @@ class JSONLibTest {
 			.assertEquals(exampleHero.spells, restoredHero.spells)
 
 		// TODO (comparing test, comparable <SimpleItem, String> List.)
-		"Hero's inventory".assertEqualsBy(exampleHero.inventory, restoredHero.inventory) { expected, restored ->
-			val a = expected.sortedBy { it.second }
-			val b = restored.sortedBy { it.second }
+		"Hero's inventory"
+			.assertEqualsBy(exampleHero.inventory, restoredHero.inventory) { expected, restored ->
+				val a = expected.sortedBy { it.second }
+				val b = restored.sortedBy { it.second }
 
-			a.all { it in b } && b.all { it in a }
-		}
+				a.all { it in b } && b.all { it in a }
+			}
+
+		log.debug("Hero example attack:  ${exampleHero.attacks}")
+		log.debug("Hero restored attack: ${restoredHero.attacks}")
+
+		"Hero's attacks"
+			.assertEqualsBy(exampleHero.attacks, restoredHero.attacks) { expected, restored ->
+				expected.toList().all { (attack, roll) -> restored[attack] == roll }
+				&& restored.toList().all { (attack, roll) -> expected[attack] == roll }
+			}
 
 		log.info("Test: testLoading: OK!")
 	}
@@ -496,25 +515,5 @@ class JSONLibTest {
 		= let {
 			assertTrue(equalFun.invoke(expected, actual), this)
 			log.debug("Assert Equals By: '$this' as expected ($expected).")
-		}
-
-	// compare by containing all objects
-	private fun <T> String.assertSameByContent(expectedCollection: Collection<T>, actualCollection: Collection<T>)
-		= let {
-			val containsAllActual = expectedCollection.containsAll(actualCollection)
-			val containsNotMoreThanActual = actualCollection.contains(expectedCollection)
-
-			log.debug("Expected List: $expectedCollection")
-			log.debug("Actual List:   $actualCollection")
-
-			if (!containsAllActual) {
-				fail("Expected does not contain all expected => Missing: ${ expectedCollection - actualCollection }")
-			}
-
-			if (!containsNotMoreThanActual) {
-				fail("Expected contains more than expected => Too Much: ${ actualCollection - actualCollection }")
-			}
-
-			log.debug("Assert Same by Content: '$this' as expected ($expectedCollection).")
 		}
 }

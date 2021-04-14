@@ -263,6 +263,64 @@ public fun Hero.Companion.fromJSON(jsonStr: String) : Hero {
 			}
 		}
 		this.inventory.dropIncorrectlyStoredItems() // drop items whose storages couldn't be resolved
+
+		/* Get the optionally (prepared / listed) attacks. */
+		obj.optJSONArray("attacks")?.forEach<JSONObject> { atkObj ->
+			// attack-source
+			val attackSource = atkObj.get("attack-source").let { atkSrcObject -> when (atkSrcObject) {
+				is JSONObject -> {
+					val atkSrcType = atkSrcObject.getString("attack-type")
+
+					// sub types of the source.
+					when (atkSrcType) {
+						"Item" -> {
+							// name and key of item
+							val attackItemName = atkSrcObject.getString("attack-item-name")
+							val attackItemID = atkSrcObject.getString("attack-item-identifier")
+
+							// source as SimpleItem
+							inventory.getItemByID(attackItemID)?.first // from inventory
+							?: SimpleItem(attackItemName, attackItemID, "?", 0.0, 0, false) // placeholder
+						}
+						"Spell" -> {
+							// XXX
+							val attackSpellName = atkSrcObject.getString("attack-spell-name")
+
+							// spell or String (Spell name).
+							spells.keys.find { it.first.name == attackSpellName } ?: attackSpellName
+						}
+						else -> "Parsed Attack (type: $atkSrcType) $atkSrcObject"
+					}
+				}
+
+				else -> atkSrcObject.toString() // attack source just as string
+			}}
+
+			// attack-damage
+			val attackDamage: List<Attack.Damage>
+				= atkObj.getJSONArray("attack-damage")
+					.map<JSONObject, Attack.Damage> { dmgObj ->
+						Attack.Damage(
+							DamageType.valueOf(dmgObj.getString("type")),
+							dmgObj.getString("value")
+						)
+				}
+
+			val attack = Attack(
+				attackSource,
+				attackDamage,
+				atkObj.optInt("attack-reach", 5),
+				atkObj.optString("attack-targets", "One Target"),
+				atkObj.optString("attack-description"),
+			)
+
+			attacks[attack] = atkObj.optString("attack-roll")
+		}
+
+		// if attacks have no unarmed strike, add the default unarmed strike to attacks.
+		if (attacks.keys.find { atk -> atk.source == Attack.UNARMED.source } == null) {
+			attacks[Attack.UNARMED] = Attack.UNARMED_ATTACK_ROLL
+		}
 	}
 }
 
@@ -349,17 +407,11 @@ public fun Hero.toJSON(indentSpaces: Int = -1) : String
 			// var conditions: List<Effect>
 			// TODO (imeplemt me)
 
-				// - Feat(name: String, count: Count?, description: String)
-				// - KlassTrait(name: String, val klass: Triple<String, String, Int>, count: Count?, description: String)
-				// - RaceFeature(name: String, val race: Pair<String, String>, val level: Int, count: Count?, description: String)
-				// - ItemFeature(name: String, count: Count?, description: String)
-				// - CustomCount(name: String, count: Count?, description: String)
+			// TODO later human interface: setting klasses or leveling up should add the option to auto add the specialities, without duplicating
 
-				// TODO later human interface: setting klasses or leveling up should add the option to auto add the specialities, without duplicating
-
-				// - Prone / grapelled
-				// - under spell influence
-				// - Effect(name: String, seconds: Int, val removable: Boolean, description: String)
+			// - Prone / grapelled
+			// - under spell influence
+			// - Effect(name: String, seconds: Int, val removable: Boolean, description: String)
 
 			put("traits", hero.specialities.map { speciality -> JSONObject().apply {
 				/* Name Type indicating the Code's Type.*/
@@ -375,9 +427,38 @@ public fun Hero.toJSON(indentSpaces: Int = -1) : String
 				put("count", speciality.count)
 			}})
 
+			put("attacks", hero.attacks.toList().map { (atk, atkRoll) ->
+				JSONObject(mapOf(
+					"attack-roll" to atkRoll,
+					"attack-damage" to atk.damage,
+					"attack-reach" to atk.reach,
+					"attack-targets" to atk.targets,
+					"attack-description" to atk.description,
+					"attack-source" to when (atk.source) {
+						is SimpleItem -> {
+							JSONObject(mapOf(
+								"attack-type" to "Item",
+								"attack-item-name" to atk.source.name,
+								"attack-item-identifier" to atk.source.identifier,
+								)
+							)
+						}
+						is SimpleSpell -> {
+							JSONObject(mapOf(
+								"type" to "Spell",
+								"spell-attack-name" to atk.source.name,
+								)
+							)
+						}
+						else -> atk.label // just the label
+					}))
+			})
+
 			// var spells: Map<Pair<SimpleSpell, String>, Boolean>
 			// val maxPreparedSpells: List<Int>  // depends on klasses, race and feats
 			// val spellsPrepared: Set<Pair<SimpleSpell, String>>  // depends on spell
+			// TODO
+			put("spells", listOf<SimpleSpell>())
 
 			// var armorSources: List<String>
 			// val armorClass: Int  // depends on feats, spells and equipped clothes
@@ -457,7 +538,7 @@ public fun loadHero(filepath: String) : Hero {
   * @throws FileNotFoundException
   */
 public fun readText(filepath: String) : String
-	= (File(filepath).bufferedReader() as BufferedReader).use { it.readText() }
+	= (File(filepath).bufferedReader()).use { it.readText() }
 
 /** Load an JSON Array to a Map of Pre Items. */
 public fun loadSimpleItemCatalog(jsonStr: String) : Map<String, PreSimpleItem>
@@ -518,7 +599,9 @@ public fun SimpleSpell.Companion.fromJSON(jsonStr: String) : SimpleSpell
 				)
 			},
 
-			json.getString("range"),
+			json.getInt("reach"),
+			json.getString("targets"),
+
 			json.getString("duration"),
 			json.optBoolean("concentration", false),
 			json.getString("description"),

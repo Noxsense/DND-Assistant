@@ -52,8 +52,6 @@
     , {"tool-name": "Poisoneer Kit", "is-expert": false, "tool-source": "Rouge"}
     ],
 
-  "base-attack": [{"name": "Bite", "piercing": "1d6"}],
-
   "traits":
     [ {"race-feature-name": "Bite", "description": "Base attack is `1d6 + STR`"}
     , {"race-feature-name": "Fury of Flurry", "description": "+level (+ Howl's Mate Level) as attack damage", "count": { "max": 1, "recharge": "longrest"}}
@@ -125,5 +123,31 @@
     , {"item-name": "Oil", "weight-lb": 0.4, "storage": "Flask"}
 
     , {"item-name": "Dagger"}
+  ],
+
+  "attacks": [
+    {
+      "attack-source": "Some Spell as Source",
+      "attack-roll": "d20 + CHA",
+      "attack-damage": [ { "type": "BLUDGEONING", "value": "1d8 + CHA" } ]
+    },
+    {
+      "attack-source": "Some other Spell as Source",
+      "attack-roll": "DC 18 (DEX)",
+      "attack-reach": 120,
+      "attack-targets": "20ft radius",
+      "attack-damage": [ { "type": "FIRE", "value": "12d6" } ]
+    },
+    {
+      "attack-source": "Unarmed Strike",
+      "attack-roll": "d20 + STR + proficiencyBonus",
+      "attack-damage": [ { "type": "PIERCING", "value": "1d6 + STR" },  { "type": "BLUDGEONING", "value": "1" }]
+    },
+    {
+      "attack-roll": "1d20 + 3 + STR + proficiencyBonus",
+      "attack-damage": [ { "type": "SLASHING", "value": "1d8 + 3 + STR + proficiencyBonus" } ],
+      "attack-source": { "attack-type": "Item", "attack-item-name": "Sword of Answering", "attack-item-identifier": "SoA@0" }
+    }
   ]
+
 }

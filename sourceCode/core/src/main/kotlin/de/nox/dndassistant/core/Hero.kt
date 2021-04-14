@@ -414,6 +414,64 @@ class Hero(name: String, race: Pair<String, String>, player: String? = null ) {
 	/* Languages which can be spoken, written and understood. */
 	public var languages: List<String> = listOf()
 
+	/** Set of attacks with its attack roll (the possibility roll to hit).
+	 * An attack includes quickly castable spells (as attack, if casting time is not greater than 1 minute). */
+	public var attacks: MutableMap<Attack, String> = mutableMapOf()
+		private set
+	// TODO (2021-04-12) replace STRING with RollingTerm
+
+	/** Update all attacks.
+	 * - Remove unprepared spells from attacks, add spell attacks (castable in one action or less) to attacks.
+	 * - Remove unequipped items. Add newly equipped items.
+	 * - Update all proficiency bonus additions and attribute addiions
+	 */
+	public fun updateAttacks() {
+		/* Drop all attacks with spells that are not prepared. */
+		attacks.filterTo(attacks) { it.key.source != SimpleSpell || hasSpellPrepared(it.key.source as SimpleSpell) }
+
+		/* For all prepared fitting (quickly castable) spells: Add with attack roll. */
+		spells.filter { it.prepared }.forEach {
+			val spell = it.spell
+			val attack = Attack(
+				source = spell,
+				damage = listOf(),
+
+				// spell range to reach and targets.
+				reach = spell.reach, targets = spell.targets,
+
+				description = spell.description)
+
+			// set attack (spell DC or spell attack roll).
+			attacks[attack] = when (spell.optSpellDC) {
+				true -> "DC (8 + SpellCastingModifier + ProficiencyBonus) ???"
+				else -> "d20 + SpellCastingModifier + ProficiencyBonus"
+			}
+		}
+
+		/* Remove unequipped items. */
+		attacks.filterTo(attacks) { it.key.source != SimpleItem || (it.key.source as SimpleItem) in inventory  }
+
+		/* Add equipped items. */
+		inventory.forEach { (item, _) ->
+			val finesse = false
+			val damage = listOf<Attack.Damage>()
+			val (reach, targets) = 5 to "One Target"
+
+			val attack = Attack(
+				source = item,
+				damage = damage,
+				reach = reach, targets = targets,
+				description = "")
+
+			attacks[attack] = when {
+				finesse -> "d20 + max(STR, DEX)"
+				true  == false -> "d20 + DEX" // ranged
+				else -> "d20 + STR"
+			}
+		}
+	}
+
+	/** Show attack for the Hero (with replaced ability and proficiencies. */
 
 	// collection of feats, class features, race features, special items' abilities and custom counters.
 	// how to influence the hero when having these traits?

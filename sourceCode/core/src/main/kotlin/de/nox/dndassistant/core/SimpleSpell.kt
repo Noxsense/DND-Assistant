@@ -6,7 +6,8 @@ data class SimpleSpell(
 	val castingTime: String,
 	val ritual: Boolean,
 	val components: Components,
-	val range: String,
+	val reach: Int, // in feet
+	val targets: String, // touch / self / one target / cubic area, circular, cone, etc...
 	val duration: String,
 	val concentration: Boolean,
 	val description: String,
