@@ -1,89 +1,78 @@
 package de.nox.dndassistant.core
 
-/** Attack.
- * Create an attack a Weapon or a Spell can make depending on the strength or
- * dexterity and maybe proficiency value.
- * @url (https://roll20.net/compendium/dnd5e/Combat#h-Making%20an%20Attack)
+// 2021-04-12 refactored, very new logic
+/** An Attack is defined by its wrapped attsck source (like a weapon or spell),
+ *  how the damage will be rolled.
+ *  a reach (in feat), (default: 5ft meelee)
+ *  how many targets will be hit, (default: One target)
+ *  and a description (default: empty)
  */
-data class Attack(
-	val name: String,
-	val note: String = "",
-	val proficient: Boolean = false,
-	val abilityModifier: Ability = Ability.STR,
-	val damage: List<Damage> = listOf(),
-): Comparable<Attack> {
-
-	/** Get the average damage dealt of the attack. */
-	val damageAverage: Double
-		= damage.sumByDouble { d -> d.term.average }
-
-	/** Get all (officially) listed damage types.. */
-	val damageTypes: List<DamageType>
-		= damage.map { d -> d.type }
-
-	/** Get the combined damage term (roll). */
-	val damageTerm: DiceTerm
-		= when {
-			damage.size < 1 -> DiceTerm.EMPTY
-			else -> damage.fold(DiceTerm.EMPTY) { diceterm, d -> diceterm + d.term }
-		}
-		// = damage.foldl { }
-
-	/** String representation of the damage. */
-	val damageString: String
-		= damage.joinToString(" + ")
-
-	/** Compare an attack by it's average damage */
-	override fun compareTo(other: Attack) : Int
-		= this.damageAverage.compareTo(other.damageAverage)
-
-	/** Make a nice string representation, see example.
-	 * Example 0: Unarmed Attack (+2) 1 + 2 (bludgeoning) (3.0)
-	 * Example 1: Dagger (+5) 1d4 + 3 (piercing) (5.5)
-     * Example 2: Flame Strike (+0) 4d6 (fire) + 4d6 (radiant) (24.0)
-	 */
-	override fun toString() : String
-		= "%s (%s%s) %s (avg: %.1f)".format(
-			name,
-			abilityModifier.name, when { proficient -> "+PROF"; else -> ""},
-			damageString, damageAverage
+public data class Attack(val source: Any, val damage: List<Damage>, val reach: Int = 5 /*ft*/, val targets: String = "One Target", val description: String = "") {
+	public companion object {
+		var defaultCatalog: Map<Any, Map<DamageType, Int>> = mapOf(
+			"Item: Dagger" to mapOf(DamageType.PIERCING to 4 /*+max(STR/DEX)*/),
+			"Item: Magic Missile" to mapOf(DamageType.FORCE to 4+1),
+			"Unarmed Attack" to mapOf(DamageType.BLUDGEONING to 0 /*max(STR)*/),
 		)
+
+		/** Unarmed attack. */
+		val UNARMED = Attack("Unarmed Strike", DamageType.BLUDGEONING, "1 + STR")
+		val UNARMED_ATTACK_ROLL = "1d20 + STR + proficiencyBonus"
+		// always proficient.
+	}
+
+	public constructor(source: Any, damageType: DamageType, damageValue: String, reach: Int = 5, targets: String = "One Target", description: String = "")
+		: this(source, listOf(Damage(damageType, damageValue)), reach, targets, description);
+
+	/** Damage of an Attack. */
+	// TODO (2021-04-12) replace INT with the variable TERM.
+	public data class Damage(val type: DamageType, val value: String) {
+		public fun equalsType(other: Damage) = other.type == this.type
+		public fun equalsValue(other: Damage) = other.value == this.value
+		override public fun equals(other: Any?) = other != null && other is Damage && equalsType(other) && equalsValue(other)
+	}
+
+	/** String representation of the Attack given by the source. */
+	public val label: String = source.toString()
+
+	/** String representation of the summands of the (base) damage. */
+	public val damageSumString: String
+		= damage.joinToString(" + ") { "${it.value} (${it.type.toString().toLowerCase()})" }
+
+	/** String representation of an attack.
+	 * e.g. Dagger (1d4 + STR/DEX)
+	 * e.g. Spiritual Weapon (1d8 + STR/DEX/CON/CHA/WIS/INT/...)
+	 */
+	override public fun toString()
+		= "$label ($damageSumString)"
+
+	/** Pretty String representation of an attack and it's atttack roll.
+	 * e.g. Bite. Meelee Weapon Attack: +4 to hit, reach 5ft, one target, Hit: 2d4 + 2 piercing damage, knocked prone (DC 11 STR).
+	 *
+	 * @param evaluateWith if not null, replace the variable names in attack roll and attack damage with respective values.
+	 * @return String for Pair.
+	 */
+	public fun toAttackString(attackRoll: String, showDescription: Boolean = true, evaluateWith: Map<String, Int>? = null)
+		= "%s. %d ft: %s, %s. Hit: %s.".format(
+				label,
+				reach,
+				when {
+					// attack roll is not given (hits always, or DC)
+					attackRoll.startsWith("DC") -> attackRoll
+
+					// attack roll is just d20 + variables: just write d20
+					evaluateWith != null -> attackRoll
+
+					else -> attackRoll
+				},
+				targets,
+
+				// damage: e.g. 2d4 + STR (piercing damage)
+				damage.joinToString(" + ") { (type, value) -> "$value (${type.toString().toLowerCase()} damage)" }
+				+ if (showDescription) description else "",
+			)
 }
 
-/** A damage which can be dealt to anything. It consists of a certain type and
- * a (dice) term that defines the actual hurting value.
- * Examples:
- * 1. Dagger: "1d4 piercing damage",
- * 2. Flame Strike: "4d6 fire damage and 4d6 radiant damage".
- */
-class Damage(val type: DamageType, val term: DiceTerm) : Comparable<Damage> {
-	/** Add damage to another damage get a list of multiple damage forms. */
-	operator fun plus(d: Damage) : List<Damage>
-		= toList() + d
-
-	/** Put damage into a list. */
-	fun toList() : List<Damage>
-		= listOf(this)
-
-	/** Check equality between an Damage and any other object. */
-	override fun equals(other: Any?) : Boolean
-		= (other != null && other is Damage
-		&& other.type == this.type && other.term == this.term)
-
-	/** Compare an damage by its average. */
-	override fun compareTo(other: Damage) : Int
-		= term.average.compareTo(term.average)
-
-	/** Simple String representation. */
-	override fun toString() : String
-		= "${term} ($type)"
-}
-
-fun List<Damage>.tryToContract() : List<Damage>
-	= this
-
-// TODO (2020-10-07) give option to update, depending on character or less character dependent.
-// TODO (2020-10-07) spell attack => (optional) Difficulty class
 
 /** DamageType.
  * Different attacks, damaging Spells, and other harmful Effects deal different
