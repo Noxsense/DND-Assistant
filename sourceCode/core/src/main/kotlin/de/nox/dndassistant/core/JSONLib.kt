@@ -194,19 +194,20 @@ public fun Hero.Companion.fromJSON(jsonStr: String) : Hero {
 			}
 		}
 
+		// XXX remove
 		val spellCatalog: Map<String, SimpleSpell> = listOf(
 			// just a spell
-			SimpleSpell(name = "Mage Armor",    school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VSM(listOf("Piece of cured Leather" to 0)),       range = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(1 to mapOf()), optAttackRoll = false, optSpellDC = false),
+			SimpleSpell(name = "Mage Armor",    school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VSM(listOf("Piece of cured Leather" to 0)),       reach =   5, targets = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(1 to mapOf()), optAttackRoll = false, optSpellDC = false),
 			// spel with concentration
-			SimpleSpell(name = "Wall of Stone", school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VSM(listOf("Small Block of Granite" to 0)),       range = "Touch",               duration = "10 min",        concentration =  true, description = "?", levels = mapOf(5 to mapOf()), optAttackRoll = false, optSpellDC = false),
+			SimpleSpell(name = "Wall of Stone", school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VSM(listOf("Small Block of Granite" to 0)),       reach =   5, targets = "Touch",               duration = "10 min",        concentration =  true, description = "?", levels = mapOf(5 to mapOf()), optAttackRoll = false, optSpellDC = false),
 			// levelling spell
-			SimpleSpell(name = "Heal",          school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VS,                                               range = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = (6 .. 9).map { l -> l to mapOf("Heal" to "${(l + 1)*10} hp")}.toMap(), optAttackRoll = false, optSpellDC = false),
+			SimpleSpell(name = "Heal",          school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VS,                                               reach =   5, targets = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = (6 .. 9).map { l -> l to mapOf("Heal" to "${(l + 1)*10} hp")}.toMap(), optAttackRoll = false, optSpellDC = false),
 			// leveling cantrip
-			SimpleSpell(name = "Firebolt",      school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VS,                                               range = "120 ft",              duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(0 to mapOf("Attack-Damage" to "1d10 (fire)"), -5 to mapOf("Attack-Damage" to "2d10 (fire)"), -11 to mapOf("Attack-Damage" to "3d10 (fire)"), -17 to mapOf("Attack-Damage" to "4d10 (fire)")), optAttackRoll = true, optSpellDC = false),
+			SimpleSpell(name = "Firebolt",      school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VS,                                               reach = 120, targets = "One Target",          duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(0 to mapOf("Attack-Damage" to "1d10 (fire)"), -5 to mapOf("Attack-Damage" to "2d10 (fire)"), -11 to mapOf("Attack-Damage" to "3d10 (fire)"), -17 to mapOf("Attack-Damage" to "4d10 (fire)")), optAttackRoll = true, optSpellDC = false),
 			// spell with ritual (and concentration)
-			SimpleSpell(name = "Detect Magic",  school = "???", castingTime = "1 act", ritual =  true, components = SimpleSpell.Components.VS,                                               range = "self + globe (30ft)", duration = "10 min",        concentration =  true, description = "?", levels = mapOf(1 to mapOf()), optAttackRoll = false, optSpellDC = false),
+			SimpleSpell(name = "Detect Magic",  school = "???", castingTime = "1 act", ritual =  true, components = SimpleSpell.Components.VS,                                               reach =   5, targets = "self + globe (30ft)", duration = "10 min",        concentration =  true, description = "?", levels = mapOf(1 to mapOf()), optAttackRoll = false, optSpellDC = false),
 			// spell components with money
-			SimpleSpell(name = "Clone",         school = "???", castingTime =   "1 h", ritual = false, components = SimpleSpell.Components.VSM(listOf("Diamond" to 1000, "Vessel" to 2000)), range = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(8 to mapOf()), optAttackRoll = false, optSpellDC = false),
+			SimpleSpell(name = "Clone",         school = "???", castingTime =   "1 h", ritual = false, components = SimpleSpell.Components.VSM(listOf("Diamond" to 1000, "Vessel" to 2000)), reach =   5, targets = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(8 to mapOf()), optAttackRoll = false, optSpellDC = false),
 		).map { it.name to it }.toMap()
 
 		log.debug("Spell Catalog: $spellCatalog")
@@ -223,13 +224,12 @@ public fun Hero.Companion.fromJSON(jsonStr: String) : Hero {
 			}
 
 			val prepared = metaSpells.getJSONArray("prepared").map<String,String> { it }.forEach {
-				prepareSpell(spellName = it as String)
+				prepareSpell(spellName = it)
 			}
 		}
 
 		/* Pack the inventory. */
 		obj.getJSONArray("inventory").forEach<JSONObject> { preItemObj ->
-
 			val itemname = preItemObj.getString("item-name")
 
 			/* Get Identifier for one special item or
@@ -287,7 +287,7 @@ public fun Hero.Companion.fromJSON(jsonStr: String) : Hero {
 							val attackSpellName = atkSrcObject.getString("attack-spell-name")
 
 							// spell or String (Spell name).
-							spells.keys.find { it.first.name == attackSpellName } ?: attackSpellName
+							spells.find { it.spell.name == attackSpellName } ?: attackSpellName
 						}
 						else -> "Parsed Attack (type: $atkSrcType) $atkSrcObject"
 					}

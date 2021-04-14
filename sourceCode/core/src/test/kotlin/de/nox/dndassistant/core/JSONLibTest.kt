@@ -43,6 +43,16 @@ class JSONLibTest {
 		"Oil"    to PreSimpleItem("Miscelleanous", 1.0, SimpleItem.SP_TO_CP, false) // 1lb oil is worth 1sp
 	)
 
+	private val spells = listOf(
+		SimpleSpell(name = "Simple Spell",                     school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VSM(listOf("Piece of cured Leather" to 0)),       reach =   5, targets = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(1 to mapOf()), optAttackRoll = false, optSpellDC = false),
+		SimpleSpell(name = "Concentration Spell",              school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VSM(listOf("Small Block of Granite" to 0)),       reach =   5, targets = "Touch",               duration = "10 min",        concentration =  true, description = "?", levels = mapOf(5 to mapOf()), optAttackRoll = false, optSpellDC = false),
+		SimpleSpell(name = "Levelling Spell",                  school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VS,                                               reach =   5, targets = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = (6 .. 9).map { l -> l to mapOf("Heal" to "${(l + 1)*10} hp")}.toMap(), optAttackRoll = false, optSpellDC = false),
+		SimpleSpell(name = "Levelling Cantrip",                school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VS,                                               reach = 120, targets = "One Target",          duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(0 to mapOf("Attack-Damage" to "1d10 (fire)"), -5 to mapOf("Attack-Damage" to "2d10 (fire)"), -11 to mapOf("Attack-Damage" to "3d10 (fire)"), -17 to mapOf("Attack-Damage" to "4d10 (fire)")), optAttackRoll = true, optSpellDC = false),
+		SimpleSpell(name = "Spell with many targets",          school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VS,                                               reach = 120, targets = "20-ft radius",        duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(0 to mapOf("Attack-Damage" to "1d10 (fire)"), -5 to mapOf("Attack-Damage" to "2d10 (fire)"), -11 to mapOf("Attack-Damage" to "3d10 (fire)"), -17 to mapOf("Attack-Damage" to "4d10 (fire)")), optAttackRoll = true, optSpellDC = false),
+		SimpleSpell(name = "Ritual Spell",                     school = "???", castingTime = "1 act", ritual =  true, components = SimpleSpell.Components.VS,                                               reach =   0, targets = "self + globe (30ft)", duration = "10 min",        concentration = false, description = "?", levels = mapOf(1 to mapOf()), optAttackRoll = false, optSpellDC = false),
+		SimpleSpell(name = "Spell with Materials (GP) Needed", school = "???", castingTime = "1 h",   ritual = false, components = SimpleSpell.Components.VSM(listOf("Diamond" to 1000, "Vessel" to 2000)), reach =   5, targets = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(8 to mapOf()), optAttackRoll = false, optSpellDC = false),
+	)
+
 	// get from testItemCatalog
 	private fun Map<String, PreSimpleItem>.getItem(name: String, id: String)
 		= this.get(name)?.let { (category, weight, coppers, dividable) -> SimpleItem(
@@ -97,15 +107,17 @@ class JSONLibTest {
 
 		// var klasses: MutableList<Triple<String, String?, Int>>
 
-		// var skills: MutableMap<SimpleSkill, Pair<SimpleProficiency, String>>
-		// var tools: MutableMap<Pair<String, String>, Pair<SimpleProficiency, String>>
-
 		klasses.plusAssign(Triple("Base Klass", null, 3))
 		klasses.plusAssign(Triple("Second Klass", "Chosen Klass Branch", 11))
 
+		// var skills: MutableMap<SimpleSkill, Pair<SimpleProficiency, String>>
+		// var tools: MutableMap<Pair<String, String>, Pair<SimpleProficiency, String>>
+
 		// saveProficiences += Ability.WIS
-		skills.plusAssign(SimpleSkill.DEFAULT_SKILLS[0] to (SimpleProficiency.P to "Base Klass")) // TODO better syntax
-		skills.plusAssign(SimpleSkill("Additional Knitting", Ability.DEX) to (SimpleProficiency.E to "Background")) // TODO better syntax
+		// skills.plusAssign(SimpleSkill.DEFAULT_SKILLS["Acrobatics"]!! to (SimpleProficiency.P to "Base Klass")) // TODO better syntax
+		// skills.plusAssign(SimpleSkill("Additional Knitting", Ability.DEX) to (SimpleProficiency.E to "Background")) // TODO better syntax
+
+		// setSkillProficiency(SimpleSkill.DEFAULT_SKILLS["Acrobatics"], SimpleProficiency.E, "Base Klass")
 
 		tools.plusAssign(("" to "Simple Meelee Weapon") to (SimpleProficiency.P to "Base Klass")) // TODO better syntax
 		tools.plusAssign(("Knitting Set" to "") to (SimpleProficiency.P to "Background")) // TODO better syntax
@@ -286,9 +298,6 @@ class JSONLibTest {
 		"Hero's spellsPrepared"
 			.assertEquals(exampleHero.spellsPrepared, restoredHero.spellsPrepared)
 
-		"Hero's maxPreparedSpells"
-			.assertEquals(exampleHero.maxPreparedSpells, restoredHero.maxPreparedSpells)
-
 		// TODO (comparing test, comparable <Simple Spells, String> List.)
 		"Hero's spells"
 			.assertEquals(exampleHero.spells, restoredHero.spells)
@@ -345,15 +354,6 @@ class JSONLibTest {
 	fun loadSimpleSpells() {
 		log.info("Test.loadSimpleSpells() / SimpleSpell.toJSON(), SimpleSpell.Companion.fromJSON()")
 
-		val spells = listOf(
-			SimpleSpell(name = "Simple Spell",                     school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VSM(listOf("Piece of cured Leather" to 0)),       range = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(1 to mapOf()), optAttackRoll = false, optSpellDC = false),
-			SimpleSpell(name = "Concentration Spell",              school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VSM(listOf("Small Block of Granite" to 0)),       range = "Touch",               duration = "10 min",        concentration =  true, description = "?", levels = mapOf(5 to mapOf()), optAttackRoll = false, optSpellDC = false),
-			SimpleSpell(name = "Levelling Spell",                  school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VS,                                               range = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = (6 .. 9).map { l -> l to mapOf("Heal" to "${(l + 1)*10} hp")}.toMap(), optAttackRoll = false, optSpellDC = false),
-			SimpleSpell(name = "Levelling Cantrip",                school = "???", castingTime = "1 act", ritual = false, components = SimpleSpell.Components.VS,                                               range = "120 ft",              duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(0 to mapOf("Attack-Damage" to "1d10 (fire)"), -5 to mapOf("Attack-Damage" to "2d10 (fire)"), -11 to mapOf("Attack-Damage" to "3d10 (fire)"), -17 to mapOf("Attack-Damage" to "4d10 (fire)")), optAttackRoll = true, optSpellDC = false),
-			SimpleSpell(name = "Ritual Spell",                     school = "???", castingTime = "1 act", ritual =  true, components = SimpleSpell.Components.VS,                                               range = "self + globe (30ft)", duration = "10 min",        concentration = false, description = "?", levels = mapOf(1 to mapOf()), optAttackRoll = false, optSpellDC = false),
-			SimpleSpell(name = "Spell with Materials (GP) Needed", school = "???", castingTime = "1 h",   ritual = false, components = SimpleSpell.Components.VSM(listOf("Diamond" to 1000, "Vessel" to 2000)), range = "Touch",               duration = "Instantaneous", concentration = false, description = "?", levels = mapOf(8 to mapOf()), optAttackRoll = false, optSpellDC = false),
-		)
-
 		val spellsJSON = spells.toJSON()
 
 		File("/tmp/Spells.json").writeText(spellsJSON) // XXX
@@ -366,8 +366,115 @@ class JSONLibTest {
 		assertTrue(spellsFromJSON.containsAll(spells))
 		assertTrue(spells.containsAll(spellsFromJSON))
 
-
 		log.info("Test.loadSimpleSpells() DONE")
+	}
+
+	@Test
+	fun castSpell() {
+		log.info("Test.castSpells()")
+
+		var castSuccess: Either<CastSpell, String>
+		var spellSlots: List<KlassTrait> = listOf(-1, 4, 3, 3, 3, 3, 2, 2, 1, 1)
+			.mapIndexed { spellSlotLevel, countMax ->
+				KlassTrait(
+					"Spell Slot $spellSlotLevel",
+					Triple("Base Klass", "", 20),
+					count = Speciality.Count(recharge = "longrest", max = countMax)
+				)
+			}
+
+		castSuccess = exampleHero.checkSpellCastable(spells[0].name)
+		"Cannot cast unknown spells.".assertEquals(true, castSuccess is Either.Right)
+
+		"No Spell leaned".assertEquals(0, exampleHero.spells.size)
+		"No Spell Slots".assertEquals(0, exampleHero.specialities.filter { it.name.startsWith("Spell Slot") }.size)
+
+		log.info("Learn Spells")
+		spells.forEach { exampleHero.learnSpell(it, "Base Klass") }
+
+		"Spell is now known.".assertEquals(true, exampleHero.spells.find { it.spell.name == spells[0].name } != null)
+
+		log.info("Prepare Spells")
+		exampleHero.spells.forEach { exampleHero.prepareSpell(it.spell.name) }
+
+
+		"Spell is now prepared.".assertEquals(true, exampleHero.spellsPrepared.find { it.spell.name == spells[0].name } != null)
+
+		log.info("Available Spells: ${exampleHero.spells}")
+
+		castSuccess = exampleHero.checkSpellCastable(spells[0].name)
+
+		"Cannot cast without spell slots.".assertEquals(true, castSuccess is Either.Right)
+
+		log.info("Casting Spell Success: $castSuccess")
+
+		log.info("Add Spell slots")
+		spellSlots.drop(1).forEach { exampleHero.specialities += it }
+
+		"Spell Slots succssfull added, now hero has such counters."
+			.assertEquals(true, 0 != exampleHero.specialities.filter { it.name.startsWith("Spell Slot") }.size)
+
+		// spellslot[0] = exampleHero.specialities.find { it.name == "Spell Slot 1" }!!
+
+		log.info("Spell Slots Before: $spellSlots")
+		log.info("Spell Slots Before (hero): ${exampleHero.specialities}")
+
+		"Spell Slot 1: Before Cast (4/4).".assertEquals(4, spellSlots[1].count!!.current)
+
+		log.info("Cast spell again.")
+
+		castSuccess = exampleHero.checkSpellCastable(spells[0].name)
+
+		log.info("castSuccess = $castSuccess = ${if (castSuccess is Either.Left) castSuccess.left else (castSuccess as Either.Right).right}")
+
+		// XXX source to counter
+
+		"Spell learned, prepared and spell slots available: Successful!.".assertEquals(true, castSuccess is Either.Left)
+
+		log.info("Spell Slots Afterwards: $spellSlots")
+		log.info("Spell Slots Afterwards (hero): ${exampleHero.specialities}")
+
+		"Spell Slot 1: After Cast (3/4) .".assertEquals(3, spellSlots[1].count!!.current)
+
+		log.info("Repeat casting spell on lvl 1, until spell slots are used up. Use higher automatically.")
+
+		for (i in 0 until 3) {
+			exampleHero.checkSpellCastable(spells[0].name)
+			log.info("Spell Slots Afterwards (hero): ${exampleHero.specialities}")
+		}
+
+		"Spell Slot 1: After Multiple Casts (0/4) .".assertEquals(0, spellSlots[1].count!!.current)
+
+		castSuccess = exampleHero.checkSpellCastable(spells[0].name)
+		"New casting attempt tries to use spell slot 2".assertEquals(true, castSuccess is Either.Left)
+
+		"Only a casting attempt, no spell slot actually used"
+			.assertEquals(spellSlots[2].count!!.max, spellSlots[2].count!!.current)
+
+		var checkOnlySuccess2: Either<CastSpell, String>
+			= exampleHero.checkSpellCastable(spells[0].name)
+
+		log.info("checkSpellCastable: $checkOnlySuccess2")
+
+		// spell by magic item or so.
+		val itemCastSpell = SimpleSpell("Item Cast Spell", "ENCHANTMENT", "1 action", false, components = SimpleSpell.Components.V, reach = 120, targets = "One Target", duration = "10 minutes", concentration = true, description = "", levels = mapOf(9 to mapOf()))
+
+		exampleHero.learnSpell(itemCastSpell, "Magic Item X")
+		exampleHero.prepareSpell(itemCastSpell.name)
+		exampleHero.specialities += ItemFeature("Magic Item X - The Counter!", count = Speciality.Count("longrest", 2))
+
+		checkOnlySuccess2 = exampleHero.checkSpellCastable(itemCastSpell.name)
+
+		when (checkOnlySuccess2) {
+			is Either.Left -> log.info("Cast from Item Success: ${checkOnlySuccess2.left}")
+			is Either.Right -> log.info("Cast from Item FAIL: ${checkOnlySuccess2.right}")
+		}
+
+		log.info("Show learned and prepared spells: ${exampleHero.spells}")
+
+		log.info("Cast Item Cast Spell: $checkOnlySuccess2")
+
+		log.info("Test.castSpells() DONE")
 	}
 
 	private fun <T> String.assertEquals(expected: T, actual: T)

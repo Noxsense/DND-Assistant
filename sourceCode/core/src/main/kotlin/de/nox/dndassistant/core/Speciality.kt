@@ -22,7 +22,13 @@ abstract class Speciality(val name: String, val count: Count?, val description: 
 	// class LoadedLimit(recharge: String, var items: List<Any>) : Count(recharge, max = items.size(), 0)
 
 	override fun toString() : String
-		= name + if (count != null) " { counted: $count }" else ""
+		// = name + if (count != null) " { counted: $count }" else ""
+		 = "${name} ${count?.let {
+				// Pretty
+				// circle: \u26aa (white) \u26ab (black)
+				// black dots: still available, white dots: already used.
+				(0 until it.max).joinToString("") { x -> if (x < it.current) "\u26ab" else "\u26aa"}
+			}}"
 
 	public override fun equals(other: Any?) : Boolean
 		= (other != null && other is Speciality && other.name == this.name && other.description == this.description)
@@ -43,6 +49,8 @@ abstract class Speciality(val name: String, val count: Count?, val description: 
 		if (current < 0) current = 0
 		if (max > 0 && current > max) current = max
 	}
+
+	public fun getCountCurrent() = count?.current ?: 0
 }
 
 // TODO (2021-03-11) Speciality of an Item (like +3 or additional spells) vs Buff of an Item (one time for period +3 or so)

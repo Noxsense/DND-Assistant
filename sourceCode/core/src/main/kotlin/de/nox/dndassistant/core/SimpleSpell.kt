@@ -1,5 +1,7 @@
 package de.nox.dndassistant.core
 
+import kotlin.math.max
+
 data class SimpleSpell(
 	val name: String, // key => equality
 	val school: String,
@@ -18,6 +20,11 @@ data class SimpleSpell(
 	) {
 
 	public companion object {
+		public var Catalog: MutableSet<SimpleSpell> = mutableSetOf() // list of known spells.
+
+		/** Get a SimpleSpell from the Catalog given by its name. */
+		public fun getSpell(spellName: String) : SimpleSpell?
+			= Catalog.find { spell -> spell.name == spellName }
 	}
 
 	public data class Components(
@@ -25,7 +32,6 @@ data class SimpleSpell(
 		val somatic: Boolean,
 		val materialGP: List<Pair<String, Int>>, // material and least worth (if necessary)
 	) {
-
 		/** Custom constructer with no attribute. */
 		public constructor() : this(false, false, listOf());
 
@@ -62,8 +68,16 @@ data class SimpleSpell(
 			)
 	};
 
-	/** Representation. */
-	public override fun toString() = this.name
+	/** Representation:
+	 * (level-school) Name / casting time (+ritual) / range / duration (+concentration)
+	 */
+	public override fun toString() = "(%d-%s) %s / %s / %s / %s".format(
+		baseLevel, school,
+		this.name,
+		this.castingTime + if (ritual) " (ritual)" else "",
+		"$reach ft ($targets)",
+		this.duration + if (concentration) " (concentration)" else ""
+		)
 
 	/** Equality by name. Name is the identificator. */
 	public override fun equals(other: Any?) = other != null && other is SimpleSpell && other.name == this.name
@@ -143,3 +157,109 @@ data class SimpleSpell(
 			= description.replace("\n", " ")
 	}
 }
+
+
+
+/** Data class wrapping a Spell with Hero specific meta data. */
+data class LearnedSpell(val spell: SimpleSpell, val reasonKnown: String, var prepared: Boolean, var labels: Set<String>) {
+	/** Equality by spell (as key). */
+	override public fun equals(other: Any?) = other != null && when (other) {
+		is LearnedSpell -> other.spell == this.spell // equal by underlying spell.
+		is String -> other == this.spell.name // compare this learned spell with string.
+		else -> false
+	}
+}
+
+
+// XXX REMOVE ME: (Learnt(Spell + Source), minGoal + Caster(noFocus,counters,verbal,somatic) + metamagic?) => cast spell
+/** Try to cast a spell.
+ * If the spell can be cast, wrap it into @see CastSpell otherwise return a String (Either<CastSpell, String>).
+ */
+public fun checkSpellCastable(caster: Hero, learnedSpell: LearnedSpell, minLevel: Int = 0, metamagic: String? = null) : Either<CastSpell, String> {
+	val spell = learnedSpell.spell
+	val spellName = spell.name
+
+	/* Spell unknown to caster. */
+	if (!caster.hasSpellLearned(spell))
+		return Either.Right("Spell ($spellName) is not learned by the caster.")
+
+	/* Spell is not prepared for the caster. */
+	if (!caster.hasSpellPrepared(spell))
+		return Either.Right("Spell ($spellName) is not prepared by the caster.")
+
+	/* Check if enough physical resoureces are available. */
+	var (requiredItems, optionalItems)
+		= spell.components.materialGP
+		.partition { (_, valueGP) -> valueGP > 0 }
+
+	/* Check if an arcane focus or component pouch can be used, otherwise other items are also needed.. */
+	// if (caster.getArcaneFocus() == null) { }
+
+	/* Try to lcast level in this minimally requested, minimally needed and minimally available. */
+	// XXX
+	var counters = when (learnedSpell.reasonKnown) {
+		"Base Klass (etc)." -> caster.specialities.filter { it.name.startsWith("Spell Slot") }
+		else -> listOf()
+	}
+
+	// Drop unavailable counters: If with counter, then still not zero.
+	counters = counters.filterNot { it.count?.run { current < 1 } ?: false }
+
+	/* Neither Spell Slots, item charges nor other counters have capacity to cast the spell left. */
+	if (counters.size < 1)
+		return Either.Right("Cannot Cast Spell ($spellName). No magic ressource / counter available.")
+
+	val availableMinSpellLevel = counters
+		.map { if (it.name.startsWith("Spell Slot")) { it.name.last().toInt() - 48 /*char num*/ } else { 0 } }
+		.minOrNull() ?: 0
+
+	var thenLevel = max(max(minLevel, spell.baseLevel), availableMinSpellLevel)
+
+	/* Effects of the level the spell will then be cast with. */
+	var thenEffects = spell.levels
+		.toList()
+		.dropLastWhile { (lvl, _) -> lvl > thenLevel } // drop too high
+		.maxByOrNull { (lvl, _) -> lvl }?.second // effects of highest already fitting
+		?: mapOf() // no effects.
+
+	return Either.Left(CastSpell(
+		learnedSpell = learnedSpell,
+
+		// consumed to cast the spell then.
+		counter = null,
+		verbal = spell.components.verbal,
+		somatic = spell.components.somatic,
+		consumedItems = listOf(),
+
+		// special effects the cast spell will have
+		targetedLevel = thenLevel,
+		concentration = thenEffects["concentration"] as? Boolean ?: spell.concentration,
+		targets = thenEffects["targets"] as? String ?: spell.targets, // XXX by higher level or metamagic or other means.
+		duration = thenEffects["duration"] as? String ?: spell.duration, // XXX by higher level or metamagic or other means.
+
+		// final result message for successfully cast spell
+		meta = "Spell ($spellName) can be successfully cast.",
+	))
+}
+
+
+/** Simple Summary of a successfully cast spell:
+ *  Its targeted level, the success and which counter and items would be used.
+ */
+public class CastSpell(
+	val learnedSpell: LearnedSpell,
+
+	// success and requirements and ressources to cast
+	val counter: Speciality?,  // spell slot counters or special abilities, items, etc.
+	val verbal: Boolean,  // typically defined by spell, but can be surpressed by meta magic
+	val somatic: Boolean, // typically defined by spell, but can be surpressed by meta magic
+	val consumedItems: List<String>,
+
+	// resulting level, conncntration, etc.
+	val targetedLevel: Int, // level intended to cast the spell with, or on success: the least possible with intended level (eg. intended lvl. 4, but next availble is only 6)
+	val concentration: Boolean = learnedSpell.spell.concentration, // can be surpressed by higher level casts, etc.
+	val targets: String, // can be influenced by higher level casts or meta magic
+	val duration: String, // can be influenced by higher level casts or meta magic
+
+	val meta: String,  // more information like success or fail message
+	);
