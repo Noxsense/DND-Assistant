@@ -57,7 +57,7 @@
     , {"race-feature-name": "Fury of Flurry", "description": "+level (+ Howl's Mate Level) as attack damage", "count": { "max": 1, "recharge": "longrest"}}
     , {"race-feature-name": "Convincing",     "description": "Cast Charm or cast Calm Emotions", "count": { "max": "CHA", "recharge": "longrest"}}
 
-    , {"klass-trait-name": "Spellcaster",   "trait-source": "Class Trait (Sorcerer, Divine Soul", "count": { "max": 15}}
+    , {"klass-trait-name": "Spellcaster (Maximal Spells)",   "trait-source": "Class Trait (Sorcerer, Divine Soul", "count": { "max": 15}}
 
     , {"klass-trait-name": "Spell Level 1", "trait-source": "Spellcaster (full)", "count": { "max": 4, "recharge": "longrest" } }
     , {"klass-trait-name": "Spell Level 2", "trait-source": "Spellcaster (full)", "count": { "max": 3, "recharge": "longrest" } }
@@ -66,7 +66,7 @@
     , {"klass-trait-name": "Spell Level 5", "trait-source": "Spellcaster (full)", "count": { "max": 2, "recharge": "longrest" } }
     , {"klass-trait-name": "Spell Level 6", "trait-source": "Spellcaster (full)", "count": { "max": 1, "recharge": "longrest" } }
     , {"klass-trait-name": "Spell Level 7", "trait-source": "Spellcaster (full)", "count": { "max": 1, "recharge": "longrest" } }
-    , {"klass-trait-name": "Spell Level 8", "trait-source": "Spellcaster (full)", "count": { "max": 0, "recharge": "longrest" } }
+    , {"klass-trait-name": "Spell Level 8", "trait-source": "Spellcaster (full)", "count": { "max": 1, "recharge": "longrest" } }
     , {"klass-trait-name": "Spell Level 9", "trait-source": "Spellcaster (full)", "count": { "max": 0, "recharge": "longrest" } }
 
     , {"klass-trait-name": "Ki Points", "trait-source": "Monk", "count": { "max": 2, "recharge": "longrest" } }

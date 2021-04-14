@@ -486,55 +486,115 @@ class Hero(name: String, race: Pair<String, String>, player: String? = null ) {
 	// TODO (2021-03-16) is an equipped magic item like an equipped speciality?
 	// TODO (2021-03-16) is an equipped spell like a equipped speciality?
 
-	/** List of spells which are currently equipped. */
-	public val spellsPrepared: Set<Pair<SimpleSpell, String>> get() = spells.filter { it.value }.keys
-
-	// TODO restrictions of max 14 spells, max 6 cantrips or infinitely many, etc...
-	public val maxPreparedSpells: List<Int>
-		get() = specialities.filter { false }.map { 1 } // TODO define max spell count depended by specialities?
-		// => maxPreparedSpells[0] = Infitiny or 6
-		// => maxPreparedSpells[1] = 13 ...
-
 	/** List of spells, which can be equipped. Given by klasses, race or finding scrolls.
 	 * The value (Boolean) represents, if the spell is currently prepared or not. */
 	// var spells: MutableMap<Pair<String, String>, Boolean> = mutableMapOf()
-	public var spells: Map<Pair<SimpleSpell, String>, Boolean> = mapOf()
+	public var spells: Set<LearnedSpell> = setOf()
 		private set
 
-	/** Prepare a spell. It must be from the preparable list.
-	 * @param autoLearn if true, it will make the spell to be also preparable, if possible
-	 * @return true, if the spell is sucessfully prepared. */
-	public fun prepareSpell(spellName: String) : Boolean
-		= spells.keys.find { it.first.name == spellName }?.let { spellKey ->
-			// spell is learnable
-			// maxium of prepared spells
-			// all requirements are met.
+	private val spellSources: Set<String> get() = spells.map { it.reasonKnown }.toSet()
 
-			// spells[spellKey] = true
-			spells += spellKey to true
+	/** List of spells which are currently equipped. */
+	public val spellsPrepared: Collection<LearnedSpell> get() = spells.filter { it.prepared }
 
-			true
-		} ?: false // not prepared / known.
+	/** If a spell is casted which needs concentration, this variable will be set to the casted spell.
+	 * If concentration using spell is not null, roll a constituion save when being hit.
+	 * If a new new concentration using spell is cast, reset the variable. */
+	public var concentration: SimpleSpell? = null
 
 	/** Learn a new spell, make the spell preparable (but don't prepare it yet).
 	* @return true, if the spell is sucessfully prepared. */
-	public fun learnSpell(spell: SimpleSpell, spellSource: String) : Boolean
+	public fun learnSpell(spell: SimpleSpell, reasonKnown: String) : Boolean
 		= if (true) {
 			// TODO (2021-03-14) requirements met to learn the spell
 			// all requirements are met
-			spells += (spell to spellSource) to false
+			spells += LearnedSpell(spell = spell, reasonKnown = reasonKnown, prepared = false, labels = setOf())
 			true
 		} else {
 			false
 		}
 
-	/** Cast a prepraed spell. The spell must be prepared.
+	/** Check if the Hero has learned (or equipped) a certain spell. */
+	public fun hasSpellLearned(spell: SimpleSpell) : Boolean
+		= hasSpellLearned(spell.name)
+
+	/** Check if the Hero has learned (or equipped) a certain spell (given by name). */
+	public fun hasSpellLearned(spellName: String) : Boolean
+		= spells.any { it.spell.name == spellName }
+
+	/** Forget a learned (or by item equipped) spell. */
+	public fun forgetSpell(spell: SimpleSpell)
+		= forgetSpell(spell.name)
+
+	/** Forget a learned (or by item equipped) spell (given by name). */
+	public fun forgetSpell(spellName: String) {
+		this.spells = spells.filterNot { it.spell.name == spellName }.toSet()
+	}
+
+	/** Prepare a spell.
+	 *  It must be learned to be prepared and may not overstep the maximamlly available spell slot.
+	 *  @return true, if the spell is sucessfully prepared. */
+	public fun prepareSpell(spellName: String) : Boolean
+		= spells.find { it.spell.name == spellName }?.let { learnedSpell ->
+			// spell is learnable
+			// maxium of prepared spells
+			// all requirements are met.
+
+			learnedSpell.prepared = true // set prepared.
+
+			true
+		} ?: false // not prepared / known.
+
+	/** Prepare a spell.
+	 *  It must be learned to be prepared and may not overstep the maximamlly available spell slot.
+	 *  @return true, if the spell is sucessfully prepared. */
+	public fun prepareSpell(spell: SimpleSpell) : Boolean
+		= prepareSpell(spell.name)
+
+	/** Prepare multiple learned spells at once.
+	 *  @param spellSources (optional), if set only prepare spells of those sources.
+	 *  @param maxLevel (optional), if set only prepare spells less or equal of the given level (as baselevel).
+	 *  @param maxCount (optional), if set (as natural number) only prepare as many as given spells
+	 */
+	public fun prepareMultipleSpells(spellSources: Set<String> = this.spellSources, maxLevel: Int = 9, maxCount: Int = -1) : List<LearnedSpell>
+		= spells
+			.filter { it.spell.baseLevel <= maxLevel && it.reasonKnown in spellSources }
+			.let { filtered ->
+				if (maxCount < 0) filtered // take all filtered
+				else filtered.shuffled().take(maxCount) // take randomly upto maxCount items
+			}
+			// finally prepare
+			.also { toPrepare -> toPrepare.forEach { spell -> spell.prepared = true } }
+
+	/** Check, if the hero has a spell prepared. */
+	public fun hasSpellPrepared(spell: SimpleSpell) : Boolean
+		= hasSpellPrepared(spell.name)
+
+	/** Check if a hero has a spell prepared (by spell name). */
+	public fun hasSpellPrepared(spellName: String) : Boolean
+		= spells.find { it.spell.name == spellName }?.prepared ?: false
+
+	/** Unprepare the spell. */
+	public fun unprepareSpell(spell: SimpleSpell)
+		= unprepareSpell(spell.name)
+
+	/** Unprepare the spell, given by name. */
+	public fun unprepareSpell(spellName: String)
+		= spells.find { it.spell.name == spellName }?.let { it.prepared = false }
+
+	/** Unprepare all spells. */
+	public fun unprepareAllSpells()
+		= spells.forEach { spell -> spell.prepared == false }
+
+	/** Check if a Spell is castable.
 	 * TODO or cast spell from equipped items / features?
-	 * @param consume if false, casting this spell won't use any spell slot or components or concentration;
-	 *                this might simply show if casting would have been possible.
+	 * @param minLevel the minimum level, the spell should be cast with.
+	 * @param checkOnly if true, it will only return if the spell was possible to cast and on what minimum level.
+	 * @param componentFromInventory if true, use real materials which will be used up (no component pouch or arcane focus is used)
 	 * @return if the cast was successful or not. */
-	public fun castSpell(spellName: String, useFocus: Boolean = getArcaneFocus() != null, consume: Boolean = true) : Boolean
-		= spellsPrepared.find { it.first.name == spellName } != null
+	public fun checkSpellCastable(spellName: String, minLevel: Int = 0, metamagic: String? = null,) : Either<CastSpell, String>
+		= spells.find { it.spell.name == spellName }?.let { checkSpellCastable(this, it, minLevel, metamagic) }
+		?: Either.Right("Spell Name ($spellName) is unknown.")
 
 	/** Check if the Hero has equipped an Arcane Focus. */
 	public fun getArcaneFocus() : SimpleItem?
