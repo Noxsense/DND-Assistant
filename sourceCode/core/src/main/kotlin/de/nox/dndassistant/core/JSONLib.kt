@@ -93,7 +93,7 @@ public fun Hero.Companion.fromJSON(jsonStr: String) : Hero {
 
 			try {
 				val skill: SimpleSkill = (
-					SimpleSkill.DEFAULT_SKILLS.find { it.name == skillName }
+					SimpleSkill.DEFAULT_SKILLS[skillName]
 					?: SimpleSkill(name = skillName, ability = Ability.fromString(it.getString("custom-attribute")))
 				)
 
