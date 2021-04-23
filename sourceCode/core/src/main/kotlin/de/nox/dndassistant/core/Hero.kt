@@ -331,7 +331,21 @@ class Hero(name: String, race: Pair<String, String>, player: String? = null ) {
 		)
 
 	public val skillValues: Map<SimpleSkill, Int> get()
-		= (SimpleSkill.DEFAULT_SKILLS + skills.keys).map { it to skill(it) }.toMap()
+		= (SimpleSkill.DEFAULT_SKILLS.values + skills.keys).map { it to skill(it) }.toMap()
+
+	/** Set (or unset) Proficiency for a Skill.
+	 *  @param proficiency if null, unset the proficiency.
+	 *  @param source (for reference and order) why the skill has a proficiency, by default by Race Pair(Race, Subrace). */
+	public fun setSkillProficiency(skill: SimpleSkill?, proficiency: SimpleProficiency?, source: String = race.toString())
+		= this.skills.run {
+			if (skill != null) {
+				if (proficiency != null) {
+					plusAssign(skill to (proficiency to source))
+				} else {
+					minusAssign(skill)
+				}
+			}
+		}
 
 	/** Lists proficiencies for tools or weapons. A tool is given by it's name or the category.
 	 * Proficiencies can be <proficient> or <expert>.
@@ -625,25 +639,25 @@ class Hero(name: String, race: Pair<String, String>, player: String? = null ) {
 /** SimpleSkill. */
 data class SimpleSkill(val name: String, val ability: Ability) {
 	companion object {
-		val DEFAULT_SKILLS: Array<SimpleSkill> = arrayOf (
-			SimpleSkill("Acrobatics",      Ability.DEX),
-			SimpleSkill("Animal Handling", Ability.WIS),
-			SimpleSkill("Arcana",          Ability.INT),
-			SimpleSkill("Athletics",       Ability.STR),
-			SimpleSkill("Deception",       Ability.CHA),
-			SimpleSkill("History",         Ability.INT),
-			SimpleSkill("Insight",         Ability.WIS),
-			SimpleSkill("Intimidation",    Ability.CHA),
-			SimpleSkill("Investigation",   Ability.INT),
-			SimpleSkill("Medicine",        Ability.WIS),
-			SimpleSkill("Nature",          Ability.INT),
-			SimpleSkill("Perception",      Ability.WIS),
-			SimpleSkill("Performance",     Ability.CHA),
-			SimpleSkill("Persuasion",      Ability.CHA),
-			SimpleSkill("Religion",        Ability.INT),
-			SimpleSkill("Sleight of Hand", Ability.DEX),
-			SimpleSkill("Stealth",         Ability.DEX),
-			SimpleSkill("Survival",        Ability.WIS),
+		val DEFAULT_SKILLS: Map<String, SimpleSkill> = mapOf (
+			Pair("Acrobatics",      SimpleSkill("Acrobatics",      Ability.DEX)),
+			Pair("Animal Handling", SimpleSkill("Animal Handling", Ability.WIS)),
+			Pair("Arcana",          SimpleSkill("Arcana",          Ability.INT)),
+			Pair("Athletics",       SimpleSkill("Athletics",       Ability.STR)),
+			Pair("Deception",       SimpleSkill("Deception",       Ability.CHA)),
+			Pair("History",         SimpleSkill("History",         Ability.INT)),
+			Pair("Insight",         SimpleSkill("Insight",         Ability.WIS)),
+			Pair("Intimidation",    SimpleSkill("Intimidation",    Ability.CHA)),
+			Pair("Investigation",   SimpleSkill("Investigation",   Ability.INT)),
+			Pair("Medicine",        SimpleSkill("Medicine",        Ability.WIS)),
+			Pair("Nature",          SimpleSkill("Nature",          Ability.INT)),
+			Pair("Perception",      SimpleSkill("Perception",      Ability.WIS)),
+			Pair("Performance",     SimpleSkill("Performance",     Ability.CHA)),
+			Pair("Persuasion",      SimpleSkill("Persuasion",      Ability.CHA)),
+			Pair("Religion",        SimpleSkill("Religion",        Ability.INT)),
+			Pair("Sleight of Hand", SimpleSkill("Sleight of Hand", Ability.DEX)),
+			Pair("Stealth",         SimpleSkill("Stealth",         Ability.DEX)),
+			Pair("Survival",        SimpleSkill("Survival",        Ability.WIS)),
 		)
 	}
 }

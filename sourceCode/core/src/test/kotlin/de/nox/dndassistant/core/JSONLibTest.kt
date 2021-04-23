@@ -114,8 +114,8 @@ class JSONLibTest {
 		// var tools: MutableMap<Pair<String, String>, Pair<SimpleProficiency, String>>
 
 		// saveProficiences += Ability.WIS
-		// skills.plusAssign(SimpleSkill.DEFAULT_SKILLS["Acrobatics"]!! to (SimpleProficiency.P to "Base Klass")) // TODO better syntax
-		// skills.plusAssign(SimpleSkill("Additional Knitting", Ability.DEX) to (SimpleProficiency.E to "Background")) // TODO better syntax
+		skills.plusAssign(SimpleSkill.DEFAULT_SKILLS["Acrobatics"]!! to (SimpleProficiency.P to "Base Klass")) // TODO better syntax
+		skills.plusAssign(SimpleSkill("Additional Knitting", Ability.DEX) to (SimpleProficiency.E to "Background")) // TODO better syntax
 
 		// setSkillProficiency(SimpleSkill.DEFAULT_SKILLS["Acrobatics"], SimpleProficiency.E, "Base Klass")
 
