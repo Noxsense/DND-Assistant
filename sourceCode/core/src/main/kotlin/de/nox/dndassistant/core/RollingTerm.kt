@@ -178,8 +178,8 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 						 * the previous term was meant to be negative: Push and enque (-1)*.
 						 * Eg. it is not A - B or (A-C) - B, but just -B, or +-B  or --B or *-B.
 						 */
-						if (c == '-' && !termRightBefore) {
-							postfix += "-1"
+						if ((c == '-' || c == '+') && !termRightBefore) {
+							postfix += "${c}1"
 							stack.push("*")
 							lastToken = "*"
 							termRightBefore = false // right before: (*)
