@@ -610,6 +610,18 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 			this is Rolled -> this.value.evaluateIntern(variables, rolled)
 			this is UnaryRollingTerm -> value.evaluateIntern(variables, rolled)
 
+			this.summandsWith(variables).size < 1 -> {
+				0 to rolled
+			}
+
+			this.summandsWith(variables).size > 1 -> {
+				log.debug("  ... .. roll the next sum: ${summandsWith(variables)}")
+				this.summandsWith(variables)
+					 .map { s -> s.evaluateIntern(variables, rolled) } // [(Sum, Rolled)]
+					 .reduce { (sum, sumRolled), (s, sRolled) -> (sum + s) to (sumRolled + sRolled) } // (Sum, Rolled)
+			}
+			// otherwise this is probably a product / fraction / power which couldn't be unfolded.
+
 			// maybe write product to sum.
 			// TODO with late unfolding (with variables)
 			(this is Product && (this.left.isNumericLike || this.right.isNumericLike)) -> {
@@ -848,6 +860,53 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 			// (a^b) => {(a^b)}, (abc) -> {abc}, min(a,b) => {min(a,b)}
 			else -> listOf(this) // summand with just self.
 		}.sorted()
+	}
+
+	/** The Summands of the RollingTerm, depending of the given variables.
+	 * More or less a function, that returns the summands for a given maping of variables. */
+	public val summandsWith: (TermVaribales?) -> List<RollingTerm> by lazy {
+		// create a function that can return the summands.
+		{ variables: TermVaribales? ->
+			when {
+				// no variable setup.
+				variables == null -> {
+					log.debug("No change variables (variables == null).")
+					this.summands
+				}
+
+				// replace reference with evaluated number.
+				this is Reference -> {
+					log.debug("replaced variabels.")
+					listOf(this.refToNum(variables))
+				}
+
+				// nothing to replace
+				this is BasicRollingTerm -> {
+					log.debug("No change variables (BasicRollingTerm).")
+					this.summands
+				}
+
+				// replace all references with numbers.
+				// get summands of the "new evaluated term".
+				// this is UnaryRollingTerm -> this.value.summandsWith(variables)
+				else -> {
+					log.debug("Replace references with variables, unreferenced summands: $summands")
+					this.summands
+						.flatMap { summand ->
+							log.debug("summand: $summand")
+							if (summand.hasReference) {
+								log.debug("> Replace references.")
+								log.debug("> Term postordered terms: ${this.postorderedTerms}")
+								summand.refToNum(variables).summands
+							} else {
+								// log.debug("> Keep unchanged.")
+								// java.lang.OutOfMemoryError
+								listOf(summand)
+							}
+						}.also { log.debug("> $this >> $it ")}
+				}
+			}
+		}
 	}
 
 	/** Replace all References with their given value, if available. */
