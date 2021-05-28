@@ -43,7 +43,7 @@
   <string name="title_race_background">My History</string>
   <string name="title_rolls">Rolls &amp; Counters</string>
 
-  <string name="section_dice">More Dice</string>
-  <string name="section_counters">More Counters</string>
+  <string name="section_dice">Dice</string>
+  <string name="section_counters">Resources</string>
   <string name="section_rolls">History of Rolls</string>
 </resources>
