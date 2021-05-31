@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="textSizeTitle">20sp</dimen>
+    <dimen name="textSizeTitle">@dimen/textSizeHuge</dimen>
     <dimen name="textSize">12sp</dimen>
-    <dimen name="textSizeNotes">5sp</dimen>
-    <dimen name="textSizeOverviewLabel">8sp</dimen>
+    <dimen name="textSizeTiny">5sp</dimen>
+    <dimen name="textSizeSmall">8sp</dimen>
+    <dimen name="textSizeLarge">16sp</dimen>
+    <dimen name="textSizeHuge">20sp</dimen>
 
     <dimen name="vmargin">3sp</dimen>
     <dimen name="hmargin">10sp</dimen>

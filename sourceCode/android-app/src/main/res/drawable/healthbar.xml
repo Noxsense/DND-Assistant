@@ -9,13 +9,8 @@
       <corners
         android:radius="2dp"
         />
-      <gradient
-        android:angle="0"
-        android:centerX="25%"
-        android:startColor="#55f00000"
-        android:centerColor="#55eeeeee"
-        android:endColor="#55eeeeee"
-        android:type="linear"
+      <solid
+        android:color="@color/transparent"
         />
       <stroke
         android:color="#33aaaaaa"
@@ -39,8 +34,8 @@
       android:radius="2dp"
       />
     <gradient
-      android:endColor="#00D138"
-      android:startColor="#00D138"
+      android:endColor="#24e824"
+      android:startColor="#24e824"
       />
   </shape>
 </clip>

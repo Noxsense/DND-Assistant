@@ -81,18 +81,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	/** Dialog do to display the spells.
 	 *  Here spells can be viewed and prepared, unprepared, or just marked with any label. */
 	private val dialogSpells: AlertDialog by lazy {
-			AlertDialog.Builder(this@MainActivity).apply{
-				// adapter = content.findViewById<ListView>.adapter
-				setView(ListView(this@MainActivity).apply {
-					adapter = ArrayAdapter<String>(
-						this@MainActivity,
-						// TODO (2021-05-17) prettier custom list items for spells (mark with any, prepare, unprepare..., cast on custom spell slot)
-						android.R.layout.simple_list_item_1,
-						hero.skillValues.toList().map { it.toString() }
-					)
-				})
-			}
-			.create() // make alaert dialog
+		AlertDialog.Builder(this@MainActivity).apply{
+			// adapter = content.findViewById<ListView>.adapter
+			setView(ListView(this@MainActivity).apply {
+				adapter = ArrayAdapter<String>(
+					this@MainActivity,
+					// TODO (2021-05-17) prettier custom list items for spells (mark with any, prepare, unprepare..., cast on custom spell slot)
+					android.R.layout.simple_list_item_1,
+					hero.spells.toList().map { it.toString() }
+				)
+			})
+		}
+		.create() // make alaert dialog
 	}
 
 	/** Dialog to display attacks, moves and spells castable within a round.
@@ -149,6 +149,22 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		.create() // make alaert dialog
 	}
 
+	/** Dialog with other special actions (like sneak attack rolls, lay on hands, etc.
+	 */
+	val dialogSpecialActions : AlertDialog by lazy {
+		// XXX implement
+		AlertDialog.Builder(this@MainActivity).apply{
+			// adapter = content.findViewById<ListView>.adapter
+			setView(ListView(this@MainActivity).apply {
+				adapter = ArrayAdapter<String>(
+					this@MainActivity,
+					android.R.layout.simple_list_item_1,
+					arrayOf("Som' great action", "Som' more great action.", "Using this great action redcues a counter"))
+			})
+		}
+		.create() // make alaert dialog
+	}
+
 	/** Dialog of the inventory.
 	 * Each item has different options: To be dropped (opt. also to be sold (dropped with money back)),
 	 * to put into another back (or to equip of not stored in any bag, but still hold. */
@@ -167,6 +183,29 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		.create() // make alaert dialog
 	}
 
+	/** Dialog to display the history of rolls. */
+	val dialogRolls: AlertDialog by lazy {
+		AlertDialog.Builder(this@MainActivity).apply{
+			// adapter = content.findViewById<ListView>.adapter
+			setView(ListView(this@MainActivity).apply {
+				adapter = ArrayAdapter<String>(
+					this@MainActivity,
+					android.R.layout.simple_list_item_1,
+					Rollers.history.toList().map { it.toString() })
+			})
+		}
+		.create() // make alaert dialog
+	}
+
+	/** Dialog popup for the Notes: Custom list with multiple text items and
+	 *  option to append or insert a new note. */
+	private val dialogNotes: AlertDialog by lazy {
+		AlertDialog.Builder(this@MainActivity).apply {
+			setView(ListView(this@MainActivity))
+		}
+		.create()
+	}
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		/* default loading. */
 		super.onCreate(savedInstanceState)
@@ -178,7 +217,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		li = LayoutInflater.from(this)
 
-		instance = this
+		instance = this@MainActivity
 
 		// lateinit of var model.
 		model =  ViewModelProvider(this)[HeroViewModel::class.java]
@@ -208,13 +247,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		}
 		// TODO (2021-05-14) ViewModel xp, level
 
+		/* Show and load note panel. */
+		view_story.setOnClickListener(this)
+
 		/* Show rolls. */
 
 		/* Initiate extra rolls (from grid_dice panel). */
 		setupRollPanel()
-
-		/* Open content panels on click. */
-		inspiration.setOnClickListener(this)
 
 		/* Setup dialogs and views (and listeners) for spells, items, attacks and other actions. */
 		setupActionsPanel()
@@ -224,13 +263,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		val observingHPNow = Observer<Hero> { h ->
 			healthbar_new.max = h.hitpointsMax
 			healthbar_new.progress = h.hitpointsNow
-			hp_stats.text = "__Hitpoints__: %d / %d (%+d)".format(h.hitpointsNow, h.hitpointsMax, h.hitpointsTmp)
+			hp_stats.text = "%d / %d (%+d)".format(h.hitpointsNow, h.hitpointsMax, h.hitpointsTmp)
 		}
 
 		/* Click to open view all skills. And other proficiencies. */
-		profificiency_language_skills.setOnClickListener {
-			// open dialog to show all skills.
-		}
+		profificiency_language_skills.setOnClickListener(this)
 
 		profificiency.text = "__Proficiency Bonus__: %+d".format(hero.proficiencyBonus)
 
@@ -267,6 +304,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		if (!isInitializedRolls()) return
 
 		val (preview, content) = panelRolls
+		// content.findViewById<ListView>(R.id.list_rolls).run {
+		// 	@Suppress("UNCHECKED_CAST")
+		// 	(adapter as ArrayAdapter<RollResult>).notifyDataSetChanged()
+
+		// 	/* Show last rolls, if available. */
+		// 	preview.text = getString(R.string.title_rolls).format(
+		// 		try { "Latest: ${(adapter.getItem(0) as RollResult?)?.value}" }
+		// 		catch (e: IndexOutOfBoundsException) { "No rolls yet." }
+		// 	)
+		// }
 	}
 
 	/** Initiate the panel with extra dice.
@@ -280,6 +327,56 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		/* Set onClick: Open recent rollls view. */
 		// label_rolls.setOnClickListener(this)
 
+		// TODO (2020-10-11) proper class for Array adapter or outsources
+		// XXX DELETE ME (placeholder) for real class showing recent rolls.
+		// (findViewById<ListView>(R.id.list_rolls)).run {
+		// 	if (adapter == null) {
+		// 		adapter = object: ArrayAdapter<RollResult>(
+		// 			this@MainActivity,
+		// 			R.layout.list_item_roll) {
+		// 				override fun getItem(p0: Int) : RollResult
+		// 					= Rollers.history.toList().get(p0)
+		//
+		// 				override fun getCount() : Int
+		// 					= Rollers.history.size
+		//
+		// 				override fun getView(i: Int, v: View?, parent: ViewGroup) : View {
+		// 					if (v == null) {
+		// 						val newView = li.inflate(R.layout.list_item_roll, parent, false)
+		// 						return getView(i, newView, parent)
+		// 					}
+		//
+		// 					// no null
+		//
+		// 					val e = getItem(i) // the element: RollResult to show
+		//
+		// 					/* +-------+----------------- +
+		// 					 * | ROLL  | rolls, why, when |
+		// 					 * +-------+------------------+ */
+		//
+		// 					(v.findViewById<TextView>(R.id.value))
+		// 						.text = "${e.value}"
+		//
+		// 					(v.findViewById<TextView>(R.id.single_rolls))
+		// 						.text = e.single.joinToString(" + ")
+		//
+		// 					(v.findViewById<TextView>(R.id.note))
+		// 						.text = e.reason
+		//
+		// 					(v.findViewById<TextView>(R.id.timestamp))
+		// 						.text = e.timestampString
+		//
+		// 					when (e.single.first()) {
+		// 						1 -> v.setBackgroundColor(0xff0000)
+		// 						20 -> v.setBackgroundColor(0x00ff00)
+		// 						else -> Unit // pass
+		// 					}
+		//
+		// 					return v
+		// 				}
+		// 			}
+		// 		}
+		// }
 		log.debug("Set up extra dice to roll.")
 
 		(0 until extraDice.getChildCount()).forEach {
@@ -314,26 +411,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			exampleDice)
 
 		/* Show most recent roll. */
-		findViewById<TextView>(R.id.section_dice).setOnClickListener { v ->
-			(v as TextView).text = "Recently Rolled: ${try { Rollers.history.toList().get(0).toString() } catch (e: Exception) { "Nothing"}}"
-		}
+		findViewById<TextView>(R.id.section_dice).setOnClickListener(this@MainActivity)
 
 		/* Open roll history in dialog. */
-		findViewById<View>(R.id.roll_history).setOnClickListener {
-			// dialog with roll history.
-			// XXX good code.
-			AlertDialog.Builder(this@MainActivity).apply{
-				// adapter = content.findViewById<ListView>.adapter
-				setView(ListView(this@MainActivity).apply {
-					adapter = ArrayAdapter<String>(
-						this@MainActivity,
-						android.R.layout.simple_list_item_1,
-						Rollers.history.toList().map { it.toString() })
-				})
-			}
-			.create() // make alaert dialog
-			.show() // show newly created dialog
-		}
+		findViewById<View>(R.id.roll_history).setOnClickListener(this@MainActivity)
 
 		log.debug("Extra Rolls are initiated.")
 	}
@@ -343,36 +424,45 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	private fun setupHealthPanel() {
 		/* Hide or show the more health panel.
 		 * With Death Saves and Fails, and resting options. */
-		healthbar_new.setOnClickListener {
-			more_health_panel.toggleVisibility()
-		}
+		healthbar_new.setOnClickListener (this@MainActivity)
 
 		healthbar_new.max = hero.hitpointsMax
 		healthbar_new.progress = hero.hitpointsNow
 
-		val updateHitpoints = {
-			healthbar_new.progress = hero.hitpointsNow;
-			hp_stats.text = "__Hitpoints__: %d / %d (%+d)".format(hero.hitpointsNow, hero.hitpointsMax, hero.hitpointsTmp)
-		}
-
 		// parse custom hp change (also a complete rolling term) and add (substract) it.
+		// with additional option to SET (replace) the value witht he rolled result.
 		hp_custom_modify.setOnKeyListener { view, code, event ->
 			// if confirmed
 
 			log.debug("$view onKeyEvent(code = $code, event = $event)")
 
 			if (event.action == KeyEvent.ACTION_DOWN && code == KeyEvent.KEYCODE_ENTER) {
-				// TODO clean.
 
 				var msg: String
 
 				try {
-					val hpCustomChangeTerm = RollingTerm.parse(hp_custom_modify.text.toString())
-					val justRolled = hpCustomChangeTerm.evaluate();
-					hero.hitpointsNow += justRolled
+					val text = hp_custom_modify.text.toString()
+
+					when {
+						text.startsWith("=") -> {
+							// replace hitpoints to given term after '=', maximally max.
+							val hpCustomChangeTerm = RollingTerm.parse(text.substring(1))
+							val justRolled = hpCustomChangeTerm.evaluate();
+
+							hero.hitpointsNow = justRolled
+							msg =  "Set Hitpoints to $justRolled"
+						}
+						else -> {
+							val hpCustomChangeTerm = RollingTerm.parse(text)
+							val justRolled = hpCustomChangeTerm.evaluate();
+
+							hero.hitpointsNow += justRolled
+							msg =  "Modified Hitpoints by $justRolled."
+						}
+					}
+
 					updateHitpoints()
 
-					msg =  "Rolled HP: $justRolled"
 
 				} catch (e: Exception) {
 					msg = e.toString()
@@ -386,70 +476,36 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		updateHitpoints()
 
-		// TODO cleaner, connected.
-		take_damage.setOnClickListener { hero.hitpointsNow -= 1; updateHitpoints() }
+		take_damage.setOnClickListener (this@MainActivity)
+		heal.setOnClickListener (this@MainActivity)
+		deathsave_fail.setOnClickListener (this@MainActivity)
+		deathsave_success.setOnClickListener (this@MainActivity)
+		deathsave_roll.setOnClickListener (this@MainActivity)
+		deathsave_overview.setOnClickListener (this@MainActivity)
+	}
 
-		// TODO cleaner, connected.
-		heal.setOnClickListener { hero.hitpointsNow += (1); updateHitpoints() }
+	private val healModifyIn: String get() = hp_custom_modify.text.toString()
 
-		// TODO cleaner, connected to character..
-		deathsave_fail.setOnClickListener {
-			deathsave_overview.text = deathsave_overview.text.toString() + "X"
-		}
-		// TODO cleaner, connected to character..
-		deathsave_success.setOnClickListener {
-			deathsave_overview.text = deathsave_overview.text.toString() + "O"
-		}
-		// TODO cleaner, connected to character..
-		deathsave_overview.setOnClickListener {
-			deathsave_overview.text = ""
-		}
+	/** Display the updated hitpoints. */
+	private fun updateHitpoints() {
+			healthbar_new.progress = hero.hitpointsNow;
+			hp_stats.text = "%d / %d (%+d)".format(hero.hitpointsNow, hero.hitpointsMax, hero.hitpointsTmp)
 	}
 
 	/** Setup panel and buttons and dialogs for actions, spells and items, and resource counters. */
 	private fun setupActionsPanel() {
-		action_special.setOnClickListener {
-			// dialog with roll history.
-			// XXX good code.
-			AlertDialog.Builder(this@MainActivity).apply{
-				// adapter = content.findViewById<ListView>.adapter
-				setView(ListView(this@MainActivity).apply {
-					adapter = ArrayAdapter<String>(
-						this@MainActivity,
-						android.R.layout.simple_list_item_1,
-						arrayOf("Som' great action", "Som' more great action.", "Using this great action redcues a counter"))
-				})
-			}
-			.create() // make alaert dialog
-			.show() // show newly created dialog
-		}
+		action_special.setOnClickListener(this@MainActivity)
 
-		action_attack.setOnClickListener {
-			// dialog with attacks.
-			dialogAttacks.show()
-		}
+		action_attack.setOnClickListener(this@MainActivity)
 
 		// Display spells (school, levels, description, option to equip / unequip / add label )
 		// click: DESCRIPTION (unfold description)
 		// long click: LABEL (open options to equip, unequip, cast from this menu, mark or other labels.)
-		action_spells.setOnClickListener {
-			// dialog with spells.
-			dialogSpells.show() // show newly created dialog
-		}
+		action_spells.setOnClickListener(this@MainActivity)
 
 		// Display inventory
 		// XXX Prohibit mutally storing items
-		action_skills.setOnClickListener {
-			// dialog with roll history.
-			dialogSkills.show() // show newly created dialog
-		}
-
-		// Display inventory
-		// XXX Prohibit mutally storing items
-		action_inventory.setOnClickListener {
-			// dialog with roll history.
-			dialogInventory.show() // show newly created dialog
-		}
+		action_inventory.setOnClickListener(this@MainActivity)
 
 		// Display Counter: [Name, Counter, Reset Time] - Add (if counting) / Reduce if countdown.
 		grid_counters.adapter = object: ArrayAdapter<Speciality>(
@@ -474,18 +530,114 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	}
 
 	// TODO (2020-10-06) separate single logics. (onClick(view))
+	/** Managing all main views' clicks. */
 	override fun onClick(view: View) {
 		log.debug("Clicked on $view")
 
 		when (view.getId()) {
-			R.id.inspiration -> {
-				/* toggle inspiration. */
-				findViewById<View>(R.id.inspiration).run {
-					alpha = when {
-						alpha > 0.33f -> 0.3f
-						else -> 1.0f
+			R.id.view_story -> {
+				dialogNotes.show() // show notes.
+			}
+
+			/* Unfold health and death panel view. */
+			R.id.healthbar_new -> {
+				more_health_panel.toggleVisibility()
+			}
+
+			/* Reduce health points. If more-healthpanel is open, use input field. */
+			R.id.take_damage -> {
+				// TODO ViewModel
+				hero.hitpointsNow -= when (more_health_panel.visibility) {
+					View.VISIBLE -> {
+						RollingTerm.parse(healModifyIn).evaluate().also {
+							Toast.makeText(this@MainActivity,
+							"Reduced by $it", Toast.LENGTH_SHORT).show()
+						}
 					}
+					else -> 1
 				}
+				updateHitpoints()
+			}
+
+			/* Increase health points. If more-healthpanel is open, use input field. */
+			R.id.heal -> {
+				// TODO ViewModel
+				hero.hitpointsNow += when (more_health_panel.visibility) {
+					View.VISIBLE -> {
+						RollingTerm.parse(healModifyIn).evaluate().also {
+							Toast.makeText(this@MainActivity,
+							"Increased by $it", Toast.LENGTH_SHORT).show()
+						}
+					}
+					else -> 1
+				}
+				updateHitpoints()
+			}
+
+			/* Add death save success. */
+			R.id.deathsave_fail -> {
+				// TODO ViewModel
+				deathsave_overview.text = deathsave_overview.text.toString() + "X"
+			}
+
+			/* Add death save fail. */
+			R.id.deathsave_success -> {
+				// TODO ViewModel
+				deathsave_overview.text = deathsave_overview.text.toString() + "O"
+			}
+
+			/* Roll death save throw and automatically enter the resul. */
+			R.id.deathsave_roll -> {
+				// TODO ViewModel
+				val result = de.nox.dndassistant.core.Die(20).evaluate()
+				Toast.makeText(instance, "Death Save: Enter $result", Toast.LENGTH_SHORT).show()
+				deathsave_overview.text = deathsave_overview.text.toString() + when (result) {
+					in 0..10 -> "X"
+					else -> "O"
+				}
+			}
+
+			/* Reset the death saves. */
+			R.id.deathsave_overview -> {
+				// TODO ViewModel
+				deathsave_overview.text = ""
+			}
+
+			/* Click to open a view all skills. And other proficiencies. And Edit them */
+			R.id.profificiency_language_skills -> {
+				Toast.makeText(this@MainActivity, "Edit proficiencies.", Toast.LENGTH_SHORT).show()
+			}
+
+			/* Dialog with attacks (list). */
+			R.id.action_attack -> dialogAttacks.show()
+
+			/* Show most recent dice roll. */
+			R.id.section_dice -> {
+				(view as TextView).text = "Recently Rolled: ${
+					try { Rollers.history.toList().get(0).toString() }
+					catch (e: Exception) { "Nothing"}
+				}"
+			}
+
+			/* Open roll history in dialog. */
+			R.id.roll_history -> {
+				dialogRolls.show() // show newly created dialog
+			}
+
+			/* Dialog with spells (read, prepare and mark). */
+			R.id.action_spells -> {
+				dialogSpells.show() // show newly created dialog
+			}
+
+			/* Dialog with other actions (like sneak attack rolls, lay on hands, etc.) */
+			R.id.action_special -> {
+				// XXX good code.
+				dialogSpecialActions .show() // show newly created dialog
+			}
+
+			/* Dialog with roll history. */
+			R.id.action_inventory -> {
+				dialogInventory.show() // show newly created dialog
 			}
 
 			else -> {
@@ -497,6 +649,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			}
 		}
 	}
+
 
 	/** Toggle View's visibility between "GONE" and "VISIBLE".
 	 * @return true, if visible. */

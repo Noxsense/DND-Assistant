@@ -4,7 +4,7 @@
   <!-- Name panel -->
   <string name="character_name" formatted="false">%s</string>
   <string name="level_xp" formatted="false"><b>Level %d</b>, <i>%d XP</i></string>
-  <string name="inspiration">&#x1f4a1;</string>
+  <string name="story">&#x1f4d6;</string>
 
   <!-- health panel. -->
   <string name="healthbarlabel" formatted="false">%d/%d</string>
