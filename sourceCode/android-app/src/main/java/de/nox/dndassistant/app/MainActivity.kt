@@ -7,16 +7,13 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.OnClickListener
-import android.view.View.OnLongClickListener
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.GridLayout
 import android.widget.GridView
-import android.widget.LinearLayout
 import android.widget.ListView
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -36,13 +33,9 @@ import de.nox.dndassistant.core.Either
 import de.nox.dndassistant.core.Ability
 import de.nox.dndassistant.core.Attack
 import de.nox.dndassistant.core.CastSpell
-import de.nox.dndassistant.core.D20
 import de.nox.dndassistant.core.Hero
-import de.nox.dndassistant.core.Proficiency
 import de.nox.dndassistant.core.RollingTerm
 import de.nox.dndassistant.core.SimpleSpell
-import de.nox.dndassistant.core.Skill
-import de.nox.dndassistant.core.Skillable
 import de.nox.dndassistant.core.Speciality
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -108,14 +101,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 						hero.attacks.toList().map<Pair<Attack,String>, String> { it.first.toAttackString(it.second) }
 						)
 
-					onItemClickListener = AdapterView.OnItemClickListener { parent, view, pos, id ->
-						hero.attacks.toList()[pos]?.let { (attack, attackRoll) ->
+					onItemClickListener = AdapterView.OnItemClickListener { _, _, pos, _ ->
+						hero.attacks.toList().get(pos)?.let { (attack, _) ->
 							when (attack.source) {
 								is SimpleSpell -> {
 									val spell = attack.source as SimpleSpell
 									val _cast: Either<CastSpell, String> = hero.checkSpellCastable(spell.name)
 
 									if (_cast is Either.Left) {
+										// TODO
 										val cast: CastSpell = _cast.left
 
 										// Toast.makeText(this@MainActivity, "Cast Spell ${attack.source} (as action/attack): $cast", Toast.LENGTH_SHORT).show()
@@ -248,7 +242,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		// TODO (2021-05-14) ViewModel xp, level
 
 		/* Show and load note panel. */
-		view_story.setOnClickListener(this)
 
 		/* Show rolls. */
 
@@ -267,7 +260,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		}
 
 		/* Click to open view all skills. And other proficiencies. */
-		profificiency_language_skills.setOnClickListener(this)
 
 		profificiency.text = "__Proficiency Bonus__: %+d".format(hero.proficiencyBonus)
 
@@ -325,59 +317,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		val extraDice = findViewById<GridLayout>(R.id.grid_dice)
 
 		/* Set onClick: Open recent rollls view. */
-		// label_rolls.setOnClickListener(this)
-
-		// TODO (2020-10-11) proper class for Array adapter or outsources
-		// XXX DELETE ME (placeholder) for real class showing recent rolls.
-		// (findViewById<ListView>(R.id.list_rolls)).run {
-		// 	if (adapter == null) {
-		// 		adapter = object: ArrayAdapter<RollResult>(
-		// 			this@MainActivity,
-		// 			R.layout.list_item_roll) {
-		// 				override fun getItem(p0: Int) : RollResult
-		// 					= Rollers.history.toList().get(p0)
-		//
-		// 				override fun getCount() : Int
-		// 					= Rollers.history.size
-		//
-		// 				override fun getView(i: Int, v: View?, parent: ViewGroup) : View {
-		// 					if (v == null) {
-		// 						val newView = li.inflate(R.layout.list_item_roll, parent, false)
-		// 						return getView(i, newView, parent)
-		// 					}
-		//
-		// 					// no null
-		//
-		// 					val e = getItem(i) // the element: RollResult to show
-		//
-		// 					/* +-------+----------------- +
-		// 					 * | ROLL  | rolls, why, when |
-		// 					 * +-------+------------------+ */
-		//
-		// 					(v.findViewById<TextView>(R.id.value))
-		// 						.text = "${e.value}"
-		//
-		// 					(v.findViewById<TextView>(R.id.single_rolls))
-		// 						.text = e.single.joinToString(" + ")
-		//
-		// 					(v.findViewById<TextView>(R.id.note))
-		// 						.text = e.reason
-		//
-		// 					(v.findViewById<TextView>(R.id.timestamp))
-		// 						.text = e.timestampString
-		//
-		// 					when (e.single.first()) {
-		// 						1 -> v.setBackgroundColor(0xff0000)
-		// 						20 -> v.setBackgroundColor(0x00ff00)
-		// 						else -> Unit // pass
-		// 					}
-		//
-		// 					return v
-		// 				}
-		// 			}
-		// 		}
-		// }
-		log.debug("Set up extra dice to roll.")
 
 		(0 until extraDice.getChildCount()).forEach {
 			extraDice.getChildAt(it).apply {
@@ -409,12 +348,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			this@MainActivity,
 			android.R.layout.simple_list_item_1,
 			exampleDice)
-
-		/* Show most recent roll. */
-		findViewById<TextView>(R.id.section_dice).setOnClickListener(this@MainActivity)
-
-		/* Open roll history in dialog. */
-		findViewById<View>(R.id.roll_history).setOnClickListener(this@MainActivity)
 
 		log.debug("Extra Rolls are initiated.")
 	}
@@ -494,18 +427,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 	/** Setup panel and buttons and dialogs for actions, spells and items, and resource counters. */
 	private fun setupActionsPanel() {
-		action_special.setOnClickListener(this@MainActivity)
-
-		action_attack.setOnClickListener(this@MainActivity)
 
 		// Display spells (school, levels, description, option to equip / unequip / add label )
 		// click: DESCRIPTION (unfold description)
 		// long click: LABEL (open options to equip, unequip, cast from this menu, mark or other labels.)
-		action_spells.setOnClickListener(this@MainActivity)
 
 		// Display inventory
 		// XXX Prohibit mutally storing items
-		action_inventory.setOnClickListener(this@MainActivity)
 
 		// Display Counter: [Name, Counter, Reset Time] - Add (if counting) / Reduce if countdown.
 		grid_counters.adapter = object: ArrayAdapter<Speciality>(
