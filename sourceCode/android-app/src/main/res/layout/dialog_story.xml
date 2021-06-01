@@ -1,0 +1,23 @@
+<LinearLayout
+  android:background="@android:color/transparent"
+  android:gravity="top"
+  android:id="@+id/dialog_story"
+  android:layout_height="match_parent"
+  android:layout_width="wrap_content"
+  android:orientation="vertical"
+  android:padding="10dp"
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  >
+
+  <!-- display story bits -->
+<ListView
+  android:background="@drawable/framed"
+  android:id="@+id/dialog_story_list"
+  android:layout_height="0sp"
+  android:layout_weight="8"
+  android:layout_width="match_parent"
+  android:divider="#eeeeee"
+  android:dividerHeight="1sp"
+  />
+
+</LinearLayout>

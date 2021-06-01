@@ -193,9 +193,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 	/** Dialog popup for the Notes: Custom list with multiple text items and
 	 *  option to append or insert a new note. */
-	private val dialogNotes: AlertDialog by lazy {
+	private val dialogStory: AlertDialog by lazy {
 		AlertDialog.Builder(this@MainActivity).apply {
-			setView(ListView(this@MainActivity))
+			setView(R.layout.dialog_story)
+			setTitle(R.string.dialog_story_title)
 		}
 		.create()
 	}
@@ -464,7 +465,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		when (view.getId()) {
 			R.id.view_story -> {
-				dialogNotes.show() // show notes.
+				dialogStory.show() // show notes.
+
+				val storyList = dialogStory.findViewById<ListView>(R.id.dialog_story_list)
+
+				if (storyList == null) {
+					Toast.makeText(instance, "Story list still null? (Version on Click)", Toast.LENGTH_SHORT).show()
+				} else if (storyList.adapter == null) {
+					storyList.adapter = StoryListAdapter(this@MainActivity).apply {
+						addAll(listOf("Day 1\nAwoken in Catacomb.", "Day 2\n Nothing Special.", "Day 3\n Received item from nice dragon."), true)
+					}
+				}
 			}
 
 			/* Unfold health and death panel view. */
