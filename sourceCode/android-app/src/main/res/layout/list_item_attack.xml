@@ -8,70 +8,76 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   >
   <LinearLayout
-    android:background="@drawable/framed"
+    android:id="@+id/layout_attack_name_roll_avg"
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
     android:orientation="horizontal"
     >
-    <TextView
+    <LinearLayout
+      android:layout_height="wrap_content"
+      android:layout_weight="5"
       android:background="@drawable/framed"
-      android:gravity="start|top"
-      android:id="@+id/name_attack"
-      android:layout_height="match_parent"
-      android:layout_weight="4"
       android:layout_width="0sp"
-      android:text="Attack"
+      android:orientation="vertical"
+      >
+      <TextView
+        android:id="@+id/attack_name"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:text="Attack"
+        android:textSize="@dimen/textSizeLarge"
+        />
+      <LinearLayout
+        android:id="@+id/layout_attack_reach_types"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        >
+        <TextView
+          android:gravity="left|top"
+          android:id="@+id/attack_range"
+          android:layout_height="wrap_content"
+          android:layout_marginHorizontal="@dimen/hmargin"
+          android:layout_width="wrap_content"
+          android:textColor="@color/colorHint"
+          android:textSize="@dimen/textSizeSmall"
+          />
+        <TextView
+          android:gravity="left|top"
+          android:id="@+id/attack_types"
+          android:layout_height="match_parent"
+          android:layout_marginHorizontal="@dimen/hmargin"
+          android:layout_width="wrap_content"
+          android:textColor="@color/colorHint"
+          android:textSize="@dimen/textSizeSmall"
+          />
+      </LinearLayout>
+    </LinearLayout>
+    <Button style="@style/PlainButton"
+      android:gravity="center"
+      android:id="@+id/attack_roll"
+      android:layout_height="match_parent"
+      android:layout_weight="2"
+      android:layout_width="0sp"
+      android:textSize="@dimen/textSizeLarge"
       />
-    <LinearLayout
-      android:background="@drawable/framed"
+    <Button style="@style/PlainButton"
+      android:gravity="center|center"
+      android:id="@+id/attack_dmg"
       android:layout_height="match_parent"
-      android:layout_weight="1"
+      android:layout_weight="3"
       android:layout_width="0sp"
-      android:orientation="vertical"
-      android:gravity="center|top"
-      >
-      <TextView
-        android:id="@+id/attack_roll"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:text="+0"
-        />
-      <TextView
-        android:id="@+id/attack_range"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:text="BLUDGEONING"
-        android:textSize="@dimen/textSizeNotes"
-        />
-    </LinearLayout>
-    <LinearLayout
-      android:background="@drawable/framed"
-      android:layout_height="match_parent"
-      android:layout_weight="1"
-      android:layout_width="0sp"
-      android:orientation="vertical"
-      android:gravity="center|top"
-      >
-      <TextView
-        android:id="@+id/damage_dice"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:text="+0"
-        />
-      <TextView
-        android:id="@+id/damage_type"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:text="BLUDGEONING"
-        android:textSize="@dimen/textSizeNotes"
-        />
-    </LinearLayout>
+      android:hint="@string/attack_dmg"
+      />
   </LinearLayout>
   <TextView
     android:background="@drawable/framed"
-    android:id="@+id/note"
+    android:gravity="left|top"
+    android:id="@+id/attack_note"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
-    android:textSize="@dimen/textSizeNotes"
+    android:padding="@dimen/hmargin"
+    android:visibility="gone"
+    android:alpha="0.75"
     />
 </LinearLayout>

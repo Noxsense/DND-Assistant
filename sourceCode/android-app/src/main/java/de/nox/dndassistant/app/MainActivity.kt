@@ -92,36 +92,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	 * Clicking an item, will do the action and may use up the connected resources. */
 	private val dialogAttacks: AlertDialog by lazy {
 			AlertDialog.Builder(this@MainActivity).apply{
+				hero.updateAttacks() // XXX always fetch the latest and observe changes on your own.
 				// adapter = content.findViewById<ListView>.adapter
-				setView(ListView(this@MainActivity).apply {
-					adapter = ArrayAdapter<String>(
-						this@MainActivity,
-						// TODO (2021-05-17) prettier custom list items for attacks (and round actions).
-						android.R.layout.simple_list_item_1,
-						hero.attacks.toList().map<Pair<Attack,String>, String> { it.first.toAttackString(it.second) }
-						)
 
-					onItemClickListener = AdapterView.OnItemClickListener { _, _, pos, _ ->
-						hero.attacks.toList().get(pos)?.let { (attack, _) ->
-							when (attack.source) {
-								is SimpleSpell -> {
-									val spell = attack.source as SimpleSpell
-									val _cast: Either<CastSpell, String> = hero.checkSpellCastable(spell.name)
-
-									if (_cast is Either.Left) {
-										// TODO
-										val cast: CastSpell = _cast.left
-
-										// Toast.makeText(this@MainActivity, "Cast Spell ${attack.source} (as action/attack): $cast", Toast.LENGTH_SHORT).show()
-										// Toast.makeText(this@MainActivity, "Cast Spell: ${spell} => ${hero.specialities.find { it.name == "Spell Slot ${cast.second}" }}, => $cast", Toast.LENGTH_SHORT).show()
-										(grid_counters.adapter as ArrayAdapter<Any>?)?.notifyDataSetChanged()
-									}
-								}
-								else -> {}
-							}
-						}
-					}
+				setView(AttackListView(this@MainActivity).apply {
+					addAttacks(hero.attacks)
 				})
+
 			}
 			.create()
 	}
