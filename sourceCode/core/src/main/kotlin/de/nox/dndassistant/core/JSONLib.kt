@@ -302,7 +302,7 @@ public fun Hero.Companion.fromJSON(jsonStr: String) : Hero {
 					.map<JSONObject, Attack.Damage> { dmgObj ->
 						Attack.Damage(
 							DamageType.valueOf(dmgObj.getString("type")),
-							dmgObj.getString("value")
+							RollingTerm.parse(dmgObj.getString("value"))
 						)
 				}
 

@@ -156,10 +156,10 @@ class JSONLibTest {
 		log.debug(spells)
 
 		// var attacks: MutableMap<Attack, String>
-		attacks[Attack("Unarmed Strike", listOf(Attack.Damage(DamageType.BLUDGEONING, "1d3 + DEX")))] = "d20 + STR"
+		attacks[Attack("Unarmed Strike", listOf(Attack.Damage(DamageType.BLUDGEONING, Die(13) + Reference("DEX"))))] = "d20 + STR"
 
-		attacks[Attack("Some Spell as Source", DamageType.BLUDGEONING, "1d8 + CHA")] = "d20 + CHA"
-		attacks[Attack("Some other Spell as Source", DamageType.BLUDGEONING, "12d6", 120, "20ft radius")] = "DC 18 (DEX)" // hits anyways, if in range or so.
+		attacks[Attack("Some Spell as Source", DamageType.BLUDGEONING, Die(8) + Reference("CHA"))] = "d20 + CHA"
+		attacks[Attack("Some other Spell as Source", DamageType.BLUDGEONING, Die(6) * 12, 120, "20ft radius")] = "DC 18 (DEX)" // hits anyways, if in range or so.
 
 		// var inventory: MutableList<Pair<SimpleItem, String>>
 		inventory.plusAssign(testItemCatalog.getItem("Dagger", "Dagger@0")!! to "")
@@ -168,7 +168,7 @@ class JSONLibTest {
 		inventory.plusAssign(testItemCatalog.getItem("Sword of Answering", "SoA@0")!! to "Backpack@0")
 
 		// add attack for item.
-		attacks[Attack(inventory.getItemByName("Sword of Answering")!!.first, DamageType.SLASHING, "1d8 + 3 + STR + proficiencyBonus")] = "1d20 + 3 + STR + proficiencyBonus"
+		attacks[Attack(inventory.getItemByName("Sword of Answering")!!.first, DamageType.SLASHING, Die(8) + 3 + Reference("STR") + Reference("proficiencyBonus"))] = "1d20 + 3 + STR + proficiencyBonus"
 
 		inventory.plusAssign(testItemCatalog.getItem("Pouch", "Pouch@0")!! to "Backpack@0")
 		(0 .. 5).forEach {

@@ -440,6 +440,11 @@ class Hero(name: String, race: Pair<String, String>, player: String? = null ) {
 	 * - Update all proficiency bonus additions and attribute addiions
 	 */
 	public fun updateAttacks() {
+		/* Add unarmed strike if not yet added. */
+		if (Attack.UNARMED !in attacks) {
+			attacks[Attack.UNARMED] = Attack.UNARMED_ATTACK_ROLL
+		}
+
 		/* Drop all attacks with spells that are not prepared. */
 		attacks.filterTo(attacks) { it.key.source != SimpleSpell || hasSpellPrepared(it.key.source as SimpleSpell) }
 
