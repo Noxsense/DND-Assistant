@@ -19,20 +19,20 @@
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
     android:text="Level 1"
-    android:textSize="@dimen/textSizeNotes"
+    android:textSize="@dimen/textSizeSmall"
     />
   <TextView
     android:id="@+id/description"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:text="What I do."
-    android:textSize="@dimen/textSizeNotes"
+    android:textSize="@dimen/textSizeSmall"
     />
   <TextView
     android:id="@+id/limits"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:text=" infin; times / longrest"
-    android:textSize="@dimen/textSizeNotes"
+    android:textSize="@dimen/textSizeSmall"
     />
 </LinearLayout>

@@ -4,8 +4,9 @@
     <dimen name="textSize">12sp</dimen>
     <dimen name="textSizeTiny">5sp</dimen>
     <dimen name="textSizeSmall">8sp</dimen>
-    <dimen name="textSizeLarge">16sp</dimen>
-    <dimen name="textSizeHuge">20sp</dimen>
+    <dimen name="textSizeLarge">14sp</dimen>
+    <dimen name="textSizeHuge">16sp</dimen>
+    <dimen name="textSizeGiant">20sp</dimen>
 
     <dimen name="vmargin">3sp</dimen>
     <dimen name="hmargin">10sp</dimen>

@@ -15,8 +15,7 @@
     android:textColor="#55000000"
     android:textSize="5sp"
     />
-  <TextView
-    android:background="@drawable/framed"
+  <Button style="@style/PlainButton"
     android:gravity="center"
     android:id="@+id/ability_modifier"
     android:layout_height="wrap_content"

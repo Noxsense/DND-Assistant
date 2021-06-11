@@ -21,17 +21,28 @@
         <item name="android:padding">1sp</item>
 
         <item name="android:listViewStyle">@style/DividerLessListView</item>
-
     </style>
+
+    <style name="PlainButton" parent="android:Widget.TextView">
+      <item name="android:foreground">?attr/selectableItemBackground</item>
+      <item name="android:background">@drawable/framed</item>
+      <item name="android:focusable">true</item>
+      <item name="android:clickable">true</item>
+      <item name="android:gravity">center</item>
+      <item name="android:padding">3sp</item>
+    </style>
+
     <style name="DividerLessListView" parent="android:Widget.ListView">
       <item name="android:divider">@android:color/transparent</item>
-      <item name="android:dividerHeight">3sp</item>
+      <item name="android:dividerHeight">2sp</item>
     </style>
+
     <style name="NoteText" parent="android:Widget.TextView">
-      <item name="android:textSize">@dimen/textSizeNotes</item>
+      <item name="android:textSize">@dimen/textSizeSmall</item>
       <item name="android:alpha">0.5</item>
     </style>
+
     <style name="PanelTitle" parent="android:Widget.TextView">
-      <item name="android:textSize">30sp</item>
+      <item name="android:textSize">@dimen/textSizeTitle</item>
     </style>
 </resources>

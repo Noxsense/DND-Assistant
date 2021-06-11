@@ -71,10 +71,8 @@
     android:orientation="horizontal"
     android:padding="@dimen/vmargin"
     >
-    <TextView
+    <Button style="@style/PlainButton"
       android:alpha="0.33"
-      android:background="@drawable/framed"
-      android:gravity="center"
       android:id="@+id/take_damage"
       android:layout_height="match_parent"
       android:layout_weight=".1"
@@ -184,18 +182,16 @@
           android:layout_width="match_parent"
           android:padding="6sp"
           >
-          <TextView
-            android:background="@drawable/framed"
+          <TextView style="@style/PlainButton"
             android:gravity="center"
             android:id="@+id/deathsave_fail"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_width="0sp"
             android:text="&lt;11"
             android:tooltipText="Death Save Failed!"
             />
-          <TextView
-            android:background="@drawable/framed"
+          <TextView style="@style/PlainButton"
             android:gravity="center"
             android:id="@+id/deathsave_overview"
             android:layout_height="match_parent"
@@ -203,8 +199,7 @@
             android:layout_width="0sp"
             android:tooltipText="Death Save Overview. Click to reset."
             />
-          <TextView
-            android:background="@drawable/framed"
+          <TextView style="@style/PlainButton"
             android:gravity="center"
             android:id="@+id/deathsave_success"
             android:layout_height="match_parent"
@@ -213,8 +208,7 @@
             android:text="\u2265 11"
             android:tooltipText="Death Save Success!"
             />
-          <TextView
-            android:background="@drawable/framed"
+          <TextView style="@style/PlainButton"
             android:gravity="center"
             android:id="@+id/deathsave_roll"
             android:layout_height="match_parent"
@@ -226,9 +220,8 @@
         </LinearLayout>
       </LinearLayout>
     </LinearLayout>
-    <TextView
+    <Button style="@style/PlainButton"
       android:alpha="0.33"
-      android:background="@drawable/framed"
       android:gravity="center"
       android:id="@+id/heal"
       android:layout_height="match_parent"
@@ -355,37 +348,39 @@
       android:layout_width="match_parent"
       android:orientation="horizontal"
       >
-      <Button
+      <Button style="@style/PlainButton"
         android:id="@+id/action_special"
-        android:onClick="onClick"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:layout_width="0sp"
+        android:onClick="onClick"
         android:text="Special"
         />
       <Button
+        style="@style/PlainButton"
         android:id="@+id/action_attack"
-        android:onClick="onClick"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:layout_width="0sp"
-        android:text="Attack (Hardest Hit)"
+        android:onClick="onClick"
+        android:text="Attack"
         />
       <Button
+        style="@style/PlainButton"
         android:id="@+id/action_spells"
-        android:onClick="onClick"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:layout_width="0sp"
-        android:text="Spells (Prepared: 14)"
+        android:onClick="onClick"
+        android:text="Spells"
         />
-      <Button
+      <Button style="@style/PlainButton"
         android:id="@+id/action_inventory"
-        android:onClick="onClick"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:layout_width="0sp"
-        android:text="Inventory (60lb)"
+        android:onClick="onClick"
+        android:text="Inventory"
         />
     </LinearLayout>
 
