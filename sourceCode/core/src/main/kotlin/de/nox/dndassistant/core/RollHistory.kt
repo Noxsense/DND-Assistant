@@ -6,41 +6,60 @@ import de.nox.dndassistant.core.TermParsingException
 
 public class RollHistory private constructor() {
 
-	public var rolls: List<TimedRolls> = listOf()
+	private var rolls: List<TimedRolls> = listOf()
 		private set
 
-	public data class TimedRolls(val term: RollingTerm, val roll: Int, val timestamp: Long);
+	public data class TimedRolls(
+		val label: String,
+		val term: RollingTerm,
+		val variables: TermVaribales?,
+		val rolls: Array<Int>,
+		val sum: Int,
+		val timestamp: Long
+	);
 
 	public companion object {
 		// Singleton
 		public val INSTANCE: RollHistory = RollHistory()
 
-		public fun addRoll(term: RollingTerm, result: Int, timestamp: Long = System.currentTimeMillis())
-			= INSTANCE.addRoll(term, result, timestamp)
+		public val rolls: List<TimedRolls> get() = INSTANCE.rolls
 
-		public fun roll(term: RollingTerm, variables: TermVaribales? = null)
-			= INSTANCE.roll(term, variables)
-
-		public fun rollStr(termStr: String, variables: TermVaribales? = null)
-			= INSTANCE.rollStr(termStr, variables)
-	}
-
-	/** Add a new timed roll and result. */
-	public fun addRoll(term: RollingTerm, result: Int, timestamp: Long = System.currentTimeMillis()) {
-		this.rolls += TimedRolls(term, result, timestamp)
-	}
-
-	/** Roll a term, put it into the list of rolled terms. */
-	public fun roll(term: RollingTerm, variables: TermVaribales? = null) : String
-		= term.evaluate(variables)
-			.also { result -> this@RollHistory.addRoll(term, result, 0) }
-			.toString()
-
-	public fun rollStr(term: String, variables: TermVaribales? = null)
-		= try {
-			INSTANCE.roll(RollingTerm.parse(term), variables)
-		} catch (e: Exception) {
-			// TODO could not parse.
-			"(invalid: ${e})"
+		/**
+		 * Add a new timed roll (term, result, timestamp).
+		 */
+		public fun addRoll(
+			label: String,
+			term: RollingTerm,
+			variables: TermVaribales?,
+			rolls: Array<Int>,
+			sum: Int = rolls.sum(),
+			timestamp: Long = System.currentTimeMillis()
+		) {
+			INSTANCE.rolls += TimedRolls(label, term, variables, rolls, sum, timestamp)
 		}
+
+
+		/**
+		 * Roll a term, put it into the list of rolled terms.
+		 */
+		public fun roll(label: String, term: RollingTerm, variables: TermVaribales? = null)
+			= term.evaluate(variables).let { result ->
+				RollHistory.addRoll(label, term, variables, arrayOf(result), result)
+				result to result.toString()
+				// TODO do not return as string but as list of each rolled die
+				// arrayOf(result)
+			}
+
+		/**
+		 * Roll a term which is parsed from the given String.
+		 * Add the results and the command to the history.
+		 */
+		public fun rollStr(label: String, termStr: String, variables: TermVaribales? = null)
+			= try {
+				RollHistory.roll(label, RollingTerm.parse(termStr), variables)
+			} catch (e: Exception) {
+				// TODO could not parse.
+				"(invalid: ${e})"
+			}
+	}
 }

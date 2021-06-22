@@ -49,6 +49,9 @@ class StoryListAdapter(private val context: Context,  val storyList: MutableList
 				return this
 			}
 
+			txtView.setBackgroundResource(android.R.color.white)
+			btnView.setBackgroundResource(android.R.color.white)
+
 			// TODO Setup listeners. after adding, the here fixed indeces are not the same anymore and seems more random.
 			// TODO eg. appending with pos >= items.size => last item has suddenly index 0
 

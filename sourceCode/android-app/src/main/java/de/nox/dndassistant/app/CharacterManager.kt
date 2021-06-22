@@ -1,7 +1,10 @@
 package de.nox.dndassistant.app
 
-import de.nox.dndassistant.core.Hero
 import de.nox.dndassistant.core.Ability
+import de.nox.dndassistant.core.Hero
+import de.nox.dndassistant.core.SimpleSpell
+import de.nox.dndassistant.core.Speciality
+import de.nox.dndassistant.core.CustomCount
 
 /** CharacterManager.
  * - Provide options to load, update and save the player's hero.
@@ -23,6 +26,35 @@ class CharacterManager private constructor() {
 			Ability.values().forEach { a ->
 				this.abilities[a] = (1..20).random() to ((0..1).random() == 0)
 			}
+			hitpointsMax = (6..200).random()
+			hitpointsNow = (10..hitpointsMax).random()
+
+			// add up to 10 random spells
+			(0..(0..3).random()).forEach {
+				// learn spell
+				learnSpell(SimpleSpell(
+					name = "Random Spell $it",
+					school = "EVOCATION",
+					castingTime = "1 act", ritual = false,
+					components = SimpleSpell.Components(),
+					reach = 60, // feet
+					targets = "1 target",
+					duration = "Instantious",
+					concentration = false,
+					description = "A random cantrip genereated by CharacterManager.kt",
+					levels = mapOf(it to mapOf("Spell Attack" to ("5d8" to "Fire damage"))),
+					optAttackRoll = true,
+					optSpellDC = false,
+					klasses = setOf(),
+				), "Race")
+
+				// prepare spell
+				prepareSpell("Random Spell $it")
+
+				// add spell slots
+				if (it > 0) specialities += CustomCount("Spell Slot $it", Speciality.Count("long rest", 1), "Magic Resource for Spells up to level $it")
+			}
+
 		}
 		private set
 

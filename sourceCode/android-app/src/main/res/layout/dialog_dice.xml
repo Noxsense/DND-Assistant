@@ -1,0 +1,42 @@
+<LinearLayout
+  android:background="@android:color/transparent"
+  android:gravity="top"
+  android:id="@+id/dialog_dice"
+  android:layout_height="match_parent"
+  android:layout_width="match_parent"
+  android:orientation="vertical"
+  android:padding="10dp"
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  >
+
+  <!-- Custom dice to roll. (also listed in history) -->
+  <EditText
+    android:autofillHints="none"
+    android:background="@drawable/framed_white_base"
+    android:gravity="center"
+    android:hint="2d4 - d2 + 2"
+    android:id="@+id/dterm"
+    android:inputType="text"
+    android:layout_height="wrap_content"
+    android:layout_margin="2sp"
+    android:layout_width="match_parent"
+    android:padding="2sp"
+    android:text="@string/dterm_example"
+    android:textSize="15sp"
+    />
+  <GridView
+    android:background="@drawable/framed"
+    android:id="@+id/grid_dice_new"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:layout_marginVertical="@dimen/vmargin"
+    android:numColumns="5"
+    />
+  <ListView
+    android:background="@drawable/framed"
+    android:id="@+id/roll_history"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:layout_marginVertical="@dimen/vmargin"
+    />
+</LinearLayout>

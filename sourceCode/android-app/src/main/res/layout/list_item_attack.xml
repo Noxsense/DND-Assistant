@@ -16,7 +16,7 @@
     <LinearLayout
       android:layout_height="wrap_content"
       android:layout_weight="5"
-      android:background="@drawable/framed"
+      android:background="@drawable/framed_white_base"
       android:layout_width="0sp"
       android:orientation="vertical"
       >
@@ -54,6 +54,7 @@
       </LinearLayout>
     </LinearLayout>
     <Button style="@style/PlainButton"
+      android:background="@drawable/framed_white_base"
       android:gravity="center"
       android:id="@+id/attack_roll"
       android:layout_height="match_parent"
@@ -62,6 +63,7 @@
       android:textSize="@dimen/textSizeLarge"
       />
     <Button style="@style/PlainButton"
+      android:background="@drawable/framed_white_base"
       android:gravity="center|center"
       android:id="@+id/attack_dmg"
       android:layout_height="match_parent"
@@ -71,13 +73,13 @@
       />
   </LinearLayout>
   <TextView
-    android:background="@drawable/framed"
+    android:background="@drawable/framed_white_base"
     android:gravity="left|top"
     android:id="@+id/attack_note"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:padding="@dimen/hmargin"
     android:visibility="gone"
-    android:alpha="0.75"
+    android:textColor="@color/colorHint"
     />
 </LinearLayout>

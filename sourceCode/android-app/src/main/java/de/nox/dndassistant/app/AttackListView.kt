@@ -7,15 +7,14 @@ import android.widget.ListView
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
-import android.widget.EditText
 import android.widget.AdapterView
 import android.widget.Toast
 import android.widget.AdapterView.OnItemClickListener
 
 import de.nox.dndassistant.core.Attack
-import de.nox.dndassistant.core.RollHistory
+import de.nox.dndassistant.core.RollingTerm
 
-private val logger = LoggerFactory.getLogger("AttakViewList")
+private val logger = LoggerFactory.getLogger("AttackViewList")
 
 /** An adapther for story list items.
  * A story item can be a multilined string.
@@ -36,8 +35,6 @@ class AttackListView(context: Context) : ListView(context), AdapterView.OnItemCl
 	private val defaultAttack: Pair<Attack, String> = Attack.UNARMED to Attack.UNARMED_ATTACK_ROLL
 
 	protected val variables: MutableMap<String, Int> = mutableMapOf()
-
-	private val rollHistory: RollHistory = RollHistory.INSTANCE
 
 	/** Display and actions for the displayed attacks. */
 	private val attackAdapter = object: BaseAdapter() {
@@ -103,19 +100,15 @@ class AttackListView(context: Context) : ListView(context), AdapterView.OnItemCl
 
 					// can be rolled, is not just a difficulty class.
 					if (!atkRoll.startsWith("DC")) {
-						val term = atkRoll
-						logger.debug("Try to roll: $term")
-						val result = rollHistory.rollStr(term)
-						Toast.makeText(context, "Rolled: $result", 1).show() // TODO DEBUG
+						val term = RollingTerm.parse(atkRoll) // TODO better linking, less repetitive anonymous classes
+						Utils.showRolledTerm(parent, atk.label, term)
 					}
 				}
 
 				/** Click on damage, to roll the damge dice. */
 				dmgView.setOnClickListener {
 					val term = atk.damage.joinToString("+") { (_, term) -> term.toString() }
-					logger.debug("Try to roll: $term")
-					val result = rollHistory.rollStr(term)
-					Toast.makeText(context, "Rolled: $result", 1).show() // TODO DEBUG
+					Toast.makeText(context, "TODO (roll attack roll)", 1).show() // TODO remove DEBUG
 				}
 			}
 	}

@@ -1,49 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-  android:gravity="top"
-  android:id="@+id/main_layout"
-  android:keepScreenOn="true"
-  android:layout_height="match_parent"
-  android:layout_width="match_parent"
-  android:orientation="vertical"
-  android:paddingHorizontal="@dimen/hmargin"
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  >
-
-  <!-- NAME, XP (CHARACTER LEVEL), INSPIRATION. -->
-
-  <LinearLayout
-    android:background="@drawable/framed"
-    android:layout_height="wrap_content"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
     android:layout_width="match_parent"
-    android:orientation="horizontal"
+    android:keepScreenOn="true"
+    android:paddingHorizontal="@dimen/hmargin"
+  >
+  <LinearLayout
+    android:gravity="top"
+    android:id="@+id/main_layout"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
     >
+
+    <!-- NAME, XP (CHARACTER LEVEL), INSPIRATION. -->
+
     <LinearLayout
+      android:background="@drawable/framed"
       android:layout_height="wrap_content"
-      android:layout_width="0sp"
-      android:orientation="vertical"
-      android:layout_weight="9"
+      android:layout_width="match_parent"
+      android:orientation="horizontal"
       >
-      <TextView
-        android:id="@+id/character_name"
+      <LinearLayout
         android:layout_height="wrap_content"
+        android:layout_width="0sp"
+        android:orientation="vertical"
+        android:layout_weight="9"
+        >
+        <TextView
+          android:id="@+id/character_name"
+          android:layout_height="wrap_content"
+          android:layout_marginVertical="@dimen/vmargin"
+          android:layout_width="match_parent"
+          android:text="@string/character_name"
+          android:textColor="#000000"
+          android:textSize="@dimen/textSizeTitle"
+          />
+        <TextView
+          android:id="@+id/experience"
+          android:layout_height="wrap_content"
+          android:layout_marginVertical="0sp"
+          android:layout_width="match_parent"
+          android:text="@string/level_xp"
+          android:textSize="@dimen/textSizeSmall"
+          />
+      </LinearLayout>
+
+      <!-- EXTRA DICE AND HISTORY. -->
+      <TextView style="@style/PlainButton"
+        android:id="@+id/dialog_dice_open"
+        android:onClick="onClick"
+        android:layout_height="match_parent"
+        android:gravity="center"
         android:layout_marginVertical="@dimen/vmargin"
-        android:layout_width="match_parent"
-        android:text="@string/character_name"
-        android:textColor="#000000"
-        android:textSize="@dimen/textSizeTitle"
+        android:layout_weight="1"
+        android:layout_width="0sp"
+        android:maxLines="1"
+        android:text="\u2684 \u1f3b2"
         />
-      <TextView
-        android:id="@+id/experience"
-        android:layout_height="wrap_content"
-        android:layout_marginVertical="0sp"
-        android:layout_width="match_parent"
-        android:text="@string/level_xp"
-        android:textSize="@dimen/textSizeSmall"
-        />
-    </LinearLayout>
+
       <!-- CAMPAIGN AND CHARACTER NOTES. -->
-      <TextView
+      <TextView style="@style/PlainButton"
         android:id="@+id/view_story"
         android:onClick="onClick"
         android:layout_height="match_parent"
@@ -54,412 +72,360 @@
         android:maxLines="1"
         android:text="@string/story"
         />
-  </LinearLayout>
+    </LinearLayout>
 
-  <!-- HEALTH BAR WITH UNDERLYING DEATH STATS AND RESTING OPTIONS. -->
+    <!-- HEALTH BAR WITH UNDERLYING DEATH STATS AND RESTING OPTIONS. -->
 
-  <!-- layout
-   [damage] [Bar*] [heal]
-   Bar* = unfoldable: with insert field, and more buttons.
-  -->
+    <!-- layout
+     [damage] [Bar*] [heal]
+     Bar* = unfoldable: with insert field, and more buttons.
+    -->
 
-  <LinearLayout
-    android:background="@drawable/framed"
-    android:layout_height="wrap_content"
-    android:layout_marginVertical="@dimen/vmargin"
-    android:layout_width="match_parent"
-    android:orientation="horizontal"
-    android:padding="@dimen/vmargin"
-    >
-    <Button style="@style/PlainButton"
-      android:alpha="0.33"
-      android:id="@+id/take_damage"
-      android:layout_height="match_parent"
-      android:layout_weight=".1"
-      android:layout_width="0sp"
-      android:text="-"
-      android:tooltipText="Take Damage!"
-      />
     <LinearLayout
+      android:background="@drawable/framed"
       android:layout_height="wrap_content"
-      android:layout_weight=".8"
-      android:layout_width="0sp"
-      android:orientation="vertical"
+      android:layout_marginVertical="@dimen/vmargin"
+      android:layout_width="match_parent"
+      android:orientation="horizontal"
+      android:padding="@dimen/vmargin"
       >
-      <!--
-      On Click, open long rest, short rest and death fight.
-      -->
-      <RelativeLayout
-         android:layout_height="20dp"
-         android:layout_width="match_parent"
-        >
-        <ProgressBar
-          android:background="#00000000"
-          android:gravity="center"
-          android:id="@+id/healthbar_new"
-          android:indeterminate="false"
-          android:progress="25"
-          android:layout_alignParentStart="true"
-          android:layout_centerVertical="true"
-          android:layout_height="20dp"
-          android:layout_width="match_parent"
-          android:progressDrawable="@drawable/healthbar"
-          android:tooltipText="Health Bar. Open to show more options, like rest or death saves."
-          style="@android:style/Widget.ProgressBar.Horizontal"
-          />
-        <TextView
-          android:id="@+id/hp_stats"
-          android:layout_height="wrap_content"
-          android:layout_width="match_parent"
-          android:layout_centerVertical="true"
-          android:text="?/??"
-          android:gravity="center"
-          android:textSize="@dimen/textSizeSmall"
-          />
-      </RelativeLayout>
-      <LinearLayout
-        android:id="@+id/more_health_panel"
+      <Button style="@style/PlainButton"
+        android:alpha="0.33"
+        android:id="@+id/take_damage"
         android:layout_height="match_parent"
-        android:layout_width="match_parent"
+        android:layout_weight=".1"
+        android:layout_width="0sp"
+        android:text="-"
+        android:tooltipText="Take Damage!"
+        />
+      <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_weight=".8"
+        android:layout_width="0sp"
         android:orientation="vertical"
-        android:visibility="gone"
         >
-        <EditText
-          android:id="@+id/hp_custom_modify"
-          android:gravity="center"
-          android:layout_height="wrap_content"
-          android:layout_marginVertical="@dimen/vmargin"
-          android:layout_width="match_parent"
-          android:text="+2d10 + 20"
-          android:tooltipText="Custom Hit or heal (-/+ N)"
-          />
-        <LinearLayout
-          android:background="@drawable/framed"
-          android:id="@+id/timers"
-          android:layout_height="wrap_content"
-          android:layout_marginVertical="@dimen/vmargin"
-          android:layout_width="match_parent"
-          android:padding="6sp"
+        <!--
+        On Click, open long rest, short rest and death fight.
+        -->
+        <RelativeLayout
+           android:layout_height="20dp"
+           android:layout_width="match_parent"
           >
-          <TextView
-            android:background="@drawable/framed"
+          <ProgressBar
+            android:background="#00000000"
             android:gravity="center"
-            android:id="@+id/tick"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_width="0sp"
+            android:id="@+id/healthbar_new"
+            android:indeterminate="false"
+            android:progress="25"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_height="20dp"
+            android:layout_width="match_parent"
+            android:progressDrawable="@drawable/healthbar"
+            android:tooltipText="Health Bar. Open to show more options, like rest or death saves."
+            style="@android:style/Widget.ProgressBar.Horizontal"
             />
           <TextView
-            android:background="@drawable/framed"
-            android:gravity="center"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_width="0sp"
-            android:text="Short Rest"
-            />
-          <TextView
-            android:background="@drawable/framed"
-            android:gravity="center"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_width="0sp"
-            android:text="Long Rest"
-            />
-          <TextView
-            android:background="@drawable/framed"
-            android:gravity="center"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_width="0sp"
-            android:text="One Day"
-            />
-          </LinearLayout>
-        <LinearLayout
-          android:background="@drawable/framed"
-          android:id="@+id/deathfight"
-          android:layout_height="wrap_content"
-          android:layout_marginVertical="@dimen/vmargin"
-          android:layout_width="match_parent"
-          android:padding="6sp"
-          >
-          <TextView style="@style/PlainButton"
-            android:gravity="center"
-            android:id="@+id/deathsave_fail"
+            android:id="@+id/hp_stats"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_width="0sp"
-            android:text="&lt;11"
-            android:tooltipText="Death Save Failed!"
-            />
-          <TextView style="@style/PlainButton"
+            android:layout_width="match_parent"
+            android:layout_centerVertical="true"
+            android:text="?/??"
             android:gravity="center"
-            android:id="@+id/deathsave_overview"
-            android:layout_height="match_parent"
-            android:layout_weight="4"
-            android:layout_width="0sp"
-            android:tooltipText="Death Save Overview. Click to reset."
+            android:textSize="@dimen/textSizeSmall"
             />
-          <TextView style="@style/PlainButton"
+        </RelativeLayout>
+        <LinearLayout
+          android:id="@+id/more_health_panel"
+          android:layout_height="match_parent"
+          android:layout_width="match_parent"
+          android:orientation="vertical"
+          android:visibility="gone"
+          >
+          <EditText
+            android:id="@+id/hp_custom_modify"
             android:gravity="center"
-            android:id="@+id/deathsave_success"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_width="0sp"
-            android:text="\u2265 11"
-            android:tooltipText="Death Save Success!"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="@dimen/vmargin"
+            android:layout_width="match_parent"
+            android:text="+2d10 + 20"
+            android:tooltipText="Custom Hit or heal (-/+ N)"
             />
-          <TextView style="@style/PlainButton"
-            android:gravity="center"
-            android:id="@+id/deathsave_roll"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_width="0sp"
-            android:text="Roll"
-            android:tooltipText="Roll and Auto-Enter the Result"
-            />
+          <LinearLayout
+            android:background="@drawable/framed"
+            android:id="@+id/timers"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="@dimen/vmargin"
+            android:layout_width="match_parent"
+            android:padding="6sp"
+            >
+            <TextView
+              android:background="@drawable/framed"
+              android:gravity="center"
+              android:id="@+id/tick"
+              android:layout_height="match_parent"
+              android:layout_weight="1"
+              android:layout_width="0sp"
+              />
+            <TextView
+              android:background="@drawable/framed"
+              android:gravity="center"
+              android:layout_height="match_parent"
+              android:layout_weight="1"
+              android:layout_width="0sp"
+              android:text="Short Rest"
+              />
+            <TextView
+              android:background="@drawable/framed"
+              android:gravity="center"
+              android:layout_height="match_parent"
+              android:layout_weight="1"
+              android:layout_width="0sp"
+              android:text="Long Rest"
+              />
+            <TextView
+              android:background="@drawable/framed"
+              android:gravity="center"
+              android:layout_height="match_parent"
+              android:layout_weight="1"
+              android:layout_width="0sp"
+              android:text="One Day"
+              />
+            </LinearLayout>
+          <LinearLayout
+            android:background="@drawable/framed"
+            android:id="@+id/deathfight"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="@dimen/vmargin"
+            android:layout_width="match_parent"
+            android:padding="6sp"
+            >
+            <TextView style="@style/PlainButton"
+              android:gravity="center"
+              android:id="@+id/deathsave_fail"
+              android:layout_height="wrap_content"
+              android:layout_weight="1"
+              android:layout_width="0sp"
+              android:text="&lt;11"
+              android:tooltipText="Death Save Failed!"
+              />
+            <TextView style="@style/PlainButton"
+              android:gravity="center"
+              android:id="@+id/deathsave_overview"
+              android:layout_height="match_parent"
+              android:layout_weight="4"
+              android:layout_width="0sp"
+              android:tooltipText="Death Save Overview. Click to reset."
+              />
+            <TextView style="@style/PlainButton"
+              android:gravity="center"
+              android:id="@+id/deathsave_success"
+              android:layout_height="match_parent"
+              android:layout_weight="1"
+              android:layout_width="0sp"
+              android:text="\u2265 11"
+              android:tooltipText="Death Save Success!"
+              />
+            <TextView style="@style/PlainButton"
+              android:gravity="center"
+              android:id="@+id/deathsave_roll"
+              android:layout_height="match_parent"
+              android:layout_weight="1"
+              android:layout_width="0sp"
+              android:text="Roll"
+              android:tooltipText="Roll and Auto-Enter the Result"
+              />
+          </LinearLayout>
         </LinearLayout>
       </LinearLayout>
-    </LinearLayout>
-    <Button style="@style/PlainButton"
-      android:alpha="0.33"
-      android:gravity="center"
-      android:id="@+id/heal"
-      android:layout_height="match_parent"
-      android:layout_weight=".1"
-      android:layout_width="0sp"
-      android:text="+"
-      android:tooltipText="Heal!"
-      />
-  </LinearLayout>
-
-  <!-- BASIC STATS: HP, AC, SPEED -->
-
-  <LinearLayout
-    android:background="@drawable/framed"
-    android:id="@+id/hp_ac_speed"
-    android:layout_height="wrap_content"
-    android:layout_marginVertical="@dimen/vmargin"
-    android:layout_width="match_parent"
-    android:orientation="vertical"
-    android:padding="@dimen/hmargin"
-    android:tooltipText="Tap here to change max / tmp hitpoints, hitdice, armor class and speeds."
-    >
-    <TextView
-      android:id="@+id/ac_stats"
-      android:layout_height="wrap_content"
-      android:layout_width="match_parent"
-      android:text="__AC__: 12 (naked)"
-      />
-    <TextView
-      android:id="@+id/speed_stats"
-      android:layout_height="wrap_content"
-      android:layout_width="match_parent"
-      android:text="__Speed__: 35ft (30ft flying)"
-      />
-  </LinearLayout>
-
-
-  <!-- ABILITY SCORES.
-    Background colour indicates prof in ability saving throws.
-    onClick: roll value
-    onLongClick: roll saving throw -->
-  <include
-    android:id="@+id/abilities_grid"
-    android:layout_height="wrap_content"
-    android:layout_marginVertical="@dimen/vmargin"
-    android:layout_width="match_parent"
-    layout="@layout/abilities"
-    />
-
-  <!-- PROFICIENCY AND SKILLS. -->
-
-  <LinearLayout
-    android:background="@drawable/framed"
-    android:id="@+id/profificiency_language_skills"
-    android:onClick="onClick"
-    android:layout_height="wrap_content"
-    android:layout_marginVertical="@dimen/vmargin"
-    android:layout_width="match_parent"
-    android:orientation="vertical"
-    android:padding="@dimen/hmargin"
-    android:tooltipText="Show all skills and Traits. Tap here!"
-    >
-    <!-- PROFICIENCY BONUS.
-    Open, to see a overview, which skills have profificiency.  -->
-    <TextView
-      android:id="@+id/profificiency"
-      android:layout_height="wrap_content"
-      android:layout_width="match_parent"
-      android:text="__Proficiency Bonus__: +0"
-      />
-    <TextView
-      android:id="@+id/language"
-      android:layout_height="wrap_content"
-      android:layout_width="match_parent"
-      android:text="__Languages__: Common, ..."
-      />
-    <TextView
-      android:id="@+id/tools"
-      android:layout_height="wrap_content"
-      android:layout_width="match_parent"
-      android:text="__Tools__: -"
-      />
-    <TextView
-      android:id="@+id/passive_perception"
-      android:layout_height="wrap_content"
-      android:layout_width="match_parent"
-      android:text="__Passive Perception__: Perception + 10"
-      />
-    <TextView
-      android:id="@+id/skills_proficient"
-      android:layout_height="wrap_content"
-      android:layout_width="match_parent"
-      android:text="__Skills__: Persuation, Animal Handling, ..."
-      />
-    <TextView
-      android:id="@+id/traits"
-      android:layout_height="wrap_content"
-      android:layout_width="match_parent"
-      android:text="__Traits__: Keen Nose. Flury of Fluffy, Immunity Stuff."
-      />
-  </LinearLayout>
-
-  <!-- ACTIONS, ATTACKS, SPELLS, INVENTORY. -->
-
-  <LinearLayout
-    android:background="@drawable/framed"
-    android:id="@+id/actions_panel"
-    android:layout_height="wrap_content"
-    android:layout_marginVertical="@dimen/vmargin"
-    android:layout_width="match_parent"
-    android:orientation="vertical"
-    android:padding="@dimen/hmargin"
-    android:tooltipText="Show actions. Tap here."
-    >
-    <TextView
-      android:id="@+id/actions"
-      android:layout_height="wrap_content"
-      android:layout_width="match_parent"
-      android:text="Actions, Spells and Inventory."
-      />
-    <LinearLayout
-      android:id="@+id/action_option_buttons"
-      android:layout_height="wrap_content"
-      android:layout_width="match_parent"
-      android:orientation="horizontal"
-      >
       <Button style="@style/PlainButton"
-        android:id="@+id/action_special"
+        android:alpha="0.33"
+        android:gravity="center"
+        android:id="@+id/heal"
         android:layout_height="match_parent"
-        android:layout_weight="1"
+        android:layout_weight=".1"
         android:layout_width="0sp"
-        android:onClick="onClick"
-        android:text="Special"
-        />
-      <Button
-        style="@style/PlainButton"
-        android:id="@+id/action_attack"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:layout_width="0sp"
-        android:onClick="onClick"
-        android:text="Attack"
-        />
-      <Button
-        style="@style/PlainButton"
-        android:id="@+id/action_spells"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:layout_width="0sp"
-        android:onClick="onClick"
-        android:text="Spells"
-        />
-      <Button style="@style/PlainButton"
-        android:id="@+id/action_inventory"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:layout_width="0sp"
-        android:onClick="onClick"
-        android:text="Inventory"
+        android:text="+"
+        android:tooltipText="Heal!"
         />
     </LinearLayout>
+
+    <!-- BASIC STATS: HP, AC, SPEED -->
 
     <LinearLayout
       android:background="@drawable/framed"
-      android:layout_height="match_parent"
+      android:id="@+id/hp_ac_speed"
+      android:layout_height="wrap_content"
       android:layout_marginVertical="@dimen/vmargin"
-      android:layout_weight="1"
       android:layout_width="match_parent"
       android:orientation="vertical"
+      android:padding="@dimen/hmargin"
+      android:tooltipText="Tap here to change max / tmp hitpoints, hitdice, armor class and speeds."
       >
       <TextView
+        android:id="@+id/ac_stats"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:text="@string/section_counters"
+        android:text="__AC__: 12 (naked)"
         />
-      <GridView
-        android:id="@+id/grid_counters"
+      <TextView
+        android:id="@+id/speed_stats"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:numColumns="5"
+        android:text="__Speed__: 35ft (30ft flying)"
         />
     </LinearLayout>
-  </LinearLayout>
 
 
-  <!-- EXTRA DICE AND ROLL TERM ON INPUT . -->
-
-  <LinearLayout
-    android:background="@drawable/framed"
-    android:id="@+id/content_rolls"
-    android:layout_height="match_parent"
-    android:layout_marginVertical="@dimen/vmargin"
-    android:layout_width="match_parent"
-    android:orientation="vertical"
-    android:padding="10sp"
-    >
-    <!-- Custom dice to roll. (also listed in history) -->
-    <LinearLayout
-      android:layout_height="wrap_content"
-      android:layout_width="match_parent"
-      android:orientation="horizontal"
-      >
-      <TextView
-        android:id="@+id/section_dice"
-        android:onClick="onClick"
-        android:layout_height="match_parent"
-        android:layout_weight="4"
-        android:layout_width="0sp"
-        android:text="@string/section_dice"
-        />
-      <TextView
-        android:gravity="end"
-        android:id="@+id/roll_history"
-        android:onClick="onClick"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:layout_width="0sp"
-        android:text="View history."
-        />
-    </LinearLayout>
+    <!-- ABILITY SCORES.
+      Background colour indicates prof in ability saving throws.
+      onClick: roll value
+      onLongClick: roll saving throw -->
     <include
-      android:id="@+id/grid_dice"
+      android:id="@+id/abilities_grid"
       android:layout_height="wrap_content"
       android:layout_marginVertical="@dimen/vmargin"
       android:layout_width="match_parent"
-      layout="@layout/grid_dice"
+      layout="@layout/abilities"
       />
-    <GridView
+
+    <!-- PROFICIENCY AND SKILLS. -->
+
+    <LinearLayout
       android:background="@drawable/framed"
-      android:id="@+id/grid_dice_new"
+      android:id="@+id/profificiency_language_skills"
+      android:onClick="onClick"
       android:layout_height="wrap_content"
+      android:layout_marginVertical="@dimen/vmargin"
       android:layout_width="match_parent"
-      android:numColumns="8"
-      android:gravity="end"
-      />
+      android:orientation="vertical"
+      android:padding="@dimen/hmargin"
+      android:tooltipText="Show all skills and Traits. Tap here!"
+      >
+      <!-- PROFICIENCY BONUS.
+      Open, to see a overview, which skills have profificiency.  -->
+      <TextView
+        android:id="@+id/profificiency"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:text="__Proficiency Bonus__: +0"
+        />
+      <TextView
+        android:id="@+id/language"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:text="__Languages__: Common, ..."
+        />
+      <TextView
+        android:id="@+id/tools"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:text="__Tools__: -"
+        />
+      <TextView
+        android:id="@+id/passive_perception"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:text="__Passive Perception__: Perception + 10"
+        />
+      <TextView
+        android:id="@+id/skills_proficient"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:text="__Skills__: Persuation, Animal Handling, ..."
+        />
+      <TextView
+        android:id="@+id/traits"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:text="__Traits__: Keen Nose. Flury of Fluffy, Immunity Stuff."
+        />
+    </LinearLayout>
+
+    <!-- ACTIONS, ATTACKS, SPELLS, INVENTORY. -->
+
+    <LinearLayout
+      android:background="@drawable/framed"
+      android:id="@+id/actions_panel"
+      android:layout_height="wrap_content"
+      android:layout_marginVertical="@dimen/vmargin"
+      android:layout_width="match_parent"
+      android:orientation="vertical"
+      android:padding="@dimen/hmargin"
+      android:tooltipText="Show actions. Tap here."
+      >
+      <TextView
+        android:id="@+id/actions"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:text="Actions, Spells and Inventory."
+        />
+      <LinearLayout
+        android:id="@+id/action_option_buttons"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        >
+        <Button style="@style/PlainButton"
+          android:id="@+id/action_special"
+          android:layout_height="match_parent"
+          android:layout_weight="1"
+          android:layout_width="0sp"
+          android:onClick="onClick"
+          android:text="Special"
+          />
+        <Button
+          style="@style/PlainButton"
+          android:id="@+id/action_attack"
+          android:layout_height="match_parent"
+          android:layout_weight="1"
+          android:layout_width="0sp"
+          android:onClick="onClick"
+          android:text="Attack"
+          />
+        <Button
+          style="@style/PlainButton"
+          android:id="@+id/action_spells"
+          android:layout_height="match_parent"
+          android:layout_weight="1"
+          android:layout_width="0sp"
+          android:onClick="onClick"
+          android:text="Spells"
+          />
+        <Button style="@style/PlainButton"
+          android:id="@+id/action_inventory"
+          android:layout_height="match_parent"
+          android:layout_weight="1"
+          android:layout_width="0sp"
+          android:onClick="onClick"
+          android:text="Inventory"
+          />
+      </LinearLayout>
+
+      <!-- COUNTERS AND RESOURCES AS OVERVIEW. -->
+
+      <LinearLayout
+        android:background="@drawable/framed"
+        android:layout_height="match_parent"
+        android:layout_marginVertical="@dimen/vmargin"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        >
+        <TextView
+          android:layout_height="wrap_content"
+          android:layout_width="match_parent"
+          android:text="@string/section_counters"
+          />
+        <GridView
+          android:id="@+id/grid_counters"
+          android:layout_height="wrap_content"
+          android:layout_width="match_parent"
+          android:numColumns="5"
+          />
+      </LinearLayout>
+    </LinearLayout>
+
+  <!-- end of main layout -->
   </LinearLayout>
-
-  <!-- DEPRECATED -->
-
-<!-- end of main layout -->
-</LinearLayout>
+</ScrollView>

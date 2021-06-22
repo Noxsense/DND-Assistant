@@ -6,12 +6,11 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
+import android.view.WindowManager
 import android.view.View.OnClickListener
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.EditText
-import android.widget.GridLayout
 import android.widget.GridView
 import android.widget.ListView
 import android.widget.TextView
@@ -19,23 +18,21 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
 
 import kotlinx.android.synthetic.main.activity_main.*
 
-import de.nox.dndassistant.core.Either
-
 // import de.nox.dndassistant.core.toAttackString
 import de.nox.dndassistant.core.Ability
-import de.nox.dndassistant.core.Attack
-import de.nox.dndassistant.core.CastSpell
+// import de.nox.dndassistant.core.Attack
+// import de.nox.dndassistant.core.CastSpell
 import de.nox.dndassistant.core.Hero
+import de.nox.dndassistant.core.RollHistory
 import de.nox.dndassistant.core.RollingTerm
-import de.nox.dndassistant.core.SimpleSpell
+import de.nox.dndassistant.core.Number
+// import de.nox.dndassistant.core.SimpleSpell
 import de.nox.dndassistant.core.Speciality
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -49,6 +46,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		lateinit var instance: AppCompatActivity
 			private set
 	}
+
+	private lateinit var mainLayout: ViewGroup
 
 	private lateinit var panelAbilities: View
 		private set
@@ -86,21 +85,28 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			})
 		}
 		.create() // make alaert dialog
+		.also { dialog ->
+			dialog.getWindow()?.setBackgroundDrawableResource(android.R.color.transparent)
+		}
 	}
 
 	/** Dialog to display attacks, moves and spells castable within a round.
 	 * Clicking an item, will do the action and may use up the connected resources. */
 	private val dialogAttacks: AlertDialog by lazy {
-			AlertDialog.Builder(this@MainActivity).apply{
-				hero.updateAttacks() // XXX always fetch the latest and observe changes on your own.
-				// adapter = content.findViewById<ListView>.adapter
+		AlertDialog.Builder(this@MainActivity).apply{
+			hero.updateAttacks() // XXX always fetch the latest and observe changes on your own.
+			// adapter = content.findViewById<ListView>.adapter
 
-				setView(AttackListView(this@MainActivity).apply {
-					addAttacks(hero.attacks)
-				})
-
-			}
-			.create()
+			setView(AttackListView(this@MainActivity).apply {
+				addAttacks(hero.attacks) // add all currently known attacks
+			})
+		}
+		.create()
+		.also { dialog ->
+			// finalaize to access the views without show.
+			dialog.create()
+			dialog.getWindow()?.setBackgroundDrawableResource(android.R.color.transparent)
+		}
 	}
 
 	/** Dialog with the skills.
@@ -134,6 +140,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			})
 		}
 		.create() // make alaert dialog
+		.also { dialog ->
+			// finalaize to access the views without show.
+			dialog.create()
+			dialog.getWindow()?.setBackgroundDrawableResource(android.R.color.transparent)
+		}
 	}
 
 	/** Dialog of the inventory.
@@ -149,23 +160,79 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 					android.R.layout.simple_list_item_1,
 					hero.inventory.map { it.toString() },
 				)
+				setBackgroundResource(android.R.color.transparent) // "floating" items
 			})
 		}
 		.create() // make alaert dialog
+		.also { dialog ->
+			// finalaize to access the views without show.
+			dialog.create()
+			dialog.getWindow()?.setBackgroundDrawableResource(android.R.color.transparent)
+		}
+	}
+
+	private val rollHistoryAdapter by lazy {
+		RollHistoryAdapter(this)
 	}
 
 	/** Dialog to display the history of rolls. */
 	val dialogRolls: AlertDialog by lazy {
 		AlertDialog.Builder(this@MainActivity).apply{
-			// adapter = content.findViewById<ListView>.adapter
-			setView(ListView(this@MainActivity).apply {
+			// setView(R.layout.dialog_dice)
+
+			// inflate custom dialog view (and assign the rolls)
+			val view = li.inflate(R.layout.dialog_dice, null)
+
+			view.findViewById<TextView>(R.id.dterm)?.apply {
+				setOnKeyListener { view, code, event ->
+					when (event.action == KeyEvent.ACTION_DOWN && code == KeyEvent.KEYCODE_ENTER) {
+						true -> {
+							val txt = (view as TextView).text.toString()
+							Utils.showRolledParsedTerm(mainLayout, "", txt)
+							rollHistoryAdapter.notifyDataSetChanged() // update history
+							true
+						}
+						else -> false // not yet consumed
+					}
+				}
+			}
+
+			// DisplayDie: [Name, Term] -> [edit name, edit term, change pos]
+			val exampleDice = listOf("d2", "d4", "d6", "d8", "d10", "d12", "d20", "d100", "[+]")
+
+			// assign extra dice
+			view.findViewById<GridView>(R.id.grid_dice_new)?.apply {
 				adapter = ArrayAdapter<String>(
 					this@MainActivity,
-					android.R.layout.simple_list_item_1,
-					Rollers.history.toList().map { it.toString() })
-			})
+					R.layout.list_item_rollingterm, R.id.term,
+					exampleDice,
+					)
+
+				setOnItemClickListener { parent, view, position, id ->
+					// TODO do not parse every time, placeholder for now.
+					val termStr = view.findViewById<TextView>(R.id.term).text.toString()
+					val term = Utils.showRolledParsedTerm(mainLayout, termStr, termStr)
+					rollHistoryAdapter.notifyDataSetChanged()
+				}
+			}
+
+			// rolling history.
+			view.findViewById<ListView>(R.id.roll_history)?.apply {
+				adapter = rollHistoryAdapter
+			}
+
+			setView(view)
 		}
 		.create() // make alaert dialog
+		.also { dialog ->
+			// finalaize to access the views without show.
+			dialog.create()
+
+			dialog.getWindow()?.apply {
+				setBackgroundDrawableResource(android.R.color.transparent)
+				setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
+			}
+		}
 	}
 
 	/** Dialog popup for the Notes: Custom list with multiple text items and
@@ -173,9 +240,24 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	private val dialogStory: AlertDialog by lazy {
 		AlertDialog.Builder(this@MainActivity).apply {
 			setView(R.layout.dialog_story)
-			setTitle(R.string.dialog_story_title)
+			// setTitle(R.string.dialog_story_title)
 		}
 		.create()
+		.also { dialog ->
+			// finalize views without showing yet.
+			dialog.create()
+			dialog.getWindow()?.setBackgroundDrawableResource(android.R.color.transparent)
+
+			val storyList = dialog.findViewById<ListView>(R.id.dialog_story_list)
+
+			if (storyList == null) {
+				Toast.makeText(instance, "Story list still null? (Version on Click)", Toast.LENGTH_SHORT).show()
+			} else if (storyList.adapter == null) {
+				storyList.adapter = StoryListAdapter(this@MainActivity).apply {
+					addAll(listOf("Day 1\nAwoken in Catacomb.", "Day 2\n Nothing Special.", "Day 3\n Received item from nice dragon."), true)
+				}
+			}
+		}
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -190,6 +272,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		li = LayoutInflater.from(this)
 
 		instance = this@MainActivity
+
+		mainLayout = main_layout
 
 		// lateinit of var model.
 		model =  ViewModelProvider(this)[HeroViewModel::class.java]
@@ -223,9 +307,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 		/* Show rolls. */
 
-		/* Initiate extra rolls (from grid_dice panel). */
-		setupRollPanel()
-
 		/* Setup dialogs and views (and listeners) for spells, items, attacks and other actions. */
 		setupActionsPanel()
 
@@ -244,22 +325,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		// TODO 2021-01-26 action panel
 
 		/* Search in currently displayed content view. */
-		// findViewById<EditText>(R.id.search_content).also {
-		// 	it.setOnEditorActionListener { _, actionId, _ ->
-		// 		if(actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE){
-		// 			/* Find the currently displayed adapter. */
-		// 			when  {
-		// 				panelSpells.second.visibility == View.VISIBLE -> {
-		// 					(panelSpells.second as SpellView).filterSpells(it.text.toString())
-		// 				}
-		// 				else -> {}
-		// 			}
-		// 			true
-		// 		} else {
-		// 			false
-		// 		}
-		// 	}
-		// }
+		// findViewById<EditText>(R.id.search_content)
 
 		// TODO (2020-11-22) keep screen on?
 		window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -286,50 +352,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		// }
 	}
 
-	/** Initiate the panel with extra dice.
-	 * There are extra dice and an additional custom field,
-	 * to roll outside of possible ability or attack rolls. */
-	private fun setupRollPanel() {
-		/* Assign this listener to each custom dice term. */
-		// val extraDice = content_rolls.findViewById<GridLayout>(R.id.grid_dice)
-		val extraDice = findViewById<GridLayout>(R.id.grid_dice)
-
-		/* Set onClick: Open recent rollls view. */
-
-		(0 until extraDice.getChildCount()).forEach {
-			extraDice.getChildAt(it).apply {
-				if (this is EditText) {
-					/* Parse the text and return the rolled text. */
-					val editRoller = OnEventRoller.Builder(this)
-						.setReasonView(this)
-						.create()
-
-					/* Insert term and roll it. (keep text) */
-					setOnKeyListener(editRoller)
-
-					/* On Long click: Parse last term. */
-					setOnLongClickListener(editRoller)
-
-				} else if (this is TextView) {
-					/* simply roll the die */
-					setOnClickListener(OnEventRoller.Builder(this)
-						.setReasonView(this)
-						.create())
-				}
-			}
-		}
-
-		// TODO GUI Dice.
-		// DisplayDie: [Name, Term] -> [edit name, edit term, change pos]
-		val exampleDice = listOf("d2", "d4", "d6", "d8", "d10", "d12", "d20", "d100", "[+]")
-		grid_dice_new.adapter = ArrayAdapter<String>(
-			this@MainActivity,
-			android.R.layout.simple_list_item_1,
-			exampleDice)
-
-		log.debug("Extra Rolls are initiated.")
-	}
-
 	/** Setup healthbar, hidden death save views and the listeners. */
 	// TODO what shoud the listener change? setValue of the Viewmodel or the model underlying
 	private fun setupHealthPanel() {
@@ -348,44 +370,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			log.debug("$view onKeyEvent(code = $code, event = $event)")
 
 			if (event.action == KeyEvent.ACTION_DOWN && code == KeyEvent.KEYCODE_ENTER) {
-
-				var msg: String
-
-				try {
-					val text = hp_custom_modify.text.toString()
-
-					when {
-						text.startsWith("=") -> {
-							// replace hitpoints to given term after '=', maximally max.
-							val hpCustomChangeTerm = RollingTerm.parse(text.substring(1))
-							val justRolled = hpCustomChangeTerm.evaluate();
-
-							hero.hitpointsNow = justRolled
-							msg =  "Set Hitpoints to $justRolled"
-						}
-						else -> {
-							val hpCustomChangeTerm = RollingTerm.parse(text)
-							val justRolled = hpCustomChangeTerm.evaluate();
-
-							hero.hitpointsNow += justRolled
-							msg =  "Modified Hitpoints by $justRolled."
-						}
-					}
-
-					updateHitpoints()
-
-
-				} catch (e: Exception) {
-					msg = e.toString()
-				}
-				Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
+				// modify the hero's hitpoints.
+				// roll the typed in term and if it starts with an '=' the hero's HP will be replaced, otherwise just added.
+				modifyHerosHitpoints(rollHealModifyIn(), replacingHitpoints)
 				true
 			} else {
 				false // not yet consumed
 			}
 		}
 
-		updateHitpoints()
+		updateHitpointsViews()
 
 		take_damage.setOnClickListener (this@MainActivity)
 		heal.setOnClickListener (this@MainActivity)
@@ -395,10 +389,57 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		deathsave_overview.setOnClickListener (this@MainActivity)
 	}
 
-	private val healModifyIn: String get() = hp_custom_modify.text.toString()
+	/** Resulting text of the  @see hp_custom_modify TextView. */
+	private val healModifyIn: String
+		get() = hp_custom_modify.text.toString()
 
-	/** Display the updated hitpoints. */
-	private fun updateHitpoints() {
+	/**
+	If the healModifyIn term starts with a equal mark, the rolled result will replace the current hitpoints.
+	 * This value checks, if the term is a replacing term or a modifying term.  */
+	private val replacingHitpoints: Boolean
+		get() = healModifyIn.trim().startsWith("=")
+
+	/** The resulting term, which will be pasred from the text input on @see hp_custom_modify. */
+	private val modifyInTerm: RollingTerm
+		get() = try {
+				// remove optional equal signs in the beginning.
+				RollingTerm.parse(healModifyIn.dropWhile { c -> c == ' ' || c == '=' }) }
+			catch (e: Exception) {
+				Number(0)
+			}
+
+	/**
+	 * Roll a term which was parsed from the @see hp_custom_modify TextView.
+	 * @param method If it is (-1) the result is damage damage, on (+1) it will be healed and on (0) it will be replaced.
+	 * @return returns the resulting number, only (-1) and (+1) may modify the output.
+	 */
+	private fun rollHealModifyIn(method: Int = 1) : Int
+		= Utils.showRolledTerm(
+			mainLayout,
+			when (method) {
+				-1 -> "Rolled Hitpoint Reduction"
+				+1 -> "Rolled Hitpoint Restoration"
+				0 -> "Rolled updated Hitpoints"
+				else -> "Modify Hitpoints?"
+			},
+			if (method >= 0) (modifyInTerm) else (-modifyInTerm)
+		).first
+
+	/**
+	 * Modify the connected hero's hitpoints.
+	 * @param value value to add or reduce.
+	 * @param replacing if replacing is true, the curren hitpoints will be replaced by the value, otherwise just updated.
+	 */
+	private fun modifyHerosHitpoints(value: Int, replacing: Boolean = false) {
+		hero.hitpointsNow = when (replacing) {
+			true -> value
+			else -> hero.hitpointsNow + value
+		}
+		updateHitpointsViews()
+	}
+
+	/** Display the updated hero's hitpoints. */
+	private fun updateHitpointsViews() {
 			healthbar_new.progress = hero.hitpointsNow;
 			hp_stats.text = "%d / %d (%+d)".format(hero.hitpointsNow, hero.hitpointsMax, hero.hitpointsTmp)
 	}
@@ -419,13 +460,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			android.R.layout.simple_list_item_1,
 			hero.specialities,
 			) {}
-		grid_counters.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
+		grid_counters.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
 			// reduce resource manually.
-			hero.specialities[position]?.let { c -> (c as Speciality).countDown() }
+			hero.specialities[position]?.let { c -> (c).countDown() }
 			(grid_counters.adapter as ArrayAdapter<Any>?)?.notifyDataSetChanged()
 			// Toast.makeText(this@MainActivity, hero.specialities[position]?.toString() ?: "No Counter!", Toast.LENGTH_SHORT).show()
 		}
-		grid_counters.onItemLongClickListener = AdapterView.OnItemLongClickListener { parent, view, position, id ->
+		grid_counters.onItemLongClickListener = AdapterView.OnItemLongClickListener { _, _, position, _ ->
 			// reset resource manually.
 			hero.specialities[position]?.let { c ->
 				(c as Speciality).resetCounter()
@@ -443,16 +484,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		when (view.getId()) {
 			R.id.view_story -> {
 				dialogStory.show() // show notes.
-
-				val storyList = dialogStory.findViewById<ListView>(R.id.dialog_story_list)
-
-				if (storyList == null) {
-					Toast.makeText(instance, "Story list still null? (Version on Click)", Toast.LENGTH_SHORT).show()
-				} else if (storyList.adapter == null) {
-					storyList.adapter = StoryListAdapter(this@MainActivity).apply {
-						addAll(listOf("Day 1\nAwoken in Catacomb.", "Day 2\n Nothing Special.", "Day 3\n Received item from nice dragon."), true)
-					}
-				}
 			}
 
 			/* Unfold health and death panel view. */
@@ -463,31 +494,27 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			/* Reduce health points. If more-healthpanel is open, use input field. */
 			R.id.take_damage -> {
 				// TODO ViewModel
-				hero.hitpointsNow -= when (more_health_panel.visibility) {
-					View.VISIBLE -> {
-						RollingTerm.parse(healModifyIn).evaluate().also {
-							Toast.makeText(this@MainActivity,
-							"Reduced by $it", Toast.LENGTH_SHORT).show()
+				modifyHerosHitpoints(
+					when {
+						more_health_panel.visibility == View.VISIBLE && !replacingHitpoints -> {
+							// maybe roll the value to reduce
+							rollHealModifyIn(-1) // reduce
 						}
-					}
-					else -> 1
-				}
-				updateHitpoints()
+						else -> 1
+					})
 			}
 
 			/* Increase health points. If more-healthpanel is open, use input field. */
 			R.id.heal -> {
 				// TODO ViewModel
-				hero.hitpointsNow += when (more_health_panel.visibility) {
-					View.VISIBLE -> {
-						RollingTerm.parse(healModifyIn).evaluate().also {
-							Toast.makeText(this@MainActivity,
-							"Increased by $it", Toast.LENGTH_SHORT).show()
+				modifyHerosHitpoints(
+					when {
+						more_health_panel.visibility == View.VISIBLE && !replacingHitpoints -> {
+							// maybe roll the value to reduce
+							rollHealModifyIn(+1) // heal
 						}
-					}
-					else -> 1
-				}
-				updateHitpoints()
+						else -> 1
+					})
 			}
 
 			/* Add death save success. */
@@ -505,8 +532,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			/* Roll death save throw and automatically enter the resul. */
 			R.id.deathsave_roll -> {
 				// TODO ViewModel
-				val result = de.nox.dndassistant.core.Die(20).evaluate()
-				Toast.makeText(instance, "Death Save: Enter $result", Toast.LENGTH_SHORT).show()
+				val result = Utils.showRolledTerm(mainLayout, "Death Saving Throw", RollingTerm.D20).first
 				deathsave_overview.text = deathsave_overview.text.toString() + when (result) {
 					in 0..10 -> "X"
 					else -> "O"
@@ -525,18 +551,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			}
 
 			/* Dialog with attacks (list). */
-			R.id.action_attack -> dialogAttacks.show()
-
-			/* Show most recent dice roll. */
-			R.id.section_dice -> {
-				(view as TextView).text = "Recently Rolled: ${
-					try { Rollers.history.toList().get(0).toString() }
-					catch (e: Exception) { "Nothing"}
-				}"
+			R.id.action_attack -> {
+				dialogAttacks.show()
 			}
 
 			/* Open roll history in dialog. */
-			R.id.roll_history -> {
+			R.id.dialog_dice_open -> {
+				rollHistoryAdapter.notifyDataSetChanged()
 				dialogRolls.show() // show newly created dialog
 			}
 
@@ -566,7 +587,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		}
 	}
 
-
 	/** Toggle View's visibility between "GONE" and "VISIBLE".
 	 * @return true, if visible. */
 	fun View.toggleVisibility(): Boolean
@@ -581,7 +601,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			}
 		}
 }
-
 
 // TODO own file:
 // TODO (2021-05-17) each property or whole hero?
