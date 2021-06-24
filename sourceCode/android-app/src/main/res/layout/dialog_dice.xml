@@ -10,20 +10,45 @@
   >
 
   <!-- Custom dice to roll. (also listed in history) -->
-  <EditText
-    android:autofillHints="none"
-    android:background="@drawable/framed_white_base"
-    android:gravity="center"
-    android:hint="2d4 - d2 + 2"
-    android:id="@+id/dterm"
-    android:inputType="text"
+  <LinearLayout
     android:layout_height="wrap_content"
     android:layout_margin="2sp"
     android:layout_width="match_parent"
-    android:padding="2sp"
-    android:text="@string/dterm_example"
-    android:textSize="15sp"
-    />
+    android:orientation="horizontal"
+    >
+    <EditText
+      android:autofillHints="none"
+      android:background="@drawable/framed_white_base"
+      android:gravity="center"
+      android:hint="2d4 - d2 + 2"
+      android:id="@+id/dterm"
+      android:inputType="text"
+      android:layout_height="wrap_content"
+      android:layout_weight="5"
+      android:layout_width="0sp"
+      android:padding="2sp"
+      android:text="@string/dterm_example"
+      android:textSize="@dimen/textSizeLarge"
+      />
+    <TextView style="@style/PlainButton"
+      android:background="@drawable/framed_white_base"
+      android:gravity="center"
+      android:id="@+id/dterm_roll"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      android:layout_width="0sp"
+      android:text="r"
+      />
+    <TextView style="@style/PlainButton"
+      android:background="@drawable/framed_white_base"
+      android:gravity="center"
+      android:id="@+id/dterm_add"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      android:layout_width="0sp"
+      android:text="+"
+      />
+  </LinearLayout>
   <GridView
     android:background="@drawable/framed"
     android:id="@+id/grid_dice_new"
@@ -31,6 +56,8 @@
     android:layout_width="match_parent"
     android:layout_marginVertical="@dimen/vmargin"
     android:numColumns="5"
+    android:horizontalSpacing="@dimen/hmargin"
+    android:verticalSpacing="@dimen/vmargin"
     />
   <ListView
     android:background="@drawable/framed"

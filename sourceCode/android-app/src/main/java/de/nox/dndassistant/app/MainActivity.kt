@@ -183,35 +183,60 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			// inflate custom dialog view (and assign the rolls)
 			val view = li.inflate(R.layout.dialog_dice, null)
 
-			view.findViewById<TextView>(R.id.dterm)?.apply {
-				setOnKeyListener { view, code, event ->
-					when (event.action == KeyEvent.ACTION_DOWN && code == KeyEvent.KEYCODE_ENTER) {
-						true -> {
-							val txt = (view as TextView).text.toString()
-							Utils.showRolledParsedTerm(mainLayout, "", txt)
-							rollHistoryAdapter.notifyDataSetChanged() // update history
-							true
-						}
-						else -> false // not yet consumed
-					}
+			// DisplayDie: [Name, Term] -> [edit name, edit term, change pos]
+			val exampleDice = mutableListOf("d2", "d4", "d6", "d8", "d10", "d12", "d20", "d100")
+
+			val dtermView = view.findViewById<TextView>(R.id.dterm)
+			val dtermRollView = view.findViewById<TextView>(R.id.dterm_roll)
+			val dtermAddView = view.findViewById<TextView>(R.id.dterm_add)
+			val extraTermView = view.findViewById<GridView>(R.id.grid_dice_new)
+
+			val extraTermAdapter = ArrayAdapter<String>(
+				this@MainActivity,
+				R.layout.list_item_rollingterm, R.id.term,
+				exampleDice,
+			)
+
+			dtermRollView?.apply {
+				setOnClickListener {
+					val termStr = dtermView.text.toString()
+					RollHistory.rollStr("", termStr)
+					rollHistoryAdapter.notifyDataSetChanged() // update history
 				}
 			}
 
-			// DisplayDie: [Name, Term] -> [edit name, edit term, change pos]
-			val exampleDice = listOf("d2", "d4", "d6", "d8", "d10", "d12", "d20", "d100", "[+]")
+			dtermAddView?.apply {
+				setOnClickListener {
+					val termStr = dtermView.text.toString()
+					extraTermAdapter.add(termStr) // UnsupportedOperationException
+					extraTermAdapter.notifyDataSetChanged()
+				}
+			}
+
+			dtermView?.apply {
+				setOnKeyListener { view, code, event ->
+					if (code == KeyEvent.KEYCODE_ENTER) {
+						if (event.action == KeyEvent.ACTION_DOWN) {
+							dtermRollView.performClick()
+						}
+						view.setNextFocusDownId(view.getId()) // stay in view after enter.
+						true
+					}
+					// otherwise do not handle.
+					false
+				}
+			}
 
 			// assign extra dice
-			view.findViewById<GridView>(R.id.grid_dice_new)?.apply {
-				adapter = ArrayAdapter<String>(
-					this@MainActivity,
-					R.layout.list_item_rollingterm, R.id.term,
-					exampleDice,
-					)
+			extraTermView?.apply {
+				adapter = extraTermAdapter
 
 				setOnItemClickListener { parent, view, position, id ->
 					// TODO do not parse every time, placeholder for now.
 					val termStr = view.findViewById<TextView>(R.id.term).text.toString()
-					val term = Utils.showRolledParsedTerm(mainLayout, termStr, termStr)
+
+					// roll without popup display
+					RollHistory.rollStr("", termStr)
 					rollHistoryAdapter.notifyDataSetChanged()
 				}
 			}

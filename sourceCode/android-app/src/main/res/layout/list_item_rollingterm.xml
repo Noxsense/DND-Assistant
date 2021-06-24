@@ -1,9 +1,8 @@
 <LinearLayout
   android:background="@drawable/framed_white_base"
   android:layout_height="match_parent"
-  android:layout_marginVertical="@dimen/vmargin"
+  android:layout_margin="20sp"
   android:layout_width="match_parent"
-  android:padding="@dimen/vmargin"
   android:orientation="horizontal"
   xmlns:android="http://schemas.android.com/apk/res/android"
   >
@@ -11,6 +10,7 @@
     android:gravity="center"
     android:id="@+id/term"
     android:layout_height="match_parent"
+    android:focusable="false"
     android:layout_width="match_parent"
     android:text="0"
     android:textSize="@dimen/textSizeLarge"
