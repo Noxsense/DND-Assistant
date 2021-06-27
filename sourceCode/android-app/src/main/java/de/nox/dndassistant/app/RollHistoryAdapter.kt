@@ -32,7 +32,8 @@ class RollHistoryAdapter(private val context: Context)
 	 * Get reversed (most recent on top).
 	 */
 	override fun getItem(position: Int) : RollHistory.TimedRolls
-		= rolls.get(getCount() - 1 - position)
+		// = rolls.get(getCount() - 1 - position)
+		= rolls.get(position)
 
 	override fun getItemId(position: Int) : Long
 		= position.toLong() // ?

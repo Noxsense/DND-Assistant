@@ -171,93 +171,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		}
 	}
 
-	private val rollHistoryAdapter by lazy {
-		RollHistoryAdapter(this)
-	}
-
 	/** Dialog to display the history of rolls. */
-	val dialogRolls: AlertDialog by lazy {
-		AlertDialog.Builder(this@MainActivity).apply{
-			// setView(R.layout.dialog_dice)
-
-			// inflate custom dialog view (and assign the rolls)
-			val view = li.inflate(R.layout.dialog_dice, null)
-
-			// DisplayDie: [Name, Term] -> [edit name, edit term, change pos]
-			val exampleDice = mutableListOf("d2", "d4", "d6", "d8", "d10", "d12", "d20", "d100")
-
-			val dtermView = view.findViewById<TextView>(R.id.dterm)
-			val dtermRollView = view.findViewById<TextView>(R.id.dterm_roll)
-			val dtermAddView = view.findViewById<TextView>(R.id.dterm_add)
-			val extraTermView = view.findViewById<GridView>(R.id.grid_dice_new)
-
-			val extraTermAdapter = ArrayAdapter<String>(
-				this@MainActivity,
-				R.layout.list_item_rollingterm, R.id.term,
-				exampleDice,
-			)
-
-			dtermRollView?.apply {
-				setOnClickListener {
-					val termStr = dtermView.text.toString()
-					RollHistory.rollStr("", termStr)
-					rollHistoryAdapter.notifyDataSetChanged() // update history
-				}
-			}
-
-			dtermAddView?.apply {
-				setOnClickListener {
-					val termStr = dtermView.text.toString()
-					extraTermAdapter.add(termStr) // UnsupportedOperationException
-					extraTermAdapter.notifyDataSetChanged()
-				}
-			}
-
-			dtermView?.apply {
-				setOnKeyListener { view, code, event ->
-					if (code == KeyEvent.KEYCODE_ENTER) {
-						if (event.action == KeyEvent.ACTION_DOWN) {
-							dtermRollView.performClick()
-						}
-						view.setNextFocusDownId(view.getId()) // stay in view after enter.
-						true
-					}
-					// otherwise do not handle.
-					false
-				}
-			}
-
-			// assign extra dice
-			extraTermView?.apply {
-				adapter = extraTermAdapter
-
-				setOnItemClickListener { parent, view, position, id ->
-					// TODO do not parse every time, placeholder for now.
-					val termStr = view.findViewById<TextView>(R.id.term).text.toString()
-
-					// roll without popup display
-					RollHistory.rollStr("", termStr)
-					rollHistoryAdapter.notifyDataSetChanged()
-				}
-			}
-
-			// rolling history.
-			view.findViewById<ListView>(R.id.roll_history)?.apply {
-				adapter = rollHistoryAdapter
-			}
-
-			setView(view)
-		}
-		.create() // make alaert dialog
-		.also { dialog ->
-			// finalaize to access the views without show.
-			dialog.create()
-
-			dialog.getWindow()?.apply {
-				setBackgroundDrawableResource(android.R.color.transparent)
-				setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
-			}
-		}
+	val dialogRolls: android.app.Dialog by lazy {
+		RollingTermDialog(this@MainActivity)
 	}
 
 	/** Dialog popup for the Notes: Custom list with multiple text items and
@@ -582,7 +498,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 			/* Open roll history in dialog. */
 			R.id.dialog_dice_open -> {
-				rollHistoryAdapter.notifyDataSetChanged()
 				dialogRolls.show() // show newly created dialog
 			}
 

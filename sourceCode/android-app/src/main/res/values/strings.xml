@@ -20,17 +20,16 @@
   <string name="panel_label_format" formatted="false"><b>%s</b> <p><i>(%s)</i></p></string>
 
   <string name="cast" formatted="false">&#128165;</string>
+  <string name="game_die">&#x1F3B2;</string>
+  <string name="heavy_plus">&#x2795;</string>
+  <string name="heavy_minus">&#x2796;</string>
 
-  <string name="dterm_example">2d4 - d2 + 2</string>
-
-  <string name="D2">D2</string>
-  <string name="D4">D4</string>
-  <string name="D6">D6</string>
-  <string name="D8">D8</string>
-  <string name="D10">D10</string>
-  <string name="D12">D12</string>
-  <string name="D20">D20</string>
-  <string name="D100">D100</string>
+  <string name="dialog_rolling_term_header_insert">Insert a term to roll</string>
+  <string name="dialog_rolling_term_header_history">History of rolled results</string>
+  <string name="dialog_rolling_term_header_preset">Roll a preset rolling term</string>
+  <string name="insert_term_example">2d4 - d2 + 2</string>
+  <string name="insert_term_roll">@string/game_die</string>
+  <string name="insert_term_add">@string/heavy_plus</string>
 
   <string name="title_skills">Skills &amp; Proficiencies</string>
   <string name="section_skills">Skills</string>

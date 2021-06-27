@@ -10,7 +10,9 @@
         android:roundIcon="@mipmap/ic_d20_wire_white_bloom_black"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:ignore="AllowBackup">
+        android:windowSoftInputMode="stateHidden|adjustPan"
+        tools:ignore="AllowBackup"
+      >
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
