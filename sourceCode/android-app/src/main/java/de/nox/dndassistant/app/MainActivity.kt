@@ -441,7 +441,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 							// maybe roll the value to reduce
 							rollHealModifyIn(-1) // reduce
 						}
-						else -> 1
+						else -> -1
 					})
 			}
 
