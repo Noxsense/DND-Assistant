@@ -9,7 +9,14 @@ package de.nox.dndassistant.core
  * Additionally partical items like a bag of sand an be divided (@see #devidable).
  * A SimpleItem also holds an identifier (@see #identifier), to specify a certain weapon or item is used, dropped or etc, and not all of their kind.
  */
-public data class SimpleItem(val name: String, val identifier: String, val category: String, val weight: Double, val copperValue: Int, val dividable: Boolean = false) {
+public data class SimpleItem(
+	val name: String,
+	val identifier: String,
+	val category: String,
+	val weight: Double,
+	val copperValue: Int,
+	val dividable: Boolean = false
+) {
 	companion object {
 		val CP_TO_CP : Int = 1; // copper piece to copper piece
 		val SP_TO_CP : Int = 10; // silver piece to copper piece
@@ -58,6 +65,10 @@ public data class SimpleItem(val name: String, val identifier: String, val categ
 		= this.sameByName(other) && this.identifier == other.identifier
 }
 
+/**
+ * A Pre-Item, which will be used to look up an item and therefore holds many needed attributes, to identify the final one.
+ * e.g. without id.
+ * */
 data class PreSimpleItem(val category: String, val weight: Double, val copperValue: Int, val dividable: Boolean);
 
 
@@ -73,44 +84,62 @@ public fun Collection<Pair<SimpleItem, String>>.getStorageTree() : Map<String, L
 }
 
 /** Get the Weight (Double, Pounds) of the collection of items.
- * If the optional storage is null, get the overall carried weight. */
+ * If the optional storage is null, get the overall carried weight.
+ */
 public fun Collection<Pair<SimpleItem, String>>.weight(storage: String? = null) : Double
 	= this.fold(0.0) { b, i -> b + (if (storage == null || storage == i.second) i.first.weight else 0.0) }
 
 /** Get the Value (Int, in Coppers) of the collection of items.
- * If the optional storage is null, get the overall carried value. */
+ * If the optional storage is null, get the overall carried value.
+ */
 public fun Collection<Pair<SimpleItem, String>>.copperValue(storage: String? = null) : Int
 	= this.fold(0) { b, i -> b + (if (storage == null || storage == i.second) i.first.copperValue else 0) }
 
-/** Check if an item collection contains a certain item (or of its kind) give by its name. */
+/**
+ * Check if an item collection contains a certain item (or of its kind) give by its name.
+ */
 public operator fun Collection<Pair<SimpleItem, String>>.contains(itemName: String) : Boolean
 	= this.getItemByName(itemName) != null
 
-/** Check if an item collection contains a certain item. */
+/**
+ * Check if an item collection contains a certain item.
+ */
 public operator fun Collection<Pair<SimpleItem, String>>.contains(item: SimpleItem) : Boolean
 	= this.getItemByID(item.identifier) != null
 
-/** Check if an item collection contains a certain item in the given storage. */
+/**
+ * Check if an item collection contains a certain item in the given storage.
+ */
 public operator fun Collection<Pair<SimpleItem, String>>.contains(itemStorage: Pair<SimpleItem, String>) : Boolean
 	= this.getItemByName(itemStorage.first.identifier)?.second == itemStorage.second
 
-/** Find the item by name. @return Item and its storage. */
+/** Find the item by name.
+ * @return Item and its storage.
+ */
 public fun Collection<Pair<SimpleItem, String>>.getItemByName(name: String) : Pair<SimpleItem, String>?
 	= this.find { (i, _) -> i.name == name }
 
-/** Find the item by name. @return Item and its storage. */
+/** Find the item by name.
+ * @return Item and its storage.
+ */
 public fun Collection<Pair<SimpleItem, String>>.getItemByID(identifier: String) : Pair<SimpleItem, String>?
 	= this.find { (i, _) -> i.identifier == identifier }
 
-/** Check if an item is a storage inside the given collection. */
+/**
+ * Check if an item is a storage inside the given collection.
+ */
 public fun Collection<Pair<SimpleItem, String>>.isStoring(item: SimpleItem) : Boolean
 	= this.isStoringItemsByID(item.identifier)
 
-/** Check if an item has other items containing / attached on (aka serves as bag). */
+/**
+ * Check if an item has other items containing / attached on (aka serves as bag).
+ */
 public fun Collection<Pair<SimpleItem, String>>.isStoringItemsByID(identifier: String) : Boolean
 	= this.find { (_, storage) -> storage == identifier } != null // is a storage.
 
-/** Get all items, that are stored in the given bag, also return the bag object itself. */
+/**
+ * Get all items, that are stored in the given bag, also return the bag object itself.
+ */
 public fun Collection<Pair<SimpleItem, String>>.getBag(bagIdentifier: String) : Triple<SimpleItem, String, List<SimpleItem>>?
 	= this.getItemByID(bagIdentifier)?.let { (bag, bagsStorage) ->
 		val stored = this.filter { (_, storage) -> storage == bagIdentifier }.map { (i, _) -> i }
@@ -121,7 +150,8 @@ public fun Collection<Pair<SimpleItem, String>>.getBag(bagIdentifier: String) : 
  * If the storage (reference) is null, the item is worn or directly held by the hero.
  * @param storage item referenence the new item is put i or attached to.
  * @param force if true, ignore that the storage is not available.
- * @return true, if the item was successfully stored. */
+ * @return true, if the item was successfully stored.
+ */
 public fun MutableCollection<Pair<SimpleItem, String>>.putItem(item: SimpleItem, storage: String = "", force: Boolean = false) : Boolean {
 	// XXX (2021-03-12) avoid looping Pouch 1 > Pouch 2 > Pouch 3 > Pouch 1
 
@@ -142,7 +172,8 @@ public fun MutableCollection<Pair<SimpleItem, String>>.putItem(item: SimpleItem,
 
 /** Check the inventory and drop all items whose storage is not a stored
  * item or the hero themself.
- * @return dropped items and intended storages. */
+ * @return dropped items and intended storages.
+ */
 public fun MutableCollection<Pair<SimpleItem, String>>.dropIncorrectlyStoredItems() : List<Pair<SimpleItem, String>> {
 	val badlyStored = this.filter { (_, s) -> s != "" && getItemByID(s) == null }
 	this.minusAssign(badlyStored) // drop

@@ -258,11 +258,11 @@ public fun Hero.Companion.fromJSON(jsonStr: String) : Hero {
 							copperValue = price
 						)
 					}
-					this.inventory.putItem(item = item, storage = storage, force = true)
+					this.putItemToInventory(item = item, storage = storage, force = true)
 				}
 			}
 		}
-		this.inventory.dropIncorrectlyStoredItems() // drop items whose storages couldn't be resolved
+		this.dropIncorrectlyStoredItems() // drop items whose storages couldn't be resolved
 
 		/* Get the optionally (prepared / listed) attacks. */
 		obj.optJSONArray("attacks")?.forEach<JSONObject> { atkObj ->

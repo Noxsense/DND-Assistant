@@ -5,6 +5,7 @@ import de.nox.dndassistant.core.Hero
 import de.nox.dndassistant.core.SimpleSpell
 import de.nox.dndassistant.core.Speciality
 import de.nox.dndassistant.core.CustomCount
+import de.nox.dndassistant.core.SimpleItem
 
 /** CharacterManager.
  * - Provide options to load, update and save the player's hero.

@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 				adapter = ArrayAdapter<String>(
 					this@MainActivity,
 					// TODO (2021-05-17) prettier custom list items for spells (mark with any, prepare, unprepare..., cast on custom spell slot)
-					android.R.layout.simple_list_item_1,
+					R.layout.list_item_spell, R.id.spell_name,
 					hero.spells.toList().map { it.toString() }
 				)
 			})
@@ -135,7 +135,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			setView(ListView(this@MainActivity).apply {
 				adapter = ArrayAdapter<String>(
 					this@MainActivity,
-					android.R.layout.simple_list_item_1,
+					R.layout.list_item_feat, R.id.name,
 					arrayOf("Som' great action", "Som' more great action.", "Using this great action redcues a counter"))
 			})
 		}
@@ -157,7 +157,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			setView(ListView(this@MainActivity).apply {
 				adapter = ArrayAdapter<String>(
 					this@MainActivity,
-					android.R.layout.simple_list_item_1,
+					R.layout.list_item_item, R.id.item_name,
 					hero.inventory.map { it.toString() },
 				)
 				setBackgroundResource(android.R.color.transparent) // "floating" items
@@ -223,6 +223,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 		val observingName = Observer<String> { name -> character_name.text = getString(R.string.character_name, name) }
 		model.currentName.observe(this, observingName)
 		model.currentName.setValue(hero.name)
+
+		getWindowManager().getDefaultDisplay().run {
+			model.currentName.setValue("h: ${getHeight()},  w: ${getWidth()}, is hdr: ${isHdr()}")
+		}
 
 		/* Ability panel. */
 		if (!isInitializedPanelAbilities()) panelAbilities = abilities_grid
@@ -474,9 +478,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 			R.id.deathsave_roll -> {
 				// TODO ViewModel
 				val result = Utils.showRolledTerm(mainLayout, "Death Saving Throw", RollingTerm.D20).first
-				deathsave_overview.text = deathsave_overview.text.toString() + when (result) {
-					in 0..10 -> "X"
-					else -> "O"
+				when (result) {
+					in 0..10 -> deathsave_success.performClick() // success
+					else -> deathsave_fail.performClick() // fail
 				}
 			}
 
@@ -498,6 +502,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 			/* Open roll history in dialog. */
 			R.id.dialog_dice_open -> {
+				// rollHistoryAdapter.notifyDataSetChanged()
 				dialogRolls.show() // show newly created dialog
 			}
 
@@ -514,7 +519,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 			/* Dialog with roll history. */
 			R.id.action_inventory -> {
-				dialogInventory.show() // show newly created dialog
+				dialogInventory.show()
 			}
 
 			else -> {

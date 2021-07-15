@@ -4,23 +4,28 @@
     <style name="AppTheme" parent="Theme.AppCompat.DayNight">
     -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Remove Top Action Bar, but not fullscreen. -->
+        <!-- Remove Top Action Bar (no title); but also not fullscreen (show time and battery). -->
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-
-        <!-- no colorPrimary needed. -->
         <item name="android:windowFullscreen">false</item>
-        <item name="colorPrimaryDark">@android:color/transparent</item>
 
-        <item name="android:background">@android:color/transparent</item>
+        <!-- <item name="colorPrimary">@android:color/black</item> -->
 
-        <item name="android:textSize">@dimen/textSize</item>
-        <item name="android:textColor">@color/textNormal</item>
+        <!-- status bar, "part of the main layout", but change text color -->
+       <item name="colorPrimaryDark">@android:color/transparent</item>
+       <item name="android:statusBarColor">@android:color/transparent</item>
+       <item name="android:windowLightStatusBar">true</item>
 
-        <!-- minimal default padding -->
-        <item name="android:padding">1sp</item>
+       <!--<item name="colorAccent">#00ffff</item> -->
 
-        <item name="android:listViewStyle">@style/DividerLessListView</item>
+       <!-- <item name="android:background">@android:color/white</iter> -->
+       <item name="android:textSize">@dimen/textSize</item>
+       <item name="android:textColor">@color/textNormal</item>
+
+       <!-- minimal default padding -->
+       <item name="android:padding">1sp</item>
+
+       <item name="android:listViewStyle">@style/DividerLessListView</item>
     </style>
 
     <style name="PlainButton" parent="android:Widget.TextView">
@@ -30,6 +35,15 @@
       <item name="android:clickable">true</item>
       <item name="android:gravity">center</item>
       <item name="android:padding">3sp</item>
+    </style>
+
+    <style name="WhiteWithShadow" parent="android:Widget.TextView">
+      <item name="android:textStyle">bold</item>
+      <item name="android:textColor">#ffffffff</item>
+      <item name="android:shadowColor">#7f000000</item>
+      <item name="android:shadowDx">1.5</item>
+      <item name="android:shadowDy">1.3</item>
+      <item name="android:shadowRadius">1.6</item>
     </style>
 
     <style name="DividerLessListView" parent="android:Widget.ListView">

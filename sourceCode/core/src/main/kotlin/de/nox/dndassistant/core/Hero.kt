@@ -625,6 +625,31 @@ class Hero(name: String, race: Pair<String, String>, player: String? = null ) {
 	public var inventory: MutableList<Pair<SimpleItem, String>> = mutableListOf()
 		private set
 
+	/**
+	 * Store an item to a given storage, or move it from its already set storage to another.
+	 * @return true if the item was successfully stored.
+	 * @see Inventory.putItem()
+	 */
+	public fun putItemToInventory(item: SimpleItem, storage: String = "", force: Boolean = false)
+		= inventory.putItem(item, storage, force)
+
+	/**
+	 * Try to drop an item which may be stored or held.
+	 * @return a list of items and their previous storage that are dropped.
+	 * @see Inventory.dropItem()
+	 */
+	public fun dropItem(item: SimpleItem, storage: String? = null)
+		= inventory.dropItem(item, storage)
+
+	/**
+	 * Check the inventory and drop all items whose storage is not stored.
+	 * @return a list of items and their previous storage that are dropped.
+	 * @see Inventory.dropIncorrectlyStoredItems()
+	 */
+	public fun dropIncorrectlyStoredItems()
+		= inventory.dropIncorrectlyStoredItems()
+
+
 	// eg. clothes are worn
 	// put a ring around a necklace? Combined somethings?
 	// belts are on clothes

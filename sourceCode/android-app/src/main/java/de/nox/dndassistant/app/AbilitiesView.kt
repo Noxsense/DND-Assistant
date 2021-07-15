@@ -16,7 +16,6 @@ import de.nox.dndassistant.core.Ability
 import de.nox.dndassistant.core.Die
 import de.nox.dndassistant.core.Number
 import de.nox.dndassistant.core.Logger
-import de.nox.dndassistant.core.Proficiency
 import de.nox.dndassistant.core.RollingTerm
 
 

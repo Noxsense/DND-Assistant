@@ -84,15 +84,7 @@ class AttackListView(context: Context) : ListView(context), AdapterView.OnItemCl
 				/* Set the listeners. */
 				/* Name.onClick: Show more. */
 				// TODO own variable
-				nameView.setOnClickListener {
-					noteView.visibility = when (noteView.visibility) {
-						View.GONE -> View.VISIBLE.also {
-							// also scroll to nee visiblr item
-							this@AttackListView.setSelection(position)
-						}
-						else -> View.GONE
-					}
-				}
+				nameView.setOnClickListener(onClickOpenNoteView)
 
 				/* Click on attack: Roll attack. */
 				rollView.setOnClickListener {
@@ -108,7 +100,25 @@ class AttackListView(context: Context) : ListView(context), AdapterView.OnItemCl
 				/** Click on damage, to roll the damge dice. */
 				dmgView.setOnClickListener {
 					val term = atk.damage.joinToString("+") { (_, term) -> term.toString() }
-					Toast.makeText(context, "TODO (roll attack roll)", 1).show() // TODO remove DEBUG
+					Toast.makeText(context, "TODO (roll attack roll) with $term", 1).show() // TODO remove DEBUG
+				}
+			}
+	}
+
+	/** A simple OnClickListener
+	 *  which opens the optional siblung attack_note view of the clicked view.
+	 */
+	private val onClickOpenNoteView = OnClickListener { view ->
+		// parent: LinearLayout - holds just range and damage types
+		// parent parent: LinearLayout - always displayed, with attack roll and damage roll
+		// parent parent parent: whole list_item with hidden attack_note
+
+		// find  note view: toggle visibility between VISIBLE and GONE
+		(view.getParent().getParent().getParent() as View)
+			.findViewById<TextView>(R.id.attack_note)?.run {
+				visibility = when (visibility) {
+					View.GONE -> View.VISIBLE
+					else -> View.GONE
 				}
 			}
 	}

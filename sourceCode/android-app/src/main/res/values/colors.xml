@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#ff6200EE</color>
-    <color name="colorPrimaryDark">#ff3700B3</color>
+    <color name="colorPrimary">#ff6200EE</color> <!-- action bar -->
+    <color name="colorPrimaryDark">#ff3700B3</color> <!-- status bar (battery, etc) -->
     <color name="colorAccent">#ff03DAC5</color>
-    <color name="colorHint">#ffaaaaaa</color>
+
     <color name="textNormal">#ff000000</color>
+    <color name="colorGood">#ff00D138</color>
+    <color name="colorBad">#ffd10300</color>
+    <color name="colorGoodSoft">#ffd9fbd9</color>
+    <color name="colorBadSoft">#ffffdad9</color>
+    <color name="colorHint">#ffaaaaaa</color>
 </resources>

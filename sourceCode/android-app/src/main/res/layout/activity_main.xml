@@ -91,12 +91,14 @@
       android:padding="@dimen/vmargin"
       >
       <Button style="@style/PlainButton"
-        android:alpha="0.33"
         android:id="@+id/take_damage"
         android:layout_height="match_parent"
         android:layout_weight=".1"
         android:layout_width="0sp"
-        android:text="@string/heavy_minus"
+        android:text="-"
+        android:textStyle="bold"
+        android:textSize="@dimen/textSizeHuge"
+        android:textColor="@color/colorBad"
         android:tooltipText="Take Damage!"
         />
       <LinearLayout
@@ -109,7 +111,7 @@
         On Click, open long rest, short rest and death fight.
         -->
         <RelativeLayout
-           android:layout_height="20dp"
+           android:layout_height="50dp"
            android:layout_width="match_parent"
           >
           <ProgressBar
@@ -120,7 +122,7 @@
             android:progress="25"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:layout_height="20dp"
+            android:layout_height="match_parent"
             android:layout_width="match_parent"
             android:progressDrawable="@drawable/healthbar"
             android:tooltipText="Health Bar. Open to show more options, like rest or death saves."
@@ -133,7 +135,8 @@
             android:layout_centerVertical="true"
             android:text="?/??"
             android:gravity="center"
-            android:textSize="@dimen/textSizeSmall"
+            android:textSize="@dimen/textSize"
+            android:textStyle="bold"
             />
         </RelativeLayout>
         <LinearLayout
@@ -203,20 +206,20 @@
             >
             <TextView style="@style/PlainButton"
               android:gravity="center"
+              android:id="@+id/deathsave_overview"
+              android:layout_height="match_parent"
+              android:layout_weight="4"
+              android:layout_width="0sp"
+              android:tooltipText="Death Save Overview. Click to reset."
+              />
+            <TextView style="@style/PlainButton"
+              android:gravity="center"
               android:id="@+id/deathsave_fail"
               android:layout_height="wrap_content"
               android:layout_weight="1"
               android:layout_width="0sp"
               android:text="&lt;11"
               android:tooltipText="Death Save Failed!"
-              />
-            <TextView style="@style/PlainButton"
-              android:gravity="center"
-              android:id="@+id/deathsave_overview"
-              android:layout_height="match_parent"
-              android:layout_weight="4"
-              android:layout_width="0sp"
-              android:tooltipText="Death Save Overview. Click to reset."
               />
             <TextView style="@style/PlainButton"
               android:gravity="center"
@@ -240,13 +243,15 @@
         </LinearLayout>
       </LinearLayout>
       <Button style="@style/PlainButton"
-        android:alpha="0.33"
         android:gravity="center"
         android:id="@+id/heal"
         android:layout_height="match_parent"
         android:layout_weight=".1"
         android:layout_width="0sp"
-        android:text="@string/heavy_plus"
+        android:text="+"
+        android:textStyle="bold"
+        android:textSize="@dimen/textSizeHuge"
+        android:textColor="@color/colorGood"
         android:tooltipText="Heal!"
         />
     </LinearLayout>

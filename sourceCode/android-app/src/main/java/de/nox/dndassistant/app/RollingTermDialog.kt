@@ -43,13 +43,15 @@ import de.nox.dndassistant.core.Number
 // import de.nox.dndassistant.core.SimpleSpell
 import de.nox.dndassistant.core.Speciality
 
-public class RollingTermDialog(activity: Activity) : Dialog(activity, R.drawable.framed), View.OnClickListener, View.OnLongClickListener, View.OnKeyListener {
+public class RollingTermDialog(activity: Activity) : Dialog(activity, android.R.color.transparent), View.OnClickListener, View.OnKeyListener {
 
-	lateinit var insertTermView : EditText
-	lateinit var insertTermRollView : TextView
-	lateinit var insertTermAddView : TextView
-	lateinit var extraTermView : GridView
-	lateinit var historyView : ListView
+	lateinit private var insertTermView : EditText
+	lateinit private var insertTermRollView : TextView
+	lateinit private var insertTermAddView : TextView
+	lateinit private var extraTermView : GridView
+	lateinit private var historyView : ListView
+
+	private var dialogParentId: Int = 0
 
 	val rollHistoryAdapter by lazy { RollHistoryAdapter(context) }
 
@@ -68,10 +70,10 @@ public class RollingTermDialog(activity: Activity) : Dialog(activity, R.drawable
 
 	override protected fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		// requestWindowFeature(Window.FEATURE_NO_TITLE)
+		requestWindowFeature(Window.FEATURE_NO_TITLE)
 
 		getWindow()?.apply {
-			setBackgroundDrawableResource(R.drawable.framed)
+			setBackgroundDrawableResource(android.R.color.transparent)
 		// 	setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
 		}
 
@@ -79,7 +81,21 @@ public class RollingTermDialog(activity: Activity) : Dialog(activity, R.drawable
 
 		// DisplayDie: [Name, Term] -> [edit name, edit term, change pos]
 
-		val baseView = this
+		// try to add a dismiss() action if the parent is clicked.
+		try {
+			val dialogLayout
+				= findViewById<View>(R.id.dialog_dice)
+
+			val dialogParent
+				= dialogLayout.getParent() as View
+
+			dialogLayout.setOnClickListener(this) // do nothing, avoid dismiss on border
+			dialogParent.setOnClickListener(this) // this.dismiss()
+			dialogParentId = dialogParent.getId()
+
+		} catch (e: Exception) {
+			dialogParentId = 0
+		}
 
 		insertTermView = findViewById<EditText>(R.id.insert_term)
 		insertTermRollView = findViewById<TextView>(R.id.insert_term_roll)
@@ -118,10 +134,15 @@ public class RollingTermDialog(activity: Activity) : Dialog(activity, R.drawable
 		historyView.adapter = rollHistoryAdapter
 
 		setOnShowListener {
-			// focus insertTermView, cursor to end
 			insertTermView.run {
-				requestFocus()
+				// cursor to end
 				setSelection(text.toString().length)
+			}
+
+			historyView.run {
+				requestFocus()
+				// select always most recent roll form history
+				setSelection(rollHistoryAdapter.getCount()-1)
 			}
 		}
 	}
@@ -163,16 +184,25 @@ public class RollingTermDialog(activity: Activity) : Dialog(activity, R.drawable
 				}
 			}
 
+			dialogParentId -> {
+				dismiss()
+			}
+
 			else -> {}
 		}
 	}
 
-	override fun onLongClick(view: View) : Boolean
-		= true
-
 	override fun onKey(view: View, code: Int, event: KeyEvent) : Boolean {
 		if (view.getId() != R.id.insert_term)
 			return false
+
+		if (code == KeyEvent.KEYCODE_ESCAPE) {
+			Toast.makeText(context, "Escape, dismiss()", 0).show()
+			if (event.action == KeyEvent.ACTION_DOWN) {
+				dismiss()
+			}
+			true
+		}
 
 		if (code != KeyEvent.KEYCODE_ENTER)
 			return false
