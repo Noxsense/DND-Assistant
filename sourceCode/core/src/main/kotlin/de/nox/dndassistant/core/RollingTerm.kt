@@ -37,6 +37,8 @@ public class IncompleteTermException(msg: String = "Not enough operatores to com
 	: TermParsingException(msg);
 
 public typealias TermVaribales = (Reference) -> Int
+// TODO (2021-06-30) idea alternative: RollingTerm to Result => [die: Random(), die: Random(), .. reference = getReference()] => map of what was finally for each ... base component
+// TODO (2021-06-30) ideas: class with two and a half functions, getValue(Refence) and getDefinedReferences(), and a toString()
 
 /** The abstract super class of a RollingTerm.
  * Term

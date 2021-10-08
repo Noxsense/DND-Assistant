@@ -40,13 +40,6 @@ tasks.create<Delete>("clean") {
   delete(rootProject.buildDir)
 }
 
-open class GreetingTask: DefaultTask() {
-  @TaskAction
-  fun greet() {
-    println("Hello greettings, https://docs.gradle.org/current/userguide/custom_tasks.html")
-  }
-}
-
 tasks.register("runDebug", Exec::class) {
   dependsOn(":android-app:installDebug")
   description = "Install the app"
