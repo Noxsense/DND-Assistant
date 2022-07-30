@@ -7,6 +7,9 @@ import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 import kotlin.math.abs
 
+import de.nox.dndassistant.core.terms.*
+import de.nox.dndassistant.core.terms.exceptions.*
+
 class RollingTest {
 
 	private val log = LoggerFactory.getLogger("RollingTest").also {

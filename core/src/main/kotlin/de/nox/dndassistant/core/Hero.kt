@@ -4,6 +4,8 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
+import de.nox.dndassistant.core.terms.RollingTerm
+
 /** Refactor IDEA the PlayerCharacter. */
 class Hero(name: String, race: Pair<String, String>, player: String? = null ) {
 	companion object {

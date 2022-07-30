@@ -1,4 +1,4 @@
-package de.nox.dndassistant.core
+package de.nox.dndassistant.core.terms
 
 import kotlin.math.abs
 import kotlin.math.max
@@ -8,35 +8,19 @@ import kotlin.math.pow
 import java.util.Stack
 import java.util.EmptyStackException
 
+import de.nox.dndassistant.core.LoggerFactory
+import de.nox.dndassistant.core.Logger
+
+import de.nox.dndassistant.core.terms.exceptions.IncompleteTermException
+import de.nox.dndassistant.core.terms.exceptions.NoBasicTermException
+import de.nox.dndassistant.core.terms.exceptions.NotEnoughOperatorsException
+import de.nox.dndassistant.core.terms.exceptions.NotEnoughTermsException
+import de.nox.dndassistant.core.terms.exceptions.TermParsingException
+
 /*
  * Initiate the Logger.
  */
 private val log = LoggerFactory.getLogger("RollingTerm")
-
-/*
- * Custom Exceptions.
- */
-
-public abstract class TermParsingException(val msg: String)
-	: Exception(msg);
-
-/** Term represents not an basic term. */
-public class NoBasicTermException(msg: String = "This Term does not represent a basic RollingTerm.")
-	: TermParsingException(msg);
-
-/** Recreating the term is not possible. Not enough terms. */
-public class NotEnoughTermsException(msg: String = "Not enough terms, to operate with.")
-	: TermParsingException(msg);
-
-/** Recreating the term is not possible. Too many left over terms. */
-public class NotEnoughOperatorsException(msg: String = "Not enough operatores to combine all terms")
-	: TermParsingException(msg);
-
-/** Incompplete term, for example if a opening bracket was not closed. */
-public class IncompleteTermException(msg: String = "Not enough operatores to combine all terms")
-	: TermParsingException(msg);
-
-public typealias TermVaribales = (Reference) -> Int
 
 /** The abstract super class of a RollingTerm.
  * Term
@@ -927,7 +911,6 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 			else -> this // ??? TODO how to keep relation?
 		}
 
-
 	/** Try to unfold into simple operations (+|-) and numbers, if possible.
 	 * Try to reduce as most as possible.  */
 	public fun simplify(): Pair<RollingTerm, Boolean>
@@ -1078,221 +1061,6 @@ public abstract class RollingTerm: Comparable<RollingTerm> {
 
 			else -> this to false // cannot be more simplified.
 		}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-/** A basic term is a term that does not contain more terms. (leaf) */
-public abstract class BasicRollingTerm : RollingTerm();
-
-/** A one sided / armed RollingTerm. It contains one directly underlying term. */
-public abstract class UnaryRollingTerm(val value: RollingTerm): RollingTerm() {
-	/** Check if term contains a certain term. */
-	public operator fun contains(t: RollingTerm) : Boolean
-		= when {
-			t == value -> true
-
-			value is BasicRollingTerm -> false // if t != value, not possible
-
-			value is BinaryRollingTerm -> t in value
-			value is UnaryRollingTerm -> t in value
-
-			else -> false
-		}
-}
-
-/** A one sided / armed RollingTerm. It contains one directly underlying term. */
-public abstract class BinaryRollingTerm(val left: RollingTerm, val right: RollingTerm): RollingTerm() {
-	/** Check if left and right can be exchanged. */
-	public val isCommutative: Boolean
-		= this is Sum  || this is Product || this is Min || this is Max
-
-	/** Check if term contains a certain term. */
-	public operator fun contains(t: RollingTerm) : Boolean
-		= when {
-			t == left -> true
-			t == right -> true
-
-			left is BasicRollingTerm -> false // if t != left, not possible
-			right is BasicRollingTerm -> false // if t != right, not possible
-
-			left is BinaryRollingTerm -> t in left
-			left is UnaryRollingTerm -> t in left
-			right is BinaryRollingTerm -> t in right
-			right is UnaryRollingTerm -> t in right
-
-			else -> false
-		}
-
-	/** Get the left (0) or right (0) term. */
-	public operator fun get(i: Int) : RollingTerm?
-		= when (i) {
-			0 -> left
-			1 -> right
-			else -> null
-		}
-
-	/** Get the left ("left/summand0/factor0/divisor/base/min0/min1") or right ("right/summand1/factor1/divident/exponent/min1/max1") term. */
-	public operator fun get(name: String) : RollingTerm?
-		= when {
-			this is Sum -> when (name) {
-				"left", "summand0", "1" -> left
-				"right", "summand1", "2" -> right
-				else -> null
-			}
-			this is Difference -> right
-			this is Product -> right
-			this is Fraction -> right
-			this is Power -> right
-			this is Min -> right
-			this is Max -> right
-			else -> null
-		}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-/** A simple / basic Number that is an Integer. */
-class Number(val value: Int): BasicRollingTerm();
-
-/** A simple / basic RollingTerm, that will be replaced with a function that returns an Int. */
-class Reference(val name: String): BasicRollingTerm();
-
-/** A simple / basic RollingTerm that is a die, which will return a random number between 1 and its max face. */
-class Die(_max: Int) : BasicRollingTerm() {
-	public val max: Int = abs(_max) // use the absolute value of the given.
-	public val average: Double = (1 + max) / 2.0
-}
-
-/** A term which needs to be early evaluated, it will be further handled as a simple number. */
-class Rolled(v: RollingTerm) : UnaryRollingTerm(v) {
-	public constructor(l: Int): this(Number(l));
-	public constructor(l: String): this(parseBasic(l));
-}
-
-/** A term which adds one term to another by Addition. */
-class Sum(l: RollingTerm, r: RollingTerm) : BinaryRollingTerm(l, r) {
-
-	// use as number if given as integer..
-	public constructor(l: Int, r: Int): this(Number(l), Number(r));
-	public constructor(l: Int, r: RollingTerm): this(Number(l), r);
-	public constructor(l: RollingTerm, r: Int): this(l, Number(r));
-
-	public constructor(l: String, r: String): this(parseBasic(l), parseBasic(r));
-	public constructor(l: String, r: RollingTerm): this(parseBasic(l), r);
-	public constructor(l: RollingTerm, r: String): this(l, parseBasic(r));
-
-	public constructor(l: Int, r: String): this(Number(l), parseBasic(r));
-	public constructor(l: String, r: Int): this(parseBasic(l), Number(r));
-}
-
-/** A term which subtracts a terms from another by Subtraction. */
-class Difference(l: RollingTerm, r: RollingTerm) : BinaryRollingTerm(l, r) {
-
-	// use as number if given as integer..
-	public constructor(l: Int, r: Int): this(Number(l), Number(r));
-	public constructor(l: Int, r: RollingTerm): this(Number(l), r);
-	public constructor(l: RollingTerm, r: Int): this(l, Number(r));
-
-	// parse if given as string.
-	public constructor(l: String, r: String): this(parseBasic(l), parseBasic(r));
-	public constructor(l: String, r: RollingTerm): this(parseBasic(l), r);
-	public constructor(l: RollingTerm, r: String): this(l, parseBasic(r));
-
-	public constructor(l: Int, r: String): this(Number(l), parseBasic(r));
-	public constructor(l: String, r: Int): this(parseBasic(l), Number(r));
-}
-
-/** A term which multiplies a terms to another by Multiplication. */
-class Product(l: RollingTerm, r: RollingTerm): BinaryRollingTerm(l, r) {
-
-	// use as number if given as integer..
-	public constructor(l: Int, r: Int): this(Number(l), Number(r));
-	public constructor(l: Int, r: RollingTerm): this(Number(l), r);
-	public constructor(l: RollingTerm, r: Int): this(l, Number(r));
-
-	public constructor(l: String, r: String): this(parseBasic(l), parseBasic(r));
-	public constructor(l: String, r: RollingTerm): this(parseBasic(l), r);
-	public constructor(l: RollingTerm, r: String): this(l, parseBasic(r));
-
-	public constructor(l: Int, r: String): this(Number(l), parseBasic(r));
-	public constructor(l: String, r: Int): this(parseBasic(l), Number(r));
-}
-
-/** A term which divides a terms to another by Division. */
-class Fraction(l: RollingTerm, r: RollingTerm): BinaryRollingTerm(l, r) {
-
-	// use as number if given as integer..
-	public constructor(l: Int, r: Int): this(Number(l), Number(r));
-	public constructor(l: Int, r: RollingTerm): this(Number(l), r);
-	public constructor(l: RollingTerm, r: Int): this(l, Number(r));
-
-	public constructor(l: String, r: String): this(parseBasic(l), parseBasic(r));
-	public constructor(l: String, r: RollingTerm): this(parseBasic(l), r);
-	public constructor(l: RollingTerm, r: String): this(l, parseBasic(r));
-
-	public constructor(l: Int, r: String): this(Number(l), parseBasic(r));
-	public constructor(l: String, r: Int): this(parseBasic(l), Number(r));
-}
-
-/** A term which powers a term by a term as Potenz.
- * If the exponent contains a dice, use the evaluated version.
- * If the base contains a dice (and is not already rolled), use multiplication.
- * `b^n = b * b * .. b`
- *
- * example: (3 + d3)^2 =(3 + d3)*(3 + d3) = 9 + d3*d3 + 2*(3*d3) = 9 + d3*d3 + 6*d3
- */
-class Power(l: RollingTerm, r: RollingTerm): BinaryRollingTerm(l, r) {
-
-	// use as number if given as integer..
-	public constructor(l: Int, r: Int): this(Number(l), Number(r));
-	public constructor(l: Int, r: RollingTerm): this(Number(l), r);
-	public constructor(l: RollingTerm, r: Int): this(l, Number(r));
-
-	public constructor(l: String, r: String): this(parseBasic(l), parseBasic(r));
-	public constructor(l: String, r: RollingTerm): this(parseBasic(l), r);
-	public constructor(l: RollingTerm, r: String): this(l, parseBasic(r));
-
-	public constructor(l: Int, r: String): this(Number(l), parseBasic(r));
-	public constructor(l: String, r: Int): this(parseBasic(l), Number(r));
-}
-
-/** A term that returns the maximal value of the evaluated terms.. */
-class Max(l: RollingTerm, r: RollingTerm) : BinaryRollingTerm(l, r) {
-
-	// use as number if given as integer..
-	public constructor(l: Int, r: Int): this(Number(l), Number(r));
-	public constructor(l: Int, r: RollingTerm): this(Number(l), r);
-	public constructor(l: RollingTerm, r: Int): this(l, Number(r));
-
-	public constructor(l: String, r: String): this(parseBasic(l), parseBasic(r));
-	public constructor(l: String, r: RollingTerm): this(parseBasic(l), r);
-	public constructor(l: RollingTerm, r: String): this(l, parseBasic(r));
-
-	public constructor(l: Int, r: String): this(Number(l), parseBasic(r));
-	public constructor(l: String, r: Int): this(parseBasic(l), Number(r));
-}
-
-/** A term that returns the minimal value of the evaluated terms. */
-class Min(l: RollingTerm, r: RollingTerm) : BinaryRollingTerm(l, r) {
-
-	// use as number if given as integer..
-	public constructor(l: Int, r: Int): this(Number(l), Number(r));
-	public constructor(l: Int, r: RollingTerm): this(Number(l), r);
-	public constructor(l: RollingTerm, r: Int): this(l, Number(r));
-
-	public constructor(l: String, r: String): this(parseBasic(l), parseBasic(r));
-	public constructor(l: String, r: RollingTerm): this(parseBasic(l), r);
-	public constructor(l: RollingTerm, r: String): this(l, parseBasic(r));
-
-	public constructor(l: Int, r: String): this(Number(l), parseBasic(r));
-	public constructor(l: String, r: Int): this(parseBasic(l), Number(r));
-}
-
-/** A term that returns the absolute value of the evaluated term. */
-class Abs(v: RollingTerm) : UnaryRollingTerm(v) {
-	public constructor(l: Int): this(Number(l));
-	public constructor(l: String): this(parseBasic(l));
 }
 
 /*
