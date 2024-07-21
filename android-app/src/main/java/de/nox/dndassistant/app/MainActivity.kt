@@ -19,20 +19,11 @@ import androidx.appcompat.app.AppCompatActivity
 
 // import kotlinx.android.synthetic.main.activity_main.*
 
-import de.nox.dndassistant.core.Hero
-import de.nox.dndassistant.core.Ability
-import de.nox.dndassistant.core.Proficiency
-import de.nox.dndassistant.core.Skill
-import de.nox.dndassistant.core.Skillable
-import de.nox.dndassistant.core.Attack
 import de.nox.dndassistant.core.D20
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 	private val log = LoggerFactory.getLogger("D&D Main")
-
-	/* The player hero. */
-	private val hero : Hero get() = CharacterManager.INSTANCE.hero
 
 	companion object {
 		lateinit var instance: AppCompatActivity
@@ -92,7 +83,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 	/** Check if preview and context (rolls) are initiated. */
 	private fun isInitializedRolls() : Boolean = ::panelRolls.isInitialized
-
 
 	private lateinit var li: LayoutInflater
 
@@ -201,21 +191,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
 	/** Update the hero specific panels: fill them with hero's data. */
 	private fun updateViews(initiation: Boolean = false) {
-		/* Show Player Character Name. */
-		character_name.text = getString(R.string.character_name, hero.name)
-
-		/* Show Level and XP, formatted. */
-		experience.text = getString(R.string.level_xp)
-			.format(0, 0) // level, expirience points
-
 		log.debug("Lvl (XP) displayed.")
-
-		/* Fill ability panel. */
-		showabilities() // if initiation.: set OnClickListener
-
-		log.debug("Abilities displayed.")
-
-		// TODO (2020-09-27) previews and content. (less hacked, pls)
 
 		notifyRollsUpdated()
 
@@ -235,22 +211,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 	/** Format the preview label. */
 	private fun formatLabel(a: String, b: String) :String
 		= getString(R.string.panel_label_format).format(a, b)
-
-	/** Fill the Ability Panel (STR, DEX, CON, INT, WIS, CHA).
-	 * Highlight the saving throws abilities.
-	 * Add roller to each ability and saving throw.
-	 * @param setListener if true, also set the listener.
-	 */
-	private fun showabilities() {
-		if (!isInitializedPanelAbilities()) {
-			panelAbilities = abilities_grid
-		}
-
-		// show ability scores and modifiers.
-		(panelAbilities as AbilitiesView).run {
-			this.setScores(Ability.values().associateWith { a -> hero.abilities[a]!! })
-		}
-	}
 
 	/** Initiate the panel with extra dice.
 	 * There are extra dice and an additional custom field,

@@ -42,26 +42,6 @@
     android:text="@string/level_xp"
     />
 
-  <!-- Ability Scores.
-    Background colour indicates prof in ability saving throws.
-    onClick: roll value
-    onLongClick: roll saving throw -->
-  <include
-    android:id="@+id/abilities_grid"
-    android:layout_height="wrap_content"
-    android:layout_marginVertical="@dimen/vmargin"
-    android:layout_width="match_parent"
-    layout="@layout/abilities"
-    />
-
-  <!-- Health and Conditions. -->
-  <include
-    android:id="@+id/content_health"
-    layout="@layout/content_health"
-    android:layout_height="wrap_content"
-    android:layout_marginVertical="@dimen/vmargin"
-    android:layout_width="match_parent"
-    />
   <TextView
     android:background="@drawable/framed"
     android:gravity="center"

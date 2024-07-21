@@ -22,15 +22,6 @@ fun main(args: Array<String>) {
 
 	// XXX (2020-11-27) implement me
 
-	val filename = "../core/src/test/resources/Hero.json"
-	try {
-		var hero = loadHero(File(filename).getAbsolutePath())
-		println(hero.toMarkdown())
-		File("/tmp/Hero.md").writeText(hero.toMarkdown())
-	} catch (e: FileNotFoundException) {
-		log.error("File \"$filename\" not found.")
-	}
-
 	println("Done")
 }
 

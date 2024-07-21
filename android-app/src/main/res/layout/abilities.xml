@@ -1,8 +1,0 @@
-<de.nox.dndassistant.app.AbilitiesView
-  android:background="@drawable/framed"
-  android:baselineAligned="false"
-  android:gravity="center_horizontal"
-  android:orientation="horizontal"
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  >
-</de.nox.dndassistant.app.AbilitiesView>
