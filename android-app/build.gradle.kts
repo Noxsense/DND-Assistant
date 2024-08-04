@@ -18,6 +18,8 @@ dependencies {
 }
 
 android {
+  // namespace = "de.noxsense"
+
   compileSdkVersion(29)
 
   defaultConfig {

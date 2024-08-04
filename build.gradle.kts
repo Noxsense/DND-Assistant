@@ -6,7 +6,6 @@ buildscript {
   // ext.android_version = "4.0.1"
   repositories {
     gradlePluginPortal()
-    jcenter()
     google()
     mavenCentral()
   }
@@ -34,7 +33,6 @@ allprojects {
   repositories {
     google()
     mavenCentral()
-    jcenter()
   }
 }
 
