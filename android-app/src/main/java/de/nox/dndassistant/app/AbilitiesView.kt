@@ -7,7 +7,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 
-import kotlinx.android.synthetic.main.abilities.*
+// import kotlinx.android.synthetic.main.abilities.*
 
 import kotlin.properties.Delegates
 

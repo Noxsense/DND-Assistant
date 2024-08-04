@@ -17,7 +17,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
-import kotlinx.android.synthetic.main.activity_main.*
+// import kotlinx.android.synthetic.main.activity_main.*
 
 import de.nox.dndassistant.core.Hero
 import de.nox.dndassistant.core.Ability

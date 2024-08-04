@@ -1,13 +1,13 @@
 plugins {
   id("com.android.application")
   kotlin("android")
-  id("kotlin-android-extensions")
+  id("kotlin-parcelize")
 }
 
 dependencies {
   /* Own modules */
   implementation(project(":core")) {
-    exclude(group = "org.jetbrains", module = "annotations")
+    // exclude(group = "org.jetbrains", module = "annotations")
   }
 
   /* android libaries */
@@ -18,14 +18,14 @@ dependencies {
 }
 
 android {
-  // namespace = "de.noxsense"
+  namespace = "de.noxsense"
 
-  compileSdkVersion(29)
+  compileSdk = 29
 
   defaultConfig {
     applicationId = "de.nox.dndassistant.app"
-    minSdkVersion(21)
-    targetSdkVersion(29)
+    minSdk = 21
+    targetSdk = 29
     versionCode = 1
     versionName = "1.0"
   }
@@ -43,32 +43,38 @@ android {
   }
 
   compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
   }
 
-  lintOptions {
-    isWarningsAsErrors = false
-    isAbortOnError = true
+  buildFeatures {
+    viewBinding = true
+  }
 
-    disable("HardcodedText") // ignore since it's mostly place holder text.
-    disable("IconLauncherShape") // ignore my shape
-    disable("SmallSp") // ignore too small size warnings.
-    disable("UnsafeExperimentalUsageError") // Obsolete custom lint check
-    disable("UnsafeExperimentalUsageWarning") // Obsolete custom lint check
+  lint {
+     warningsAsErrors = false
+     abortOnError = true
+
+    // disable("HardcodedText") // ignore since it's mostly place holder text.
+    // disable("IconLauncherShape") // ignore my shape
+    // disable("SmallSp") // ignore too small size warnings.
+    // disable("UnsafeExperimentalUsageError") // Obsolete custom lint check
+    // disable("UnsafeExperimentalUsageWarning") // Obsolete custom lint check
   }
 
   packagingOptions {
-    exclude("META-INF/kotlin-stdlib-common.kotlin_module")
-    exclude("META-INF/kotlin-stdlib-jdk7.kotlin_module")
-    exclude("META-INF/kotlin-stdlib-jdk8.kotlin_module")
-    exclude("META-INF/kotlin-stdlib.kotlin_module")
-    exclude("kotlin/annotation/annotation.kotlin_builtins")
-    exclude("kotlin/collections/collections.kotlin_builtins")
-    exclude("kotlin/coroutines/coroutines.kotlin_builtins")
-    exclude("kotlin/internal/internal.kotlin_builtins")
-    exclude("kotlin/kotlin.kotlin_builtins")
-    exclude("kotlin/ranges/ranges.kotlin_builtins")
-    exclude("kotlin/reflect/reflect.kotlin_builtins")
+    resources {
+    excludes += ("META-INF/kotlin-stdlib-common.kotlin_module")
+    excludes += ("META-INF/kotlin-stdlib-jdk7.kotlin_module")
+    excludes += ("META-INF/kotlin-stdlib-jdk8.kotlin_module")
+    excludes += ("META-INF/kotlin-stdlib.kotlin_module")
+    excludes += ("kotlin/annotation/annotation.kotlin_builtins")
+    excludes += ("kotlin/collections/collections.kotlin_builtins")
+    excludes += ("kotlin/coroutines/coroutines.kotlin_builtins")
+    excludes += ("kotlin/internal/internal.kotlin_builtins")
+    excludes += ("kotlin/kotlin.kotlin_builtins")
+    excludes += ("kotlin/ranges/ranges.kotlin_builtins")
+    excludes += ("kotlin/reflect/reflect.kotlin_builtins")
+    }
   }
 }

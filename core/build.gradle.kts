@@ -8,7 +8,7 @@ plugins {
   id("java-library")
 
   // Apply the Kotlin JVM plugin to add support for Kotlin.
-  id("org.jetbrains.kotlin.jvm")
+    id("org.jetbrains.kotlin.jvm")
 }
 
 dependencies {
@@ -16,7 +16,7 @@ dependencies {
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
   // Use the Kotlin JDK 8 standard library.
-  implementation(kotlin("stdlib-jdk7"))
+  implementation(kotlin("stdlib"))
 
   // json
   implementation("org.json:json:20171018")
@@ -30,7 +30,7 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+ java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
