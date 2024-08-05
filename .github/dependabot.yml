@@ -11,4 +11,4 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "Bump"
-    open-pull-request-limit: 10
+    open-pull-requests-limit: 10
