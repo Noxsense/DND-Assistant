@@ -13,7 +13,7 @@ buildscript {
   dependencies {
     classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.0") // 1.4.32
     classpath("org.jetbrains.kotlin:kotlin-serialization:1.6.0")
-    classpath("com.android.tools.build:gradle:7.3.0")
+    classpath("com.android.tools.build:gradle:8.5.1")
 
     // classpath("org.jlleitschuh.gradle.ktlint:ktlint:9.2.1") // TODO
   }
