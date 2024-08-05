@@ -19,7 +19,7 @@ dependencies {
   implementation(kotlin("stdlib"))
 
   // json
-  implementation("org.json:json:20171018")
+  implementation("org.json:json:20240303")
 
   // -- Tests ---
 
