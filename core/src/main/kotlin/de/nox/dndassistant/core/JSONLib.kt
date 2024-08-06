@@ -381,9 +381,9 @@ public fun Hero.toJSON(indentSpaces: Int = -1) : String
 
 					put("skill-source", prof.second)  // why proficient
 
-					if (skill !in SimpleSkill.DEFAULT_SKILLS) {
+					if (SimpleSkill.DEFAULT_SKILLS.containsValue(skill)) {
 						/* Custom Skill's Ability. If default skip (redudant info). */
-						put("custom-attribute", skill.ability)
+						put("custom-attribute",  skill.ability as Ability)
 					}
 				}
 			})

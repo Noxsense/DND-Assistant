@@ -20,12 +20,12 @@ dependencies {
 android {
   namespace = "de.noxsense"
 
-  compileSdk = 29
+  compileSdk = 30
 
   defaultConfig {
     applicationId = "de.nox.dndassistant.app"
     minSdk = 21
-    targetSdk = 29
+    targetSdk = 30
     versionCode = 1
     versionName = "1.0"
   }
