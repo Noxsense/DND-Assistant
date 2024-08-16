@@ -2,6 +2,7 @@ plugins {
   id("com.android.application")
   kotlin("android")
   id("kotlin-parcelize")
+
 }
 
 dependencies {
@@ -11,6 +12,7 @@ dependencies {
   }
 
   /* android libaries */
+  // implementation("com.android.tools.build:gradle:7.1.1")
   implementation("com.google.android.material:material:1.2.1")
   // implementation("androidx.appcompat:appcompat:1.2.0")
   // implementation("androidx.constraintlayout:constraintlayout:2.0.1")
@@ -20,12 +22,12 @@ dependencies {
 android {
   namespace = "de.noxsense"
 
-  compileSdk = 29
+  compileSdk = 30
 
   defaultConfig {
     applicationId = "de.nox.dndassistant.app"
     minSdk = 21
-    targetSdk = 29
+    targetSdk = 30
     versionCode = 1
     versionName = "1.0"
   }
@@ -46,6 +48,10 @@ android {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
+
+  // viewBinding {
+  //   enabled = true
+  // }
 
   buildFeatures {
     viewBinding = true
